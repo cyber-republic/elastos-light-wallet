@@ -53,12 +53,13 @@ module.exports = (props) => {
 
   const cancelSend = () => {
     App.setSendStep(1);
-    App.clearSendData();
+    //App.clearSendData();
     App.setSendHasFocus(false);
     App.renderApp();
   }
 
   const sendAmountToAddress = () => {
+	App.setSendHasFocus(false);
     const isValid = App.updateAmountAndFees();
     if (isValid) {
       App.setSendStep(1);
@@ -88,13 +89,15 @@ module.exports = (props) => {
     return (<div id="sendOne" className={`send-area ${visibility}`}>
       <img src="artwork/sendicon.svg" className="send-icon"/>
       <p className="send-text">Send</p>
-      <input type="text" size="34" id="sendToAddress" className="ela-address__input" placeholder="Enter ELA Address" defaultValue={App.getSendToAddress()} onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}/>
-      <input type="text" size="14" id="sendAmount" className="ela-send__amount" placeholder="Amount" defaultValue={App.getSendAmount()} onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}/> {/* <div className="quick-elaselector">
-          <button className="quick-elaselector__icon quarter">1/4</button>
-          <button className="quick-elaselector__icon half">Half</button>
-          <button className="quick-elaselector__icon all">All</button>
-        </div> */
-      }
+      <input type="text" size="34" id="sendToAddress" className="ela-address__input" placeholder="Enter ELA Address" defaultValue={App.getSendToAddress()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*//>
+      <input type="text" size="14" id="sendAmount" className="ela-send__amount" placeholder="Amount" defaultValue={App.getSendAmount()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*//>
+	  
+		  <div className="quick-elaselector">
+          <button className="quick-elaselector-icon quarter" onClick={() => App.insertELA('quarter')}>25%</button>
+          <button className="quick-elaselector-icon half" onClick={() => App.insertELA('half')}>50%</button>
+          <button className="quick-elaselector-icon max" onClick={() => App.insertELA('max')}>Max</button>
+        </div>
+	  
       <p className="elatext-send">ELA</p>
       <button className="next-button" onClick={(e) => showConfirmAndSeeFees()}>
         <p>Next</p>
@@ -146,9 +149,9 @@ module.exports = (props) => {
         <img src="artwork/sendicon.svg" className="send-icon" title="Refresh Blockchain Data"  onClick={(e) => App.refreshBlockchainData()}/>
         <p className="send-text">Send</p>
         <div className="fees-text">Fees (in Satoshi ELA)</div>
-        <input type="text" size="14" id="feeAmount" placeholder="Fees" defaultValue={App.getFee()} onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}></input>
+        <input type="text" size="14" id="feeAmount" placeholder="Fees" defaultValue={App.getFee()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*/></input>
         <div className="estimate-new dark-hover cursor_def br5" onClick={(e) => showConfirmAndSeeFees()}>Recalculate</div>
-        <p className="fees-balance">Your are sending <span> {App.getSendAmount()} ELA</span> + <span>{App.getFeeAmountEla()} ELA</span> in fees.</p>
+        <p className="fees-balance">Total spending amount is <span> {App.getTotalSpendingELA()} ELA</span></p>
           <span className="send-back dark-hover cursor_def" onClick={(e) => cancelSend()}><img src="artwork/arrow.svg" alt="" className="rotate_180 arrow-back" />Back </span>
           <button className="sendela-button" onClick={(e) => sendAmountToAddress()}>
           <p>Send ELA</p>

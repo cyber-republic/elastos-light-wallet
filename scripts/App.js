@@ -130,6 +130,8 @@ let feeStatus = 'No Fee Requested Yet';
 
 let fee = '';
 
+let minerFee = 100;
+
 let feeAccountStatus = 'No Fee Account Requested Yet';
 
 let feeAccount = '';
@@ -137,6 +139,8 @@ let feeAccount = '';
 let bannerStatus = '';
 
 let bannerClass = '';
+
+let roundDecimalELA = 8;
 
 const DECIMAL_REGEX = new RegExp('^[0-9]+([,.][0-9]+)?$');
 
@@ -170,6 +174,7 @@ const setRenderApp = (_renderApp) => {
     // mainConsole.log('renderApp', 'sendHasFocus', sendHasFocus);
     if (!sendHasFocus) {
       _renderApp();
+	  //var currentDate = '[' + new Date().toUTCString() + '] ';
     }
   };
 };
@@ -554,10 +559,10 @@ const clearSendData = () => {
   // mainConsole.log('SUCCESS clearSendData');
 };
 
-
 const validateInputs = () => {
   sendAmount = GuiUtils.getValue('sendAmount');
   sendToAddress = GuiUtils.getValue('sendToAddress');
+  feeAmountSats = GuiUtils.getValue('feeAmount');
 
   if (sendToAddress.length == 0) {
     bannerStatus = `Address field is blank`;
@@ -567,34 +572,37 @@ const validateInputs = () => {
     return false;
   }
 
-  if (!isValidDecimal(sendAmount)) {
-    bannerStatus = `Amount: ${sendAmount} is not a number`;
+  if (!isValidDecimal(sendAmount) || (sendAmount == 0)) {
+	if (sendAmount.length == 0) {
+		bannerStatus = `Please enter valid Amount.`;
+	} else {
+		bannerStatus = `[`+sendAmount+`] is NOT valid amount.`;
+	}    
     bannerClass = 'bg_red color_white banner-look';
     GuiToggles.showAllBanners();
     renderApp();
     return false;
   }
+
   const sendAmountSatsBn = BigNumber(sendAmount, 10).times(Asset.satoshis);
-  const feeAmountSatsBn = BigNumber(feeAmountSats, 10);
+  const feeAmountSatsBn = BigNumber(Number(feeAmountSats) + Number(minerFee), 10);
   const balanceSatsBn = BigNumber(balance, 10).times(Asset.satoshis);
-  if (sendAmountSatsBn.plus(feeAmountSatsBn).isGreaterThanOrEqualTo(balanceSatsBn)) {
-    bannerStatus = `Amount: ${sendAmount} + Fees ${feeAmountSats} is greater than balance ${balance}`;
+  feeAmountEla = BigNumber(Number(feeAmountSats) + Number(minerFee), 10).dividedBy(Asset.satoshis).toString();
+  if (sendAmountSatsBn.plus(feeAmountSatsBn).isGreaterThan(balanceSatsBn)) {
+    bannerStatus = `Spending amount [${sendAmount}] + Fees [${feeAmountEla}] is greater than your balance ${balance}.`;
     bannerClass = 'bg_red color_white banner-look';
     GuiToggles.showAllBanners();
     renderApp();
     return false;
   }
   // GuiToggles.hideAllBanners();
-  // renderApp();
-
-  feeAmountEla = BigNumber(feeAmountSats, 10).dividedBy(Asset.satoshis).toString();
+  // renderApp();  
   // mainConsole.log('SUCCESS updateAmountAndFees');
   return true;
 };
 
 const updateAmountAndFees = () => {
   // mainConsole.log('STARTED updateAmountAndFees');
-
   sendAmount = GuiUtils.getValue('sendAmount');
   sendToAddress = GuiUtils.getValue('sendToAddress');
   feeAmountSats = GuiUtils.getValue('feeAmount');
@@ -604,8 +612,12 @@ const updateAmountAndFees = () => {
   //   'sendToAddress:', sendToAddress,
   //   'feeAmountSats:', feeAmountSats,
   // );
-  if (!isValidDecimal(feeAmountSats)) {
-    bannerStatus = `Fees: ${feeAmountSats} is not a number`;
+  if (!isValidDecimal(feeAmountSats) || (feeAmountSats == 0)) {
+	if (feeAmountSats.length == 0) {
+		bannerStatus = `Please enter valid Fee amount.`;
+	} else {
+		bannerStatus = `[`+feeAmountSats+`] is NOT valid Fee amount.`;
+	} 
     bannerClass = 'bg_red color_white banner-look';
     GuiToggles.showAllBanners();
     renderApp();
@@ -620,19 +632,18 @@ const updateAmountAndFees = () => {
   }
 
   const sendAmountSatsBn = BigNumber(sendAmount, 10).times(Asset.satoshis);
-  const feeAmountSatsBn = BigNumber(feeAmountSats, 10);
+  const feeAmountSatsBn = BigNumber(Number(feeAmountSats) + Number(minerFee), 10);
   const balanceSatsBn = BigNumber(balance, 10).times(Asset.satoshis);
-  if (sendAmountSatsBn.plus(feeAmountSatsBn).isGreaterThanOrEqualTo(balanceSatsBn)) {
-    bannerStatus = `Amount: ${sendAmount} + Fees ${feeAmountSats} is greater than balance ${balance}`;
+  feeAmountEla = BigNumber(Number(feeAmountSats) + Number(minerFee), 10).dividedBy(Asset.satoshis).toString();
+  if (sendAmountSatsBn.plus(feeAmountSatsBn).isGreaterThan(balanceSatsBn)) {
+    bannerStatus = `Spending amount [${sendAmount}] + Fees [${feeAmountEla}] is greater than your balance ${balance}.`;
     bannerClass = 'bg_red color_white banner-look';
     GuiToggles.showAllBanners();
     renderApp();
     return false;
   }
   // GuiToggles.hideAllBanners();
-  // renderApp();
-
-  feeAmountEla = BigNumber(feeAmountSats, 10).dividedBy(Asset.satoshis).toString();
+  // renderApp();  
   // mainConsole.log('SUCCESS updateAmountAndFees');
   return true;
 };
@@ -947,13 +958,17 @@ const sendVoteTx = () => {
       return;
     }
 
-    if (!isValidDecimal(feeAmountSats)) {
-      bannerStatus = `feeAmountSats ${feeAmountSats} is not a number`;
+    if (!isValidDecimal(feeAmountSats) || (feeAmountSats == 0)) {
+	  if (feeAmountSats.length == 0) {
+	    bannerStatus = `Please enter valid Fee amount.`;
+	  } else {
+		bannerStatus = `[`+feeAmountSats+`] is NOT valid Fee amount.`;
+	  } 
       bannerClass = 'bg_red color_white banner-look';
       GuiToggles.showAllBanners();
       renderApp();
-      return;
-    }
+      return false;
+	}
 
     const candidates = [];
     parsedProducerList.producers.forEach((parsedProducer) => {
@@ -1198,36 +1213,52 @@ const setBlockchainLastActionHeight = () => {
 };
 
 const copyAddressToClipboard = () => {
-  appClipboard.writeText(address);
-  bannerStatus = `Copied to clipboard:\n${address}`;
-  bannerClass = 'bg_green color_white banner-look';
-  GuiToggles.showAllBanners();
-  renderApp();
+  if (address != undefined) {
+    appClipboard.writeText(address);
+    bannerStatus = `Copied to clipboard:\n${address}`;
+    bannerClass = 'bg_green color_white banner-look';
+    GuiToggles.showAllBanners();
+    renderApp();
+  } else {
+	getPublicKeyFromLedger();
+  }
 };
 
 const copyMnemonicToClipboard = () => {
   appClipboard.writeText(generatedMnemonic);
-  bannerStatus = `copied to clipboard:\n${generatedMnemonic}`;
+  bannerStatus = `Copied to clipboard:\n${generatedMnemonic}`;
   bannerClass = 'bg_green color_white banner-look';
   GuiToggles.showAllBanners();
   renderApp();
 };
 
+const pasteMnemonicFromClipboard = () => {
+  //GuiUtils.setValue('mnemonic', appClipboard.readText());
+  //bannerStatus = `Pasted mnemonic from clipboard`;
+  //bannerClass = 'bg_green color_white banner-look';
+  //GuiToggles.showAllBanners();
+  //renderApp();
+};
+
 const copyPrivateKeyToClipboard = () => {
   appClipboard.writeText(generatedPrivateKeyHex);
-  bannerStatus = `copied to clipboard:\n${generatedPrivateKeyHex}`;
+  bannerStatus = `Copied to clipboard:\n${generatedPrivateKeyHex}`;
   bannerClass = 'bg_green color_white banner-look';
   GuiToggles.showAllBanners();
   renderApp();
 };
 
 const verifyLedgerBanner = () => {
-  if (useLedgerFlag) {
-    bannerStatus = `Please verify that this address:\n${address} corresponds to the address on your Ledger device`;
+  if (address != undefined && useLedgerFlag) {
+    bannerStatus = `Please verify address [${address}] on your Ledger Device by pressing the right button.`;
     bannerClass = 'landing-btnbg color_white banner-look';
   } else {
-    bannerStatus = `No Ledger Device Connected`;
-    bannerClass = 'landing-btnbg color_white banner-look';
+	if (useLedgerFlag) {
+		getPublicKeyFromLedger();
+	} else {
+	  bannerStatus = `No Ledger Device Connected`;
+      bannerClass = 'landing-btnbg color_white banner-look';
+	}
   }
 
   GuiToggles.showAllBanners();
@@ -1517,6 +1548,45 @@ const getGeneratedMnemonic = () => {
   return generatedMnemonic;
 };
 
+const insertELA = (type) => {
+  var subtractFee = BigNumber(Number(fee) + minerFee, 10).dividedBy(Asset.satoshis).toString();
+  
+  if (type == "quarter") {
+    var newAmount = BigNumber(Number(getELABalance())/4).decimalPlaces(roundDecimalELA).toString();
+  }
+  
+  if (type == "half") {
+	var newAmount = BigNumber(Number(getELABalance())/2).decimalPlaces(roundDecimalELA).toString();
+  }
+  
+  if (type == "max") {
+	var newAmount = BigNumber(Number(getELABalance())-Number(subtractFee)).decimalPlaces(roundDecimalELA).toFixed(roundDecimalELA);
+  }
+  //mainConsole.log(getELABalance(), subtractFee, fee, minerFee);
+  if (getELABalance() < newAmount + subtractFee) {
+	newAmount = 0;
+	bannerStatus = `You have insufficient ELA balance to spend.`;
+    bannerClass = 'landing-btnbg color_white banner-look';
+	GuiToggles.showAllBanners();
+	renderApp();
+	return false;
+  } else {
+	  if (getELABalance() == "?") {
+	    getPublicKeyFromLedger();
+	  } else {
+	    GuiUtils.setValue('sendAmount',newAmount);
+	    sendAmount = newAmount;
+	    renderApp();
+	  }
+  }
+}
+
+const getTotalSpendingELA = () => {	
+	var totalSpendingELA = BigNumber(Number(getSendAmount())+Number(BigNumber(Number(fee) + minerFee, 10).dividedBy(Asset.satoshis).toString())).decimalPlaces(roundDecimalELA).toString();
+	//mainConsole.log(totalSpendingELA,roundDecimalELA);
+	return totalSpendingELA;
+}
+
 exports.REST_SERVICES = REST_SERVICES;
 exports.init = init;
 exports.log = mainConsole.log;
@@ -1585,3 +1655,6 @@ exports.formatTxValue = formatTxValue;
 exports.selectActiveVotes = selectActiveVotes;
 exports.clearSelection = clearSelection;
 exports.validateInputs = validateInputs;
+exports.insertELA = insertELA;
+exports.pasteMnemonicFromClipboard = pasteMnemonicFromClipboard;
+exports.getTotalSpendingELA = getTotalSpendingELA;

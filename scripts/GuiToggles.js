@@ -4,6 +4,8 @@
 const GuiUtils = require('./GuiUtils.js');
 
 let app;
+let bannerID;
+let bannerTimeout = 10000;
 
 
 const init = (_app) => {
@@ -35,7 +37,8 @@ const hideEverything = () => {
 const hideAllMenus = () => {
   GuiUtils.hide('loginPrivateKeyBanner');
   GuiUtils.hide('loginMnemonicBanner');
-  const menus = ['home', 'voting', 'loginPrivateKey', 'loginMnemonic'];
+  GuiUtils.hide('generateMnemonicBanner');
+  const menus = ['home', 'landing', 'voting', 'loginPrivateKey', 'loginMnemonic'];
   menus.forEach((menu) => {
     hide(menu+'Menu');
     // hide(menu+'MenuOpen');
@@ -101,8 +104,11 @@ const showQRCode = () => {
 };
 
 const showBanner = (name) => {
+  clearTimeout(bannerID);
+  bannerID = setTimeout(() => hide(name+'Banner'), bannerTimeout);
   show(name+'Banner');
 };
+
 
 const hideBanner = (name) => {
   hide(name+'Banner');
@@ -123,10 +129,13 @@ const showGenerateNewMnemonic = () => {
 };
 
 const showAllBanners = () => {
+  clearTimeout(bannerID);
+  bannerID = setTimeout(() => hideAllBanners(), bannerTimeout);
   GuiUtils.show('homeBanner');
   GuiUtils.show('votingBanner');
   GuiUtils.show('loginPrivateKeyBanner');
   GuiUtils.show('loginMnemonicBanner');
+  GuiUtils.show('generateMnemonicBanner');
   GuiUtils.show('qrcodeBanner');
 };
 
@@ -135,6 +144,7 @@ const hideAllBanners = () => {
   GuiUtils.hide('votingBanner');
   GuiUtils.hide('loginPrivateKeyBanner');
   GuiUtils.hide('loginMnemonicBanner');
+  GuiUtils.hide('generateMnemonicBanner');
   GuiUtils.hide('qrcodeBanner');
 };
 

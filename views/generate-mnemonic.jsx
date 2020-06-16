@@ -1,4 +1,5 @@
 const React = require('react');
+const Banner = require('./partial/banner.jsx');
 
 module.exports = (props) => {
   const App = props.App;
@@ -10,6 +11,7 @@ module.exports = (props) => {
   return (
     <div id="generateMnemonic">
     <div className="login-div ">
+	  <Banner App={App} GuiToggles={GuiToggles} page="generateMnemonic"/>
       <div className="flex_center w100pct">
       <img className="flex1 scale-hover" src="artwork/voting-back.svg" height="38px" width="38px" onClick={(e)=> GuiToggles.showLanding()}/>
       <img src="artwork/logonew.svg" height="80px" width="240px" />
@@ -17,7 +19,7 @@ module.exports = (props) => {
       </div>
       <p className="address-text font_size24 margin_none display_inline_block gradient-font">Create New Wallet (Mnemonics)</p>
       <div className="qraddress-div">
-        <p className="address-ex display_inline_block font_size20 padding_5px">{App.getGeneratedMnemonic()}</p>
+        <p className="address-ex display_inline_block font_size20 padding_5px" onClick={(e) => App.copyMnemonicToClipboard()}>{App.getGeneratedMnemonic()}</p>
       </div>
       <div className="flex_center">
       <button className="proceed-btn scale-hover" onClick={(e) => GuiToggles.showLanding()}>

@@ -1,4 +1,5 @@
 const React = require('react');
+const Menu = require('./partial/menu.jsx');
 
 const LedgerMessage = (props) => {
   const App = props.App;
@@ -43,11 +44,22 @@ module.exports = (props) => {
   const GuiToggles = props.GuiToggles;
   const openDevTools = props.openDevTools;
   const Version = props.Version;
+  const showMenu = () => {
+    GuiToggles.showMenu('landing');
+  }
+  const refreshLedger = () => {
+	  App.setPollForAllInfoTimer();
+  }
   return (
   
     <div id="landing">
-    <img src="artwork/refreshicon.svg" className="refresh-icon" title="Refresh" onClick={(e) => App.refreshBlockchainData()}/>
-
+	<Menu App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} page="landing"/>
+	<header>
+      <img src="artwork/refreshicon.svg" className="refresh-icon" title="Refresh" onClick={(e) => refreshLedger()} />
+	  <nav id="landingMenuOpen" title="menu" onClick={(e) => showMenu()}>
+        <img src="artwork/nav.svg" className="nav-icon dark-hover" onClick={(e) => showMenu()}/>
+      </nav>
+    </header>
     <div className="login-div ">
       <img src="artwork/logonew.svg" height="80px" width="240px" className="flexgrow_pt35"/>
 
@@ -69,7 +81,7 @@ module.exports = (props) => {
         </button>
       </div>
       <p className="address-text font_size24 margin_none display_inline_block gradient-font">Ledger</p>
-      <p className="color_white font_size16 w80pct word-breakword">Ledger Status:
+      <p className="address-text font_size16 w80pct word-breakword">Ledger Status:&nbsp;
         <LedgerMessage App={App}/></p>
     </div>
     <div>

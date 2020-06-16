@@ -49,6 +49,7 @@ button {
 
 #votingMenu,
 #homeMenu,
+#landingMenu,
 #loginPrivateKeyMenu,
 #loginMnemonicMenu {
   position: absolute;
@@ -65,10 +66,6 @@ button {
   width: 788px;
   height: 99px;
   font-size: 14px;
-}
-
-.display_inline_block {
-  display: inline-block;
 }
 
 .gradient-font {
@@ -164,6 +161,7 @@ button {
   transform: scale(1.1);
   opacity: 1;
   transition: 0.4s;
+  /*cursor: pointer;*/
 }
 
 .dark-hover {
@@ -177,6 +175,7 @@ button {
   background: rgba(151, 153, 166, 0.16);
   transform: scale(1.1);
   transition: 0.4s;
+  /*cursor: pointer;*/
 }
 
 .ledgeranimation {
@@ -199,6 +198,7 @@ button {
     opacity: 1;
   }
 }
+}
 
 .dark-hover2 {
   -webkit-app-region: no-drag;	
@@ -208,6 +208,7 @@ button {
 .dark-hover2:hover {
   background: rgba(151, 153, 166, 0.16);
   transition: 0.4s;
+  /*cursor: pointer;*/
 }
 
 .scale-hover {
@@ -222,7 +223,7 @@ button {
   transform: scale(1.1);
   opacity: 1;
   transition: 0.4s;
-
+  /*cursor: pointer;*/
 }
 
 .logo-info {
@@ -428,6 +429,7 @@ button {
   transform: scale(1.1);
   opacity: 1;
   transition: 0.4s;
+  /*cursor: pointer;*/
 }
 
 .send-text {
@@ -497,7 +499,7 @@ button {
   text-align: center;
   position: absolute;
   top: 252px;
-  left: 675px;
+  left: 670px;
   margin: 0;
 }
 
@@ -587,6 +589,7 @@ button {
   transform: scale(1.1);
   opacity: 1;
   transition: 0.4s;
+  /*cursor: pointer;*/
 }
 
 .send-back {
@@ -1143,6 +1146,7 @@ select, input {
 .exit_link:hover {
   color: #AAA;
   text-decoration: underline;
+  /*cursor: pointer;*/
 }
 
 .color_orange {
@@ -1447,6 +1451,8 @@ select, input {
   font-size: 20px;
   font-family: inherit;
   font-weight: 600;
+  -moz-text-align-last: center; /* Firefox 12+ */
+  text-align-last: center;
 }
 
 .br30 {
@@ -1656,4 +1662,42 @@ select, input {
       -moz-box-shadow: 0 0 0 0 rgba(229,167,118, 0);
       box-shadow: 0 0 0 0 rgba(229,167,118, 0);
   }
+}
+
+.quick-elaselector-icon {
+  background: rgba(151, 153, 166, 0.16);
+  border-radius: 4px;
+  top: 290px;
+  position: absolute;
+  margin: 0;
+  height: 30px;
+  width: 50px;
+  font-size: 14px;
+  color: #FFFFFF;
+  letter-spacing: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  will-change: transform, opacity;
+}
+
+.quick-elaselector-icon.quarter {
+	left: 543px;
+}
+
+.quick-elaselector-icon.half {
+	left: 598px;
+}
+
+.quick-elaselector-icon.max {
+	left: 653px;
+}
+.quick-elaselector-icon:active,
+.quick-elaselector-icon:hover {
+  /* background: linear-gradient(160deg, rgba(229, 167, 118, 1), rgba(244, 210, 174, 1)); */
+  transform: scale(1.1);
+  opacity: 1;
+  transition: 0.4s;
+  /*cursor: pointer;*/
 }

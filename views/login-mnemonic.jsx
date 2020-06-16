@@ -34,7 +34,7 @@ module.exports = (props) => {
     <div className="flex1"></div>
     </div>
     <p className="address-text font_size24 margin_none display_inline_block gradient-font">Enter Mnemonics</p>
-    <textarea className="qraddress-div color_white textarea-placeholder padding_5px" type="text" rows="4" cols="50" id="mnemonic" placeholder="Enter 12 word mnemonic/seed phrase"></textarea>
+    <textarea className="qraddress-div color_white textarea-placeholder padding_5px" type="text" rows="4" cols="50" id="mnemonic" placeholder="Enter 12 word mnemonic/seed phrase" onClick={(e) => App.pasteMnemonicFromClipboard()}></textarea>
     <div className="flex_center">
     <button className="proceed-btn scale-hover" onClick={(e)=> useMnemonic()}>
           <p>Proceed</p>

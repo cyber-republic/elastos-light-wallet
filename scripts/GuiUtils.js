@@ -16,7 +16,6 @@ const getValue = (id) => {
   return get(id).value;
 };
 
-
 const hide = (id) => {
   get(id).style = 'display:none;';
 };
