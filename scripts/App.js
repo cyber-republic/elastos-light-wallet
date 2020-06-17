@@ -486,6 +486,8 @@ const getPublicKeyFromMnemonic = () => {
     renderApp();
     return false;
   }
+  const privateKeyElt = document.getElementById('privateKey');
+  privateKeyElt.value = privateKey;
   publicKey = KeyTranscoder.getPublic(privateKey);
   requestBlockchainData();
   return true;
@@ -623,12 +625,16 @@ const updateAmountAndFees = () => {
     renderApp();
     return false;
   }
-  if (parsedTransactionHistory[0].type == '*Sending') {
-    bannerStatus = `Please wait for previous transaction to confirm.`;
-    bannerClass = 'bg_red color_white banner-look';
-    GuiToggles.showAllBanners();
-    renderApp();
-    return false;
+  if(parsedTransactionHistory) {
+    if(parsedTransactionHistory[0]) {
+      if (parsedTransactionHistory[0].type == '*Sending') {
+        bannerStatus = `Please wait for previous transaction to confirm.`;
+        bannerClass = 'bg_red color_white banner-look';
+        GuiToggles.showAllBanners();
+        renderApp();
+        return false;
+      }
+    }
   }
 
   const sendAmountSatsBn = BigNumber(sendAmount, 10).times(Asset.satoshis);
