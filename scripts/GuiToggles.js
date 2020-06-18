@@ -109,7 +109,6 @@ const showBanner = (name) => {
   show(name+'Banner');
 };
 
-
 const hideBanner = (name) => {
   hide(name+'Banner');
 };
@@ -128,9 +127,11 @@ const showGenerateNewMnemonic = () => {
   show('generateMnemonic');
 };
 
-const showAllBanners = () => {
-  clearTimeout(bannerID);
-  bannerID = setTimeout(() => hideAllBanners(), bannerTimeout);
+const showAllBanners = (timeout) => {
+  if (timeout === true) {
+	  clearTimeout(bannerID);
+	  bannerID = setTimeout(() => hideAllBanners(), bannerTimeout);
+  }
   GuiUtils.show('homeBanner');
   GuiUtils.show('votingBanner');
   GuiUtils.show('loginPrivateKeyBanner');
@@ -163,3 +164,4 @@ exports.showGenerateNewPrivateKey = showGenerateNewPrivateKey;
 exports.showGenerateNewMnemonic = showGenerateNewMnemonic;
 exports.showAllBanners = showAllBanners;
 exports.hideAllBanners = hideAllBanners;
+exports.bannerID = bannerID;

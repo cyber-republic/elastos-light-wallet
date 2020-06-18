@@ -2,6 +2,7 @@
 
 /** imports */
 const bip39 = require('bip39');
+const bs58 = require('bs58');
 const mainConsoleLib = require('console');
 const BigNumber = require('bignumber.js');
 const crypto = require('crypto');
@@ -222,19 +223,23 @@ const isValidDecimal = (testAmount) => {
 };
 
 
-const formatDate = (date) => {
+const formatDate = (date, type) => {
   let month = (date.getMonth() + 1).toString();
   let day = date.getDate().toString();
   const year = date.getFullYear();
+  let hour = date.getHours().toString();
+  let minute = date.getMinutes().toString();
 
-  if (month.length < 2) {
-    month = '0' + month;
-  };
-  if (day.length < 2) {
-    day = '0' + day;
-  };
-
-  return [year, month, day].join('-');
+  if (month.length < 2) month = '0' + month;
+  if (day.length < 2) day = '0' + day;
+  if (hour.length < 2) hour = '0' + hour;
+  if (minute.length < 2) minute = '0' + minute;
+  
+  if (type == "date") {
+    return [year, month, day].join('-');
+  } else {
+	return [hour, minute].join(':');
+  }
 };
 
 const changeNetwork = (event) => {
@@ -276,7 +281,7 @@ const publicKeyCallback = (message) => {
     ledgerDeviceInfo.message = message.message;
     bannerStatus = message.message;
     bannerClass = 'bg_red color_white banner-look';
-    GuiToggles.showAllBanners();
+    GuiToggles.showAllBanners(false);
     renderApp();
   }
   pollDataTypeIx++;
@@ -474,7 +479,7 @@ const getPublicKeyFromMnemonic = () => {
   if (!bip39.validateMnemonic(mnemonic)) {
     bannerStatus = `Mnemonic is not valid.`;
     bannerClass = 'bg_red color_white banner-look';
-    GuiToggles.showAllBanners();
+    GuiToggles.showAllBanners(false);
     renderApp();
     return false;
   }
@@ -482,7 +487,7 @@ const getPublicKeyFromMnemonic = () => {
   if (privateKey.length != PRIVATE_KEY_LENGTH) {
     bannerStatus = `Mnemonic must create a of length ${PRIVATE_KEY_LENGTH}, not ${privateKey.length}`;
     bannerClass = 'bg_red color_white banner-look';
-    GuiToggles.showAllBanners();
+    GuiToggles.showAllBanners(false);
     renderApp();
     return false;
   }
@@ -501,7 +506,7 @@ const getPublicKeyFromPrivateKey = () => {
   if (privateKey.length != PRIVATE_KEY_LENGTH) {
     bannerStatus = `Private key must be a hex encoded string of length ${PRIVATE_KEY_LENGTH}, not ${privateKey.length}`;
     bannerClass = 'bg_red color_white banner-look';
-    GuiToggles.showAllBanners();
+    GuiToggles.showAllBanners(false);
     renderApp();
     return false;
   }
@@ -523,12 +528,14 @@ const sendAmountToAddressReadyCallback = (transactionJson) => {
     bannerStatus = message;
     bannerClass = 'bg_red color_white banner-look';
     sendToAddressStatuses.push(message);
+	GuiToggles.showAllBanners(false);
   } else if (transactionJson.Error != 0) {
     sendToAddressStatuses.length = 0;
     const message = `Transaction Error.  Error:${transactionJson.Error}  Result:${transactionJson.Result}`;
     bannerStatus = message;
     bannerClass = 'bg_red color_white banner-look';
     sendToAddressStatuses.push(message);
+	GuiToggles.showAllBanners(false);
   } else {
     sendToAddressStatuses.length = 0;
     const link = getTransactionHistoryLink(transactionJson.result);
@@ -536,14 +543,14 @@ const sendAmountToAddressReadyCallback = (transactionJson) => {
     elt.txDetailsUrl = link;
     elt.txHash = transactionJson.result;
     sendToAddressStatuses.length = 0;
-    const message = 'Transaction Successful.';
+    const message = 'Sending transaction successful.';
     bannerClass = 'bg_green color_white banner-look';
     sendToAddressStatuses.push(message);
     bannerStatus = message;
     sendToAddressLinks.push(elt);
     requestTransactionHistory();
+	GuiToggles.showAllBanners(true);
   }
-  GuiToggles.showAllBanners();
   setBlockchainLastActionHeight();
   renderApp();
 };
@@ -561,18 +568,33 @@ const clearSendData = () => {
   // mainConsole.log('SUCCESS clearSendData');
 };
 
+const isValidAddress = (testAddress) => {
+  if (testAddress.substring(0, 1) != 'E' && testAddress.substring(0, 1) != '8') return false;
+  const hexAddress = bs58.decodeUnsafe(testAddress);
+  if (!hexAddress) {
+    return false;
+  } else {
+	//mainConsole.log(hexAddress.toString('hex'), hexAddress.toString('hex').length)
+	if (hexAddress.toString('hex').length != 50) {
+      return false;
+	} else {
+	  return true;
+	}
+  }  
+};
+
 const validateInputs = () => {
-  sendAmount = GuiUtils.getValue('sendAmount');
   sendToAddress = GuiUtils.getValue('sendToAddress');
+  sendAmount = GuiUtils.getValue('sendAmount');  
   feeAmountSats = GuiUtils.getValue('feeAmount');
 
-  if (sendToAddress.length == 0) {
-    bannerStatus = `Address field is blank`;
+  if (!isValidAddress(sendToAddress)) {
+    bannerStatus = `Please enter valid Address.`;
     bannerClass = 'bg_red color_white banner-look';
-    GuiToggles.showAllBanners();
-    renderApp();
-    return false;
-  }
+	GuiToggles.showAllBanners(false);
+	renderApp();
+	return false;
+  } 
 
   if (!isValidDecimal(sendAmount) || (sendAmount == 0)) {
 	if (sendAmount.length == 0) {
@@ -581,39 +603,11 @@ const validateInputs = () => {
 		bannerStatus = `[`+sendAmount+`] is NOT valid amount.`;
 	}    
     bannerClass = 'bg_red color_white banner-look';
-    GuiToggles.showAllBanners();
+    GuiToggles.showAllBanners(false);
     renderApp();
     return false;
   }
-
-  const sendAmountSatsBn = BigNumber(sendAmount, 10).times(Asset.satoshis);
-  const feeAmountSatsBn = BigNumber(Number(feeAmountSats) + Number(minerFee), 10);
-  const balanceSatsBn = BigNumber(balance, 10).times(Asset.satoshis);
-  feeAmountEla = BigNumber(Number(feeAmountSats) + Number(minerFee), 10).dividedBy(Asset.satoshis).toString();
-  if (sendAmountSatsBn.plus(feeAmountSatsBn).isGreaterThan(balanceSatsBn)) {
-    bannerStatus = `Spending amount [${sendAmount}] + Fees [${feeAmountEla}] is greater than your balance ${balance}.`;
-    bannerClass = 'bg_red color_white banner-look';
-    GuiToggles.showAllBanners();
-    renderApp();
-    return false;
-  }
-  // GuiToggles.hideAllBanners();
-  // renderApp();  
-  // mainConsole.log('SUCCESS updateAmountAndFees');
-  return true;
-};
-
-const updateAmountAndFees = () => {
-  // mainConsole.log('STARTED updateAmountAndFees');
-  sendAmount = GuiUtils.getValue('sendAmount');
-  sendToAddress = GuiUtils.getValue('sendToAddress');
-  feeAmountSats = GuiUtils.getValue('feeAmount');
-
-  // mainConsole.log('INTERIM updateAmountAndFees',
-  //   'sendAmount:', sendAmount,
-  //   'sendToAddress:', sendToAddress,
-  //   'feeAmountSats:', feeAmountSats,
-  // );
+  
   if (!isValidDecimal(feeAmountSats) || (feeAmountSats == 0)) {
 	if (feeAmountSats.length == 0) {
 		bannerStatus = `Please enter valid Fee amount.`;
@@ -621,22 +615,11 @@ const updateAmountAndFees = () => {
 		bannerStatus = `[`+feeAmountSats+`] is NOT valid Fee amount.`;
 	} 
     bannerClass = 'bg_red color_white banner-look';
-    GuiToggles.showAllBanners();
+    GuiToggles.showAllBanners(false);
     renderApp();
     return false;
   }
-  if(parsedTransactionHistory) {
-    if(parsedTransactionHistory[0]) {
-      if (parsedTransactionHistory[0].type == '*Sending') {
-        bannerStatus = `Please wait for previous transaction to confirm.`;
-        bannerClass = 'bg_red color_white banner-look';
-        GuiToggles.showAllBanners();
-        renderApp();
-        return false;
-      }
-    }
-  }
-
+ 
   const sendAmountSatsBn = BigNumber(sendAmount, 10).times(Asset.satoshis);
   const feeAmountSatsBn = BigNumber(Number(feeAmountSats) + Number(minerFee), 10);
   const balanceSatsBn = BigNumber(balance, 10).times(Asset.satoshis);
@@ -644,13 +627,29 @@ const updateAmountAndFees = () => {
   if (sendAmountSatsBn.plus(feeAmountSatsBn).isGreaterThan(balanceSatsBn)) {
     bannerStatus = `Spending amount [${sendAmount}] + Fees [${feeAmountEla}] is greater than your balance ${balance}.`;
     bannerClass = 'bg_red color_white banner-look';
-    GuiToggles.showAllBanners();
+    GuiToggles.showAllBanners(false);
     renderApp();
     return false;
   }
   // GuiToggles.hideAllBanners();
   // renderApp();  
-  // mainConsole.log('SUCCESS updateAmountAndFees');
+  // mainConsole.log('SUCCESS checkTransactionHistory');
+  return true;
+};
+
+const checkTransactionHistory = () => {  
+  if(parsedTransactionHistory) {
+    if(parsedTransactionHistory[0]) {
+      if (parsedTransactionHistory[0].type == 'Sending') {
+        bannerStatus = `Please wait for previous transaction to confirm.`;
+        bannerClass = 'bg_red color_white banner-look';
+        GuiToggles.showAllBanners(false);
+        renderApp();
+        return false;
+      }
+    }
+  }
+  
   return true;
 };
 
@@ -658,7 +657,7 @@ const showLedgerConfirmBanner = (size) => {
   bannerStatus = `Please review and sign transaction on Ledger (Tx size = ${size} bytes)`;
   mainConsole.log('STARTED showLedgerConfirmBanner', bannerStatus);
   bannerClass = 'landing-btnbg color_white banner-look';
-  GuiToggles.showAllBanners();
+  GuiToggles.showAllBanners(false);
   renderApp();
 };
 
@@ -672,7 +671,7 @@ const getTxByteLength = (transactionHex) => {
 };
 
 const sendAmountToAddress = () => {
-  const isValid = updateAmountAndFees();
+  const isValid = checkTransactionHistory();
   if (!isValid) {
     return;
   }
@@ -695,7 +694,7 @@ const sendAmountToAddress = () => {
       if (!message.success) {
         bannerStatus = `Send Error: ${message.message}`;
         bannerClass = 'bg_red color_white banner-look';
-        GuiToggles.showAllBanners();
+        GuiToggles.showAllBanners(false);
         renderApp();
         return;
       }
@@ -852,7 +851,7 @@ const selectActiveVotes = () => {
   } else {
     bannerStatus = `Previous voting record not found.`;
     bannerClass = 'bg_red color_white banner-look';
-    GuiToggles.showAllBanners();
+    GuiToggles.showAllBanners(false);
   }
   renderApp();
 };
@@ -936,14 +935,14 @@ const requestListOfCandidateVotes = () => {
 
 const sendVoteTx = () => {
   try {
-    updateAmountAndFees();
+    checkTransactionHistory();
     const unspentTransactionOutputs = parsedUnspentTransactionOutputs;
     // mainConsole.log('sendVoteTx.unspentTransactionOutputs ' + JSON.stringify(unspentTransactionOutputs));
 
-    if (parsedTransactionHistory[0].type == '*Sending') {
+    if (parsedTransactionHistory[0].type == 'Sending') {
       bannerStatus = `Please wait for previous transaction to confirm.`;
       bannerClass = 'bg_red color_white banner-look';
-      GuiToggles.showAllBanners();
+      GuiToggles.showAllBanners(false);
       renderApp();
       return;
     }
@@ -951,7 +950,7 @@ const sendVoteTx = () => {
     if (parsedProducerList.producersCandidateCount === 0) {
       bannerStatus = 'No Candidates Selected.';
       bannerClass = 'bg_red color_white banner-look';
-      GuiToggles.showAllBanners();
+      GuiToggles.showAllBanners(false);
       renderApp();
       return;
     }
@@ -959,7 +958,7 @@ const sendVoteTx = () => {
     if (balance == 0) {
       bannerStatus = 'You have insufficient ELA balance to vote.';
       bannerClass = 'bg_red color_white banner-look';
-      GuiToggles.showAllBanners();
+      GuiToggles.showAllBanners(false);
       renderApp();
       return;
     }
@@ -971,7 +970,7 @@ const sendVoteTx = () => {
 		bannerStatus = `[`+feeAmountSats+`] is NOT valid Fee amount.`;
 	  } 
       bannerClass = 'bg_red color_white banner-look';
-      GuiToggles.showAllBanners();
+      GuiToggles.showAllBanners(false);
       renderApp();
       return false;
 	}
@@ -1005,7 +1004,7 @@ const sendVoteTx = () => {
             candidateVoteListStatus = `Vote Error: ${message.message}`;
             bannerStatus = candidateVoteListStatus;
             bannerClass = 'bg_red color_white banner-look';
-            GuiToggles.showAllBanners();
+            GuiToggles.showAllBanners(false);
             renderApp();
             return;
           }
@@ -1070,13 +1069,15 @@ const sendVoteReadyCallback = (transactionJson) => {
     candidateVoteListStatus = `Vote Error: ${transactionJson.Error} ${transactionJson.Result}`;
     bannerStatus = candidateVoteListStatus;
     bannerClass = 'bg_red color_white banner-look';
+	GuiToggles.showAllBanners(false);
   } else {
-    candidateVoteListStatus = `Vote Success TX: ${transactionJson.Result}`;
+    candidateVoteListStatus = `Voting transaction successful.`;
     bannerStatus = candidateVoteListStatus;
     bannerClass = 'bg_green color_white banner-look';
     requestTransactionHistory();
+	GuiToggles.showAllBanners(true);
   }
-  GuiToggles.showAllBanners();
+  
   renderApp();
 };
 
@@ -1098,9 +1099,11 @@ const getTransactionHistoryReadyCallback = (transactionHistory) => {
   if (transactionHistory.result !== undefined) {
     if (transactionHistory.result.History !== undefined) {
       transactionHistory.result.History.forEach((tx, txIx) => {
-        let time = formatDate(new Date(tx.CreateTime * 1000));
-        if (tx.CreateTime == 0) {
-          time = formatDate(new Date());
+        let date = formatDate(new Date(tx.CreateTime * 1000),"date");
+		let time = formatDate(new Date(tx.CreateTime * 1000),"time");
+		if (tx.CreateTime == 0) {
+          date = formatDate(new Date(),"date");
+		  time = "";
         }
         const parsedTransaction = {};
         parsedTransaction.sortTime = tx.CreateTime;
@@ -1117,11 +1120,12 @@ const getTransactionHistoryReadyCallback = (transactionHistory) => {
           parsedTransaction.type = 'Sent';
         }
         if (tx.Type == 'spend' && tx.Status == 'pending') {
-          parsedTransaction.type = '*Sending';
+          parsedTransaction.type = 'Sending';
         }
         if (tx.Type == 'income' && tx.Status == 'pending') {
-          parsedTransaction.type = '*Receiving';
+          parsedTransaction.type = 'Receiving';
         }
+		parsedTransaction.status = tx.Status;
         parsedTransaction.valueSat = tx.Value;
         parsedTransaction.value = formatTxValue(tx.Value);
         parsedTransaction.address = tx.Address;
@@ -1131,8 +1135,10 @@ const getTransactionHistoryReadyCallback = (transactionHistory) => {
           parsedTransaction.txHashWithEllipsis = parsedTransaction.txHashWithEllipsis.substring(0, 20) + '...';
         }
         parsedTransaction.txDetailsUrl = getTransactionHistoryLink(tx.Txid);
-        parsedTransaction.time = time;
+        parsedTransaction.date = date;
+		parsedTransaction.time = time;
         parsedTransactionHistory.push(parsedTransaction);
+		// mainConsole.log(parsedTransaction);
       });
     }
   }
@@ -1223,7 +1229,7 @@ const copyAddressToClipboard = () => {
     appClipboard.writeText(address);
     bannerStatus = `Copied to clipboard:\n${address}`;
     bannerClass = 'bg_green color_white banner-look';
-    GuiToggles.showAllBanners();
+    GuiToggles.showAllBanners(true);
     renderApp();
   } else {
 	getPublicKeyFromLedger();
@@ -1234,7 +1240,7 @@ const copyMnemonicToClipboard = () => {
   appClipboard.writeText(generatedMnemonic);
   bannerStatus = `Copied to clipboard:\n${generatedMnemonic}`;
   bannerClass = 'bg_green color_white banner-look';
-  GuiToggles.showAllBanners();
+  GuiToggles.showAllBanners(true);
   renderApp();
 };
 
@@ -1242,7 +1248,7 @@ const pasteMnemonicFromClipboard = () => {
   //GuiUtils.setValue('mnemonic', appClipboard.readText());
   //bannerStatus = `Pasted mnemonic from clipboard`;
   //bannerClass = 'bg_green color_white banner-look';
-  //GuiToggles.showAllBanners();
+  //GuiToggles.showAllBanners(true);
   //renderApp();
 };
 
@@ -1250,7 +1256,7 @@ const copyPrivateKeyToClipboard = () => {
   appClipboard.writeText(generatedPrivateKeyHex);
   bannerStatus = `Copied to clipboard:\n${generatedPrivateKeyHex}`;
   bannerClass = 'bg_green color_white banner-look';
-  GuiToggles.showAllBanners();
+  GuiToggles.showAllBanners(true);
   renderApp();
 };
 
@@ -1262,13 +1268,17 @@ const verifyLedgerBanner = () => {
 	if (useLedgerFlag) {
 		getPublicKeyFromLedger();
 	} else {
-	  bannerStatus = `No Ledger Device Connected`;
+	  bannerStatus = `No Ledger device connected`;
       bannerClass = 'landing-btnbg color_white banner-look';
 	}
   }
 
-  GuiToggles.showAllBanners();
+  GuiToggles.showAllBanners(false);
   renderApp();
+};
+
+const isLedgerConnected = () => {
+  return useLedgerFlag;
 };
 
 const clearGlobalData = () => {
@@ -1555,7 +1565,8 @@ const getGeneratedMnemonic = () => {
 };
 
 const insertELA = (type) => {
-  var subtractFee = BigNumber(Number(fee) + minerFee, 10).dividedBy(Asset.satoshis).toString();
+  feeAmountSats = GuiUtils.getValue('feeAmount');
+  var subtractFee = BigNumber(Number(feeAmountSats) + minerFee, 10).dividedBy(Asset.satoshis).toString();
   
   if (type == "quarter") {
     var newAmount = BigNumber(Number(getELABalance())/4).decimalPlaces(roundDecimalELA).toString();
@@ -1568,12 +1579,14 @@ const insertELA = (type) => {
   if (type == "max") {
 	var newAmount = BigNumber(Number(getELABalance())-Number(subtractFee)).decimalPlaces(roundDecimalELA).toFixed(roundDecimalELA);
   }
-  //mainConsole.log(getELABalance(), subtractFee, fee, minerFee);
+  
+  if (newAmount < 0) newAmount = 0;
+    //mainConsole.log(getELABalance(), subtractFee, fee, minerFee);
   if (getELABalance() < newAmount + subtractFee) {
 	newAmount = 0;
 	bannerStatus = `You have insufficient ELA balance to spend.`;
     bannerClass = 'landing-btnbg color_white banner-look';
-	GuiToggles.showAllBanners();
+	GuiToggles.showAllBanners(false);
 	renderApp();
 	return false;
   } else {
@@ -1588,9 +1601,9 @@ const insertELA = (type) => {
 }
 
 const getTotalSpendingELA = () => {	
-	var totalSpendingELA = BigNumber(Number(getSendAmount())+Number(BigNumber(Number(fee) + minerFee, 10).dividedBy(Asset.satoshis).toString())).decimalPlaces(roundDecimalELA).toString();
-	//mainConsole.log(totalSpendingELA,roundDecimalELA);
-	return totalSpendingELA;
+  var totalSpendingELA = BigNumber(Number(getSendAmount())+Number(BigNumber(Number(feeAmountSats) + minerFee, 10).dividedBy(Asset.satoshis).toString())).decimalPlaces(roundDecimalELA).toString();
+  //mainConsole.log(totalSpendingELA,roundDecimalELA);
+  return totalSpendingELA;
 }
 
 exports.REST_SERVICES = REST_SERVICES;
@@ -1620,7 +1633,7 @@ exports.getBlockchainState = getBlockchainState;
 exports.getConfirmations = getConfirmations;
 exports.getBlockchainStatus = getBlockchainStatus;
 exports.getTransactionHistoryStatus = getTransactionHistoryStatus;
-exports.updateAmountAndFees = updateAmountAndFees;
+exports.checkTransactionHistory = checkTransactionHistory;
 exports.getSendToAddressStatuses = getSendToAddressStatuses;
 exports.getSendToAddressLinks = getSendToAddressLinks;
 exports.getSendAmount = getSendAmount;
@@ -1664,3 +1677,5 @@ exports.validateInputs = validateInputs;
 exports.insertELA = insertELA;
 exports.pasteMnemonicFromClipboard = pasteMnemonicFromClipboard;
 exports.getTotalSpendingELA = getTotalSpendingELA;
+exports.isValidAddress = isValidAddress;
+exports.isLedgerConnected = isLedgerConnected;

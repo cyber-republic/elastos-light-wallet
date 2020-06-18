@@ -22,7 +22,9 @@ module.exports = (props) => {
   const Version = props.Version;
   const GuiToggles = props.GuiToggles;
   const onLinkClick = props.onLinkClick;
-
+  const isLedgerConnected = App.isLedgerConnected();
+  // console.log(isLedgerConnected);
+  
   const showMenu = () => {
     GuiToggles.showMenu('home');
   }
@@ -33,12 +35,7 @@ module.exports = (props) => {
 
   const sendIsNotFocus = () => {
     App.setSendHasFocus(false);
-    // App.updateAmountAndFees();
-  }
-
-  const updateAmountAndFeesAndRenderApp = (e) => {
-    App.updateAmountAndFees();
-    App.renderApp();
+    // App.checkTransactionHistory();
   }
 
   const showConfirmAndSeeFees = () => {
@@ -60,7 +57,7 @@ module.exports = (props) => {
 
   const sendAmountToAddress = () => {
 	App.setSendHasFocus(false);
-    const isValid = App.updateAmountAndFees();
+    const isValid = App.checkTransactionHistory();
     if (isValid) {
       App.setSendStep(1);
       App.sendAmountToAddress();
@@ -83,22 +80,23 @@ module.exports = (props) => {
       </div>)
     }
   }
-
+  
   const SendScreenOne = (props) => {
     const visibility = props.visibility;
     return (<div id="sendOne" className={`send-area ${visibility}`}>
       <img src="artwork/sendicon.svg" className="send-icon"/>
       <p className="send-text">Send</p>
-      <input type="text" size="34" id="sendToAddress" className="ela-address__input" placeholder="Enter ELA Address" defaultValue={App.getSendToAddress()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*//>
-      <input type="text" size="14" id="sendAmount" className="ela-send__amount" placeholder="Amount" defaultValue={App.getSendAmount()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*//>
-	  
-		  <div className="quick-elaselector">
-          <button className="quick-elaselector-icon quarter" onClick={() => App.insertELA('quarter')}>25%</button>
-          <button className="quick-elaselector-icon half" onClick={() => App.insertELA('half')}>50%</button>
-          <button className="quick-elaselector-icon max" onClick={() => App.insertELA('max')}>Max</button>
-        </div>
-	  
-      <p className="elatext-send">ELA</p>
+      <input type="text" size="34" maxLength={34} id="sendToAddress" className="ela-address_input" placeholder="Enter ELA Address" defaultValue={App.getSendToAddress()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*//>
+      <input type="text" size="14" maxLength={14} id="sendAmount" className="ela-send_amount" placeholder="Amount" defaultValue={App.getSendAmount()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*//>	  
+	  <div className="quick-elaselector">
+	    <button className="quick-elaselector-icon quarter" onClick={() => App.insertELA('quarter')}>25%</button>
+	    <button className="quick-elaselector-icon half" onClick={() => App.insertELA('half')}>50%</button>
+	    <button className="quick-elaselector-icon max" onClick={() => App.insertELA('max')}>Max</button>
+	  </div>
+	  <hr className="ela-send_amount_line" />
+	  <p className="elatext-send">ELA</p>
+	  <input type="text" size="5" maxLength={5} id="feeAmount" placeholder="Fees" defaultValue={App.getFee()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*/></input>
+	  <div className="fees-text">Fees (in Satoshi ELA)</div>
       <button className="next-button" onClick={(e) => showConfirmAndSeeFees()}>
         <p>Next</p>
       </button>
@@ -148,10 +146,10 @@ module.exports = (props) => {
       <div id="sendTwo" className={`send-area ${visibility}`}>
         <img src="artwork/sendicon.svg" className="send-icon" title="Refresh Blockchain Data"  onClick={(e) => App.refreshBlockchainData()}/>
         <p className="send-text">Send</p>
-        <div className="fees-text">Fees (in Satoshi ELA)</div>
-        <input type="text" size="14" id="feeAmount" placeholder="Fees" defaultValue={App.getFee()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*/></input>
-        <div className="estimate-new dark-hover cursor_def br5" onClick={(e) => showConfirmAndSeeFees()}>Recalculate</div>
-        <p className="fees-balance">Total spending amount is <span> {App.getTotalSpendingELA()} ELA</span></p>
+		<p className="confirm-send-address-label">Receiving Address</p>
+	    <p className="confirm-send address"><span>{App.getSendToAddress()}</span></p>
+		{/*<p className="confirm-send amount">Send Amount: <span>{App.getSendAmount()}</span></p>*/}
+		<p className="confirm-send total">Total spending amount with fees is <span>{App.getTotalSpendingELA()} ELA</span></p>
           <span className="send-back dark-hover cursor_def" onClick={(e) => cancelSend()}><img src="artwork/arrow.svg" alt="" className="rotate_180 arrow-back" />Back </span>
           <button className="sendela-button" onClick={(e) => sendAmountToAddress()}>
           <p>Send ELA</p>
@@ -217,10 +215,10 @@ module.exports = (props) => {
       <p className="howqr-text gradient-font">Click QR code to Enlarge</p>
       <img src="artwork/separator.svg" className="rec-separator"/>
       <p className="ledger-heading">Ledger</p>
-      <img src="artwork/ledgericon.svg" alt="" className="ledger-icon scale-hover" height="36px" width="57px" title="Please verify above address on Ledger" onClick={(e) => App.verifyLedgerBanner()}/>
-      <p className="verifyledger-text">Please verify above address<br/>
-        <strong>on Ledger Device</strong>
-      </p>
+      {isLedgerConnected && <img src="artwork/ledgericon.svg" alt="" className="ledger-icon scale-hover" height="36px" width="57px" title="Please verify above address on Ledger" onClick={(e) => App.verifyLedgerBanner()}/>}
+	  {isLedgerConnected && <p className="verifyledger-text">Please verify above address<br/><strong>on Ledger Device</strong></p>}
+	  {!isLedgerConnected && <img src="artwork/ledgericon.svg" alt="" className="ledger-icon scale-hover" height="36px" width="57px" title="No Ledger device connected"/>}
+      {!isLedgerConnected && <p className="verifyledger-text">No Ledger device<br/><strong>connected</strong></p>}
     </div>
 
     <div className="transaction-area">
@@ -250,8 +248,9 @@ module.exports = (props) => {
                 return (<tr className="txtable-row" key={index}>
                   <td>{item.value}&nbsp;<span className="dark-font">ELA</span>
                   </td>
-                  <td>{item.time}</td>
-                  <td>{item.type}</td>
+                  <td>{item.date}&nbsp;&nbsp;<span className="dark-font">{item.time}</span>
+				  </td>
+                  <td className={(item.status === "pending") ? "tx-pending" : "" }>{item.type}</td>
                   <td>
                     <a className="exit_link" href={item.txDetailsUrl} onClick={(e) => onLinkClick(e)}>{item.txHashWithEllipsis}</a>
                   </td>
