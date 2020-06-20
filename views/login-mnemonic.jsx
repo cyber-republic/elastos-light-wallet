@@ -4,6 +4,10 @@ const Menu = require('./partial/menu.jsx');
 
 const Banner = require('./partial/banner.jsx');
 
+const GuiUtils = require('../scripts/GuiUtils.js');
+
+let editablePath = false;
+
 module.exports = (props) => {
   const App = props.App;
   const openDevTools = props.openDevTools;
@@ -17,6 +21,19 @@ module.exports = (props) => {
   const showMenu = () => {
     GuiToggles.showMenu('loginMnemonic');
   }
+  
+  const editPath = () => {
+	if (!editablePath) {
+	  editablePath = true;
+	  GuiUtils.setValue('derivationPathMnemonic', "m/44'/0'/0'/0/0");
+	} else {
+	  editablePath = false;
+	  GuiUtils.setValue('derivationPathMnemonic', "");
+	}
+	App.renderApp();	
+  }
+  
+  
   return (
 
   <div id="loginMnemonic">
@@ -36,10 +53,27 @@ module.exports = (props) => {
     <p className="address-text font_size24 margin_none display_inline_block gradient-font">Enter Mnemonics</p>
     <textarea className="qraddress-div color_white textarea-placeholder padding_5px" type="text" rows="4" cols="50" id="mnemonic" placeholder="Enter 12 word mnemonic/seed phrase" onClick={(e) => App.pasteMnemonicFromClipboard()}></textarea>
     <div className="flex_center">
-    <button className="proceed-btn scale-hover" onClick={(e)=> useMnemonic()}>
-          <p>Proceed</p>
-          </button>
-  </div>
+	<input type="text" size="18" maxLength={18} className="derivationPathPicker mnemonicPicker w195px" id="derivationPathMnemonic" name="derivationPathMnemonic" readOnly={!editablePath ? true : false} placeholder="Derivation path (default)"/><img title="For Advanced users only" className={!editablePath ? "editPath dark-hover padding_5px br5 editOn" : "editPath dark-hover padding_5px br5 editOff"} onClick={(e) => editPath()}/>
+      
+	  {/*<input id="indexPathMnemonic" name="indexPathMnemonic" onChange={(e) => App.changeIndexPathMnemonic()}>
+	  <option value="0">Derivation path (default)</option>
+	  <option value="1">m/44'/0'/0'/0/1</option>
+	  <option value="2">m/44'/0'/0'/0/2</option>
+	  <option value="3">m/44'/0'/0'/0/3</option>
+	  <option value="4">m/44'/0'/0'/0/4</option>
+	  <option value="5">m/44'/0'/0'/0/5</option>
+	  <option value="6">m/44'/0'/0'/0/6</option>
+	  <option value="7">m/44'/0'/0'/0/7</option>
+	  <option value="8">m/44'/0'/0'/0/8</option>
+	  <option value="9">m/44'/0'/0'/0/9</option>	  
+	  </select>*/}
+	</div>
+    <div className="flex_center">
+	  <button className="proceed-btn scale-hover" onClick={(e)=> useMnemonic()}>
+        <p>Proceed</p>
+      </button>
+	
+    </div>
 
   <div>
   <p className="gradient-font font_size20 ta_center list-none" >Tips</p>
@@ -53,17 +87,6 @@ module.exports = (props) => {
   </div>
 </div>);
 }
-
-
-
-
-
-
-
-
-
-
-
 
 //   (
 //   <table id="loginMnemonic" className="bordered w750h520px">

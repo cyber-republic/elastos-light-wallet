@@ -14,12 +14,18 @@ const mainConsole = new mainConsoleUtil.Console(process.stdout, process.stderr);
 // max length in bytes.
 const MAX_SIGNED_TX_LEN = 1024;
 
-const bip44Path =
+const bip44PathBase =
   '8000002C' +
   '80000901' +
   '80000000' +
-  '00000000' +
-  '00000000';
+  '00000000'; /*+
+  '00000000';*/
+let bip44Path = '';
+
+const GuiUtils = require('./GuiUtils.js');
+
+let indexPathLedger = 0;
+let derivationPathLedger = '';
 
 const LOG_LEDGER_MESSAGE = false;
 if (LOG_LEDGER_MESSAGE) {
@@ -30,7 +36,21 @@ if (LOG_LEDGER_MESSAGE) {
 
 const getPublicKey = (callback) => {
   const deviceThenCallback = (device) => {
-    try {
+	derivationPathLedger = GuiUtils.getValue('derivationPathLedger');
+	
+	if (derivationPathLedger == "") {
+	  indexPathLedger = 0;
+	} else {
+	  var pathArr = derivationPathLedger.split("/");
+	  indexPathLedger = pathArr[pathArr.length-1];
+	}
+	
+	var indexPathLedgerHex = Number(indexPathLedger).toString(16);
+	var s = "00000000" + indexPathLedgerHex.toUpperCase();
+	bip44Path = bip44PathBase + s.substr(s.length-8, 8);
+	//mainConsole.log(bip44Path);
+	
+	try {
       // mainConsole.log('sending message ');
       const message = Buffer.from('8004000000' + bip44Path, 'hex');
       // mainConsole.log(`STARTED sending message ${message.toString('hex').toUpperCase()}`);

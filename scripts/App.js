@@ -151,6 +151,9 @@ const mainConsole = new mainConsoleLib.Console(process.stdout, process.stderr);
 
 let GuiToggles;
 
+let indexPathMnemonic = 0;
+let derivationPathMnemonic = '';
+
 /** functions */
 const init = (_GuiToggles) => {
   sendToAddressStatuses.push('No Send-To Transaction Requested Yet');
@@ -474,6 +477,21 @@ const requestBlockchainData = () => {
 const getPublicKeyFromMnemonic = () => {
   useLedgerFlag = false;
   isLoggedIn = true;
+  derivationPathMnemonic = GuiUtils.getValue('derivationPathMnemonic');
+  if (derivationPathMnemonic == "") {
+	indexPathMnemonic = 0; 
+  } else {
+	var pathArr = derivationPathMnemonic.split("/");
+	indexPathMnemonic = pathArr[pathArr.length-1];
+	if (!isValidDecimal(indexPathMnemonic)) {
+	  bannerStatus = `Derivation path is not valid.`;
+      bannerClass = 'bg_red color_white banner-look';
+      GuiToggles.showAllBanners(false);
+      renderApp();
+      return false;
+	}
+  }
+  
   const mnemonicElt = document.getElementById('mnemonic');
   const mnemonic = mnemonicElt.value;
   if (!bip39.validateMnemonic(mnemonic)) {
@@ -483,7 +501,7 @@ const getPublicKeyFromMnemonic = () => {
     renderApp();
     return false;
   }
-  const privateKey = Mnemonic.getPrivateKeyFromMnemonic(mnemonic);
+  const privateKey = Mnemonic.getPrivateKeyFromMnemonic(mnemonic, indexPathMnemonic);
   if (privateKey.length != PRIVATE_KEY_LENGTH) {
     bannerStatus = `Mnemonic must create a of length ${PRIVATE_KEY_LENGTH}, not ${privateKey.length}`;
     bannerClass = 'bg_red color_white banner-look';
@@ -1679,3 +1697,4 @@ exports.pasteMnemonicFromClipboard = pasteMnemonicFromClipboard;
 exports.getTotalSpendingELA = getTotalSpendingELA;
 exports.isValidAddress = isValidAddress;
 exports.isLedgerConnected = isLedgerConnected;
+exports.isValidDecimal = isValidDecimal;
