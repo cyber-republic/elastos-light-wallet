@@ -22,8 +22,7 @@ module.exports = (props) => {
   const Version = props.Version;
   const GuiToggles = props.GuiToggles;
   const onLinkClick = props.onLinkClick;
-  const isLedgerConnected = App.isLedgerConnected();
-  // console.log(isLedgerConnected);
+  const isLedgerConnected = App.isLedgerConnected();  
   
   const showMenu = () => {
     GuiToggles.showMenu('home');
@@ -58,11 +57,14 @@ module.exports = (props) => {
   const sendAmountToAddress = () => {
 	App.setSendHasFocus(false);
     const isValid = App.checkTransactionHistory();
-    if (isValid) {
-      App.setSendStep(1);
-      App.sendAmountToAddress();
+    if (isValid) {      
+      const isSent = App.sendAmountToAddress();
+	  //console.log("isSent", isSent);
+	  if (isSent) {
+		App.setSendStep(1);	    
+	  }
     }
-    App.renderApp();
+	App.renderApp();
   }
 
   const SendScreen = (props) => {
@@ -147,8 +149,8 @@ module.exports = (props) => {
         <img src="artwork/sendicon.svg" className="send-icon" title="Refresh Blockchain Data"  onClick={(e) => App.refreshBlockchainData()}/>
         <p className="send-text">Send</p>
 		<p className="confirm-send-address-label">Receiving Address</p>
-	    <p className="confirm-send address"><span>{App.getSendToAddress()}</span></p>
-		{/*<p className="confirm-send amount">Send Amount: <span>{App.getSendAmount()}</span></p>*/}
+	    <p className="confirm-send address"><span>{App.getSendToAddress()}</span></p>		
+		<input type="password" style={(App.getPasswordFlag()) ? {display: 'block'} : {display: 'none'}} className="enterPassword sendPassword" size="18" id="sendPassword" placeholder="Enter Password" name="sendPassword"/>
 		<p className="confirm-send total">Total spending amount with fees is <span>{App.getTotalSpendingELA()} ELA</span></p>
           <span className="send-back dark-hover cursor_def" onClick={(e) => cancelSend()}><img src="artwork/arrow.svg" alt="" className="rotate_180 arrow-back" />Back </span>
           <button className="sendela-button" onClick={(e) => sendAmountToAddress()}>
@@ -241,12 +243,13 @@ module.exports = (props) => {
               <td>DATE</td>
               <td>TYPE</td>
               <td>TX</td>
+			  <td>MEMO</td>
             </tr>
 
             {
               App.getParsedTransactionHistory().map((item, index) => {
                 return (<tr className="txtable-row" key={index}>
-                  <td>{item.value}&nbsp;<span className="dark-font">ELA</span>
+                  <td title={item.value}>{item.valueShort}&nbsp;<span className="dark-font">ELA</span>
                   </td>
                   <td>{item.date}&nbsp;&nbsp;<span className="dark-font">{item.time}</span>
 				  </td>
@@ -254,6 +257,9 @@ module.exports = (props) => {
                   <td>
                     <a className="exit_link" href={item.txDetailsUrl} onClick={(e) => onLinkClick(e)}>{item.txHashWithEllipsis}</a>
                   </td>
+				  <td>
+				    <span title={item.memoLong} className="tx-memo">{item.memo}</span>
+				  </td>
                 </tr>)
               })
             }

@@ -114,6 +114,7 @@ module.exports = (props) => {
       <div className="voting-row3">
         <button className='votingselect-button scale-hover' title="Select previous voting list" onClick={() => App.selectActiveVotes()} >Select Previous</button>
         <button className='votingselect-button marginright_auto scale-hover' title='Clear Selection' onClick={() => App.clearSelection()}>Clear Selection</button>
+		<input type="password" style={(App.getPasswordFlag()) ? {display: 'block'} : {display: 'none'}} className="enterPassword votePassword" size="18" id="votePassword" placeholder="Enter Password" name="votePassword"/>
         <button  onClick={(e) => App.sendVoteTx()} className="scale-hover voting-button">Vote</button>
       </div>
 

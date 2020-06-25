@@ -24,21 +24,21 @@ const hideEverything = () => {
   hide('home');
   hide('landing');
   hide('loginMnemonic');
-  hide('loginPrivateKey');
+  //hide('loginPrivateKey');
   hide('version');
   hide('voting');
   hide('qrcode');
   hide('generateMnemonic');
-  hide('generatePrivateKey');
+  //hide('generatePrivateKey');
   hideAllBanners();
   hideAllMenus();
 };
 
 const hideAllMenus = () => {
-  GuiUtils.hide('loginPrivateKeyBanner');
+  //GuiUtils.hide('loginPrivateKeyBanner');
   GuiUtils.hide('loginMnemonicBanner');
   GuiUtils.hide('generateMnemonicBanner');
-  const menus = ['home', 'landing', 'voting', 'loginPrivateKey', 'loginMnemonic'];
+  const menus = ['home', 'landing', 'voting', 'loginMnemonic'];
   menus.forEach((menu) => {
     hide(menu+'Menu');
     // hide(menu+'MenuOpen');
@@ -117,7 +117,7 @@ const showGenerateNewPrivateKey = () => {
   hideEverything();
   app.clearGlobalData();
   app.generatePrivateKeyHex();
-  show('generatePrivateKey');
+  //show('generatePrivateKey');
 };
 
 const showGenerateNewMnemonic = () => {
@@ -132,18 +132,20 @@ const showAllBanners = (timeout) => {
 	  clearTimeout(bannerID);
 	  bannerID = setTimeout(() => hideAllBanners(), bannerTimeout);
   }
+  GuiUtils.show('landingBanner');
   GuiUtils.show('homeBanner');
   GuiUtils.show('votingBanner');
-  GuiUtils.show('loginPrivateKeyBanner');
+  //GuiUtils.show('loginPrivateKeyBanner');
   GuiUtils.show('loginMnemonicBanner');
   GuiUtils.show('generateMnemonicBanner');
   GuiUtils.show('qrcodeBanner');
 };
 
 const hideAllBanners = () => {
+  GuiUtils.hide('landingBanner');
   GuiUtils.hide('homeBanner');
   GuiUtils.hide('votingBanner');
-  GuiUtils.hide('loginPrivateKeyBanner');
+  //GuiUtils.hide('loginPrivateKeyBanner');
   GuiUtils.hide('loginMnemonicBanner');
   GuiUtils.hide('generateMnemonicBanner');
   GuiUtils.hide('qrcodeBanner');
@@ -152,7 +154,7 @@ const hideAllBanners = () => {
 exports.init = init;
 exports.showLanding = showLanding;
 exports.showLoginMnemonic = showLoginMnemonic;
-exports.showLoginPrivateKey = showLoginPrivateKey;
+//exports.showLoginPrivateKey = showLoginPrivateKey;
 exports.showHome = showHome;
 exports.showMenu = showMenu;
 exports.hideMenu = hideMenu;
@@ -160,7 +162,7 @@ exports.showVoting = showVoting;
 exports.showQRCode = showQRCode;
 exports.showBanner = showBanner;
 exports.hideBanner = hideBanner;
-exports.showGenerateNewPrivateKey = showGenerateNewPrivateKey;
+//exports.showGenerateNewPrivateKey = showGenerateNewPrivateKey;
 exports.showGenerateNewMnemonic = showGenerateNewMnemonic;
 exports.showAllBanners = showAllBanners;
 exports.hideAllBanners = hideAllBanners;

@@ -13,8 +13,8 @@ const clipboard = electron.clipboard;
 const Home = require('./home.jsx');
 const Landing = require('./landing.jsx');
 const LoginMnemonic = require('./login-mnemonic.jsx');
-const LoginPrivateKey = require('./login-private-key.jsx');
-const GeneratePrivateKey = require('./generate-private-key.jsx');
+//const LoginPrivateKey = require('./login-private-key.jsx');
+//const GeneratePrivateKey = require('./generate-private-key.jsx');
 const GenerateMnemonic = require('./generate-mnemonic.jsx');
 const Voting = require('./voting.jsx');
 const QRCode = require('./qrcode.jsx');
@@ -104,8 +104,8 @@ class AppView extends React.Component {
       <Home App={App} openDevTools={openDevTools} onLinkClick={onLinkClick} GuiToggles={GuiToggles} Version={Version}/>
       <Landing App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
       <LoginMnemonic App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
-      <LoginPrivateKey App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
-      <GeneratePrivateKey App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
+	  {/*<LoginPrivateKey App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>*/}
+	  {/*<GeneratePrivateKey App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>*/}
       <GenerateMnemonic App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
       <Voting App={App} openDevTools={openDevTools} onLinkClick={onLinkClick} GuiToggles={GuiToggles} Version={Version}/>
       <QRCode App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>

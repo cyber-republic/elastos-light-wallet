@@ -16,6 +16,14 @@ const getValue = (id) => {
   return get(id).value;
 };
 
+const setChecked = (id) => {
+  get(id).checked = true;
+};
+
+const getChecked = (id) => {
+  return get(id).checked;
+};
+
 const hide = (id) => {
   get(id).style = 'display:none;';
 };
@@ -27,5 +35,7 @@ const show = (id) => {
 exports.get = get;
 exports.setValue = setValue;
 exports.getValue = getValue;
+exports.setChecked = setChecked;
+exports.getChecked = getChecked;
 exports.hide = hide;
 exports.show = show;

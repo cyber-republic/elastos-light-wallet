@@ -26,13 +26,18 @@ select {
 
 @font-face {
   font-family: "BioSans-Regular";
-  src: url("artwork/biosans-regular.otf");
+  src: url("artwork/BioSans-Regular.otf");
 }
 
 @font-face {
-  font-family: "BioSans-Regular";
-  src: url("artwork/biosans-semibold.otf");
-  font-weight: 600;
+  font-family: "BioSans-Bold";
+  src: url("artwork/BioSans-SemiBold.otf");
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "BioSans-Light";
+  src: url("artwork/BioSans-Light.otf");
 }
 
 html {
@@ -270,14 +275,50 @@ button {
   font-weight: 600;
 }
 
+.usd-balance-hidden {
+  font-size: 51px;
+  color: #FFFFFF;
+  letter-spacing: 6px;
+  top: 273px;
+  left: 82px;  
+  margin: 0;
+}
+
 .ela-balance {
   font-size: 20px;
   letter-spacing: 0;
   text-shadow: 0 3px 6px rgba(79, 72, 141, 0.15);
   top: 329px;
   left: 82px;
-  margin: 0;
   white-space: nowrap;
+  margin-top: 0;
+}
+
+.ela-balance-hidden {
+  letter-spacing: 3px;
+}
+
+.balanceEye {
+  width: 24px;
+  height: 24px;
+  top: 248px;
+  left: 135px;
+}
+
+.eyeOn {
+  opacity: 0.6;
+  content: url("artwork/eye-on.png");
+}
+
+.eyeOff {
+  opacity: 0.6;
+  content: url("artwork/eye-off.png");
+}
+
+.eyeOn:hover, .eyeOff:hover {
+  transform: scale(1.1);
+  opacity: 1;
+  transition: 0.4s;
 }
 
 .stakingarea {
@@ -590,7 +631,7 @@ button {
 }
 
 .confirm-send.total {
-  top: 240px;
+  top: 220px;
 }
 
 .confirm-send span {
@@ -842,11 +883,13 @@ button {
 }
 
 .txtable-row {
+  opacity: 0.9;
+  font-family: "BioSans-Light";
   background-image: linear-gradient(90deg, rgba(23, 24, 28, 0.45) 0%, rgba(26, 26, 30, 0.17) 100%);
   border-top: 3px solid transparent;
   border-radius: 10px;
   font-size: 14px;
-  font-weight: 300;
+  font-weight: 100;
   color: #FFFFFF;
   letter-spacing: 0.3px;
   line-height: 17px;
@@ -873,6 +916,11 @@ button {
   font-size: 15px;
   top: -5px;
   position: relative;
+}
+
+.tx-memo {
+  font-size: 14px;
+  font-weight: 100;
 }
 
 .dark-font {
@@ -1583,24 +1631,6 @@ select, input {
   align-items: center;
 }
 
-
-.proceed-btn {
-  background-image: linear-gradient(-214deg, #F4D2AE 0%, #E5A776 100%);
-  box-shadow: 0 3px 6px -2px rgba(25, 23, 41, 0.66);
-  border-radius: 8px;
-  width: 161px;
-  height: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border: none;
-  margin: 0;
-  font-weight: 600;
-  font-size: 16px;
-  color: #FFFFFF;
-  letter-spacing: 0;
-}
-
 .list-none {
   list-style: none
 }
@@ -1782,7 +1812,7 @@ select, input {
 }
 
 .mnemonicPicker {
-  top: 379px;
+  top: 449px;
   right: 463px;
   position: absolute;
 }
@@ -1801,7 +1831,7 @@ select, input {
 .editPath {  
   width: 19px;
   height: 19px;
-  top: 380px;
+  top: 449px;
   right: 465px;
   position: absolute;
 }
@@ -1828,6 +1858,7 @@ select, input {
   transform: scale(1.2);
   opacity: 1;
   transition: 0.4s;
+}
 
 .clearDerivationDiv {
   padding: 0;
@@ -1837,4 +1868,218 @@ select, input {
 .clearElement {
   margin: 0;
   padding: 0;
+}
+
+.walletPicker {
+  opacity: 0.7;
+  border: 0.7px solid #787981;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #FFFFFF;
+  text-align: center;
+  padding: 5px;
+  background: none;
+  margin: 0 4px;
+  top: 0px;
+  position: relative;
+}
+
+.walletPicker option{
+  color: #B2B4C3;
+}
+
+.enterPassword {
+  height: 25px;
+  width: 140px;
+  text-align: center;
+  border: none;
+  border-bottom: 1px solid #E5A776;
+  background: none;
+  position: relative;
+  top: 0;
+  font-size: 16px;
+  color: #FFFFFF;
+  padding-bottom: 2px;
+}
+
+.loginWallet {
+  /*background-image: linear-gradient(-214deg, #F4D2AE 0%, #E5A776 100%);*/
+  box-shadow: 0 3px 6px -2px rgba(25, 23, 41, 0.66);
+  border-radius: 8px;
+  width: 120px;
+  height: 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  margin: 0;
+  font-weight: 600;
+  font-size: 18px;
+  color: #FFFFFF;
+  letter-spacing: 0;
+}
+
+/* new landing css (absolute) */
+.landingBack {
+  position: absolute;
+  top: 68px;
+  left: 333px;
+}
+
+.logoTop {
+  position: absolute;
+  top: 47px;  
+}
+
+.address-text-ab {
+  opacity: 0.8;  
+  color: #B2B4C3;
+  letter-spacing: 0;
+  text-align: center;
+  top: 173px;
+  position: absolute;
+}
+
+.qraddress-div-ab {
+  opacity: 0.5;
+  background: rgba(168, 170, 174, 0.22);
+  border-radius: 15px;
+  width: 480px;
+  height: 95px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-family: inherit;
+  font-weight: 600;
+  -moz-text-align-last: center; /* Firefox 12+ */
+  text-align-last: center;
+  position: absolute;
+  top: 340px;
+}
+
+.saveWalletCheckbox {
+  top: 220px;
+  left: 480px;
+  position: absolute;
+}
+
+.saveWalletLabel {
+  opacity: 0.7;
+  color: #FFFFFF;
+  top: 219px;
+  left: 500px;
+  position: absolute;
+  
+}
+
+.logoDiv {
+  top: 50px;
+  position: absolute;
+}
+
+.walletNameCreate {
+  opacity: 1;
+  background: rgba(168, 170, 174, 0.22);
+  border-radius: 8px;
+  position: absolute;
+  font-size: 16px;
+  color: #FFFFFF;
+  letter-spacing: 0;
+  height: 30px;
+  width: 150px;
+  top: 255px;
+  left: 485px;
+  text-align: center;
+  border: none;
+  text-align: left;
+  padding-left: 8px;
+}
+
+.newPassword {
+  top: 295px;
+  left: 420px;
+  position: absolute;
+}
+
+.confirmPassword {
+  top: 295px;
+  left: 580px;
+  position: absolute;
+}
+
+.proceed-btn {
+  background-image: linear-gradient(-214deg, #F4D2AE 0%, #E5A776 100%);
+  box-shadow: 0 3px 6px -2px rgba(25, 23, 41, 0.66);
+  border-radius: 8px;
+  width: 161px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  margin: 0;
+  font-weight: 600;
+  font-size: 16px;
+  color: #FFFFFF;
+  letter-spacing: 0;  
+}
+
+.login-btn {
+  top: 490px;
+  position: absolute;
+}
+
+.tips {
+  width: 55%;
+  position: absolute;
+  top: 540px;
+}
+
+/* END: new landing css (absolute) */
+
+.votePassword {
+  position: absolute;
+  top: 460px;
+  left: 725px;
+}
+
+.sendPassword {
+  position: absolute;
+  top: 318px;
+  left: 550px;
+}
+
+.radioMnemonic {
+  opacity: 0.8;
+  width: 18px;
+  height: 18px;
+  top: 453px;
+  left: 338px;
+  position: absolute;
+}
+
+.radioMnemonicLabel {
+  /*opacity: 0.8;*/
+  top: 456px;
+  left: 365px;
+  position: absolute;
+  font-size: 14px;
+}
+
+.radioPrivateKey {
+  opacity: 0.8;
+  width: 18px;
+  height: 18px;
+  top: 453px;
+  left: 770px;
+  position: absolute;
+}
+
+.radioPrivateKeyLabel {
+  /*opacity: 0.8;*/
+  top: 455px;
+  left: 700px;
+  position: absolute;
+  font-size: 14px;
 }

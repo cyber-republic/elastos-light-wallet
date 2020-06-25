@@ -1,3 +1,5 @@
+{
+/* Cleanup 25.6.2020
 const React = require('react');
 
 module.exports = (props) => {
@@ -40,3 +42,4 @@ module.exports = (props) => {
   </table>
   );
 }
+*/}

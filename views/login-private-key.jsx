@@ -1,3 +1,5 @@
+{/*
+Cleanup 25.6.2020 (merged with generate-mnemonic.jsx)
 const React = require('react');
 
 const Menu = require('./partial/menu.jsx');
@@ -33,7 +35,7 @@ module.exports = (props) => {
     <div className="flex1"></div>
     </div>
     <p className="address-text font_size24 margin_none display_inline_block gradient-font">Enter Private Key</p>
-    <textarea className="qraddress-div color_white textarea-placeholder padding_5px" type="text" rows="4" cols="50" id="privateKey" placeholder="Enter Private Key"></textarea>
+    <textarea className="qraddress-div color_white textarea-placeholder padding_5px" type="text" rows="4" cols="50" id="privateKeyElt" placeholder="Enter Private Key"></textarea>
     <div className="flex_center">
     <button className="proceed-btn scale-hover" onClick={(e)=> usePrivateKey()}>
           <p>Proceed</p>
@@ -51,42 +53,3 @@ module.exports = (props) => {
   </div>
 </div>);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//   (
-//   <table id="loginPrivateKey" className="bordered w750h520px">
-//     <tbody>
-//       <tr>
-//         <td colSpan="2">
-//           <div>Private Key</div>
-//         </td>
-//       </tr>
-//       <tr>
-//         <td colSpan="2">
-//           <input className="monospace" type="text" size="64" id="privateKey" placeholder="Private Key"></input>
-//         </td>
-//       </tr>
-//       <tr>
-//         <td className="ta_left">
-//           <div className="bordered bgcolor_black_hover display_inline_block" onClick={(e)=> usePrivateKey()}>Use Private Key</div>
-//         </td>
-//         <td className="ta_right">
-//           <div className="bordered bgcolor_black_hover display_inline_block ta_right" onClick={(e)=> GuiToggles.showLanding()}>Back</div>
-//         </td>
-//       </tr>
-//     </tbody>
-//   </table>
-//   );
-// }

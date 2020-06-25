@@ -1,23 +1,30 @@
 const React = require('react');
-
 const Menu = require('./partial/menu.jsx');
-
 const Banner = require('./partial/banner.jsx');
-
 const GuiUtils = require('../scripts/GuiUtils.js');
 
 let editablePath = false;
+let enableSaveWallet = true;
+let importType = "mnemonic";
+let success = '';
 
 module.exports = (props) => {
   const App = props.App;
   const openDevTools = props.openDevTools;
   const GuiToggles = props.GuiToggles;
-  const useMnemonic = () => {
-    const success = App.getPublicKeyFromMnemonic();
+  const useProceedButton = () => {
+	if (importType === "mnemonic") {
+      success = App.getPublicKeyFromMnemonic();
+	  //console.log("mnemonic",success);
+	} else {
+	  success = App.getPublicKeyFromPrivateKey();
+	  //console.log("pvtkey",success);
+	}
     if(success) {
       GuiToggles.showHome();
     }
   }
+  
   const showMenu = () => {
     GuiToggles.showMenu('loginMnemonic');
   }
@@ -33,6 +40,25 @@ module.exports = (props) => {
 	App.renderApp();	
   }
   
+  const showWalletDefinitions = () => {
+	if (enableSaveWallet) {
+	  enableSaveWallet = false;
+	} else {
+	  enableSaveWallet = true;
+	}
+	//console.log(GuiUtils.getValue('walletNameCreate'));
+	App.renderApp();
+  }
+  
+  const setInputType = () => {
+	if (GuiUtils.getChecked('radioMnemonic')) {
+	  importType = "mnemonic";
+	} else {
+	  importType = "privateKey";
+	}
+	App.renderApp();
+  }
+  
   
   return (
 
@@ -45,43 +71,43 @@ module.exports = (props) => {
        <img src="artwork/nav.svg" className="nav-icon dark-hover" onClick={(e) => showMenu()}/>
      </nav>
    </header>
-    <div className="flex_center w100pct">
-    <img className="flex1 scale-hover" src="artwork/voting-back.svg"  height="38px" width="38px" onClick={(e)=> GuiToggles.showLanding()}/>
-    <img src="artwork/logonew.svg" height="80px" width="240px" />
-    <div className="flex1"></div>
+    <img className="landingBack scale-hover" src="artwork/voting-back.svg"  height="38px" width="38px" onClick={(e)=> GuiToggles.showLanding()}/>
+    <img className="logoTop"src="artwork/logonew.svg" height="80px" width="240px" />    
+	<p className="address-text-ab font_size24 margin_none display_inline_block gradient-font">Import wallet ({(importType === "mnemonic") ? "Mnemonic" : "Private Key"})</p>	
+	<input type="checkbox" className="saveWalletCheckbox" id="saveWallet" name="saveWallet" defaultChecked onChange={(e)=> showWalletDefinitions()}/><span className="saveWalletLabel">Save Wallet locally</span>
+	<div style={enableSaveWallet ? {display: 'block'} : {display: 'none'}}>
+	  <input type="text" className="walletNameCreate" size="18" id="walletNameCreate" placeholder="Enter Wallet name" name="walletNameCreate"/>
+	  <input type="password" className="enterPassword newPassword" size="18" id="newPassword" placeholder="Enter Password" name="newPassword"/>
+	  <input type="password" className="enterPassword confirmPassword" size="18" id="confirmPassword" placeholder="Confirm Password" name="confirmPassword"/>
     </div>
-    <p className="address-text font_size24 margin_none display_inline_block gradient-font">Enter Mnemonics</p>
-    <textarea className="qraddress-div color_white textarea-placeholder padding_5px" type="text" rows="4" cols="50" id="mnemonic" placeholder="Enter 12 word mnemonic/seed phrase" onClick={(e) => App.pasteMnemonicFromClipboard()}></textarea>
-    <div className="flex_center">
+	<input className="radioMnemonic" type="radio" id="radioMnemonic" name="importType" value="mnemonic" onChange={(e)=> setInputType()} defaultChecked/>
+	<label className="radioMnemonicLabel gradient-font">Mnemonic</label>
+	<input className="radioPrivateKey" type="radio" id="radioPrivateKey" name="importType" value="privateKey" onChange={(e)=> setInputType()}/>
+	<label className="radioPrivateKeyLabel gradient-font">Private Key</label>	
+	
+    <textarea style={(importType === "mnemonic") ? {display: 'block'} : {display: 'none'}} className="qraddress-div-ab color_white textarea-placeholder padding_5px" type="text" rows="4" cols="50" id="mnemonic" placeholder="Enter 12 word mnemonic/seed phrase"></textarea>
+	<textarea style={(importType === "mnemonic") ? {display: 'none'} : {display: 'block'}} className="qraddress-div-ab color_white textarea-placeholder padding_5px" type="text" rows="4" cols="50" id="privateKeyElt" placeholder="Enter Private Key"></textarea>
+    <div style={(importType === "mnemonic") ? {display: 'block'} : {display: 'none'}} className="flex_center">
 	<input type="text" size="18" maxLength={18} className="derivationPathPicker mnemonicPicker w195px" id="derivationPathMnemonic" name="derivationPathMnemonic" readOnly={!editablePath ? true : false} placeholder="Derivation path (default)"/><img title="For Advanced users only" className={!editablePath ? "editPath dark-hover padding_5px br5 editOn" : "editPath dark-hover padding_5px br5 editOff"} onClick={(e) => editPath()}/>
-      
-	  {/*<input id="indexPathMnemonic" name="indexPathMnemonic" onChange={(e) => App.changeIndexPathMnemonic()}>
-	  <option value="0">Derivation path (default)</option>
-	  <option value="1">m/44'/0'/0'/0/1</option>
-	  <option value="2">m/44'/0'/0'/0/2</option>
-	  <option value="3">m/44'/0'/0'/0/3</option>
-	  <option value="4">m/44'/0'/0'/0/4</option>
-	  <option value="5">m/44'/0'/0'/0/5</option>
-	  <option value="6">m/44'/0'/0'/0/6</option>
-	  <option value="7">m/44'/0'/0'/0/7</option>
-	  <option value="8">m/44'/0'/0'/0/8</option>
-	  <option value="9">m/44'/0'/0'/0/9</option>	  
-	  </select>*/}
 	</div>
     <div className="flex_center">
-	  <button className="proceed-btn scale-hover" onClick={(e)=> useMnemonic()}>
+	  <button className="proceed-btn login-btn scale-hover" onClick={(e)=> useProceedButton()}>
         <p>Proceed</p>
-      </button>
-	
+      </button>	
     </div>
-
-  <div>
-  <p className="gradient-font font_size20 ta_center list-none" >Tips</p>
-  <ul className="color_white ta_left">
-    <li>Enter your 12 word mnemonic phrase above.</li>
-    <li>Use a single space between each word, with no space before the first and last word.</li>
-    <li>All words should be in lowercase.</li>
-    <li>Take precautions when entering your mnemonic phrase, make sure no one is watching physically or virtually.</li>
+  <div className="tips">  
+    <p className="gradient-font font_size20 ta_center list-none" >Tips</p>
+    <ul style={(importType === "mnemonic") ? {display: 'block'} : {display: 'none'}} className="color_white ta_left">
+      <li>Enter your 12 word mnemonic phrase above.</li>
+      <li>Use a single space between each word, with no space before the first and last word.</li>
+      <li>All words should be in lowercase.</li>
+      <li>Take precautions when entering your mnemonic phrase, make sure no one is watching physically or virtually.</li>
+    </ul>
+	<ul style={(importType === "privateKey") ? {display: 'block'} : {display: 'none'}} className="color_white ta_left">
+    <li>Enter your Private Key above.</li>
+    <li>Your Private Key is a string of numbers and letters.</li>
+    <li>Please use the Mnemonic login if you have your 12 seed words.</li>
+    <li>Please take precautions when entering your Private Key, make sure nobody is watching you physically or virtually.</li>
   </ul>
   </div>
   </div>
