@@ -20,6 +20,7 @@ module.exports = (props) => {
   const Version = props.Version;
   const GuiToggles = props.GuiToggles;
   const onLinkClick = props.onLinkClick;
+  const isLedgerConnected = App.isLedgerConnected();
 
   const showMenu = () => {
     GuiToggles.showMenu('voting');
@@ -36,6 +37,10 @@ module.exports = (props) => {
     } else {
       return (<img src="artwork/square.svg" />)
     }
+  }
+  
+  const sendVote = () => {
+	App.sendVoteTx();	
   }
 
   return (
@@ -115,7 +120,7 @@ module.exports = (props) => {
         <button className='votingselect-button scale-hover' title="Select previous voting list" onClick={() => App.selectActiveVotes()} >Select Previous</button>
         <button className='votingselect-button marginright_auto scale-hover' title='Clear Selection' onClick={() => App.clearSelection()}>Clear Selection</button>
 		<input type="password" style={(App.getPasswordFlag()) ? {display: 'block'} : {display: 'none'}} className="enterPassword votePassword" size="18" id="votePassword" placeholder="Enter Password" name="votePassword"/>
-        <button  onClick={(e) => App.sendVoteTx()} className="scale-hover voting-button">Vote</button>
+        <button onClick={(e) => sendVote()} className="scale-hover voting-button">Vote</button>
       </div>
 
       <div className="voting-row4">

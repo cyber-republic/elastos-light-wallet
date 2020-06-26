@@ -144,7 +144,7 @@ const parsedRssFeed = [];
 
 let feeStatus = 'No Fee Requested Yet';
 
-let fee = '';
+let feeRequested = '';
 
 let minerFee = 100;
 
@@ -533,7 +533,7 @@ const getPublicKeyFromMnemonic = () => {
   //console.log("saveWallet",saveWallet);
   if (saveWallet) {
 	let walletCreated = saveWalletLocally(privateKey);
-	console.log("walletCreated",walletCreated);
+	// console.log("walletCreated",walletCreated);
 	if (!walletCreated) {
 	  return false;
 	}
@@ -716,22 +716,31 @@ const sendAmountToAddressReadyCallback = (transactionJson) => {
     sendToAddressLinks.push(elt);
     requestTransactionHistory();
 	GuiToggles.showAllBanners(true);
+	clearSendData();
+	setSendStep(1);
   }
-  setBlockchainLastActionHeight();
   renderApp();
+  setBlockchainLastActionHeight();
+  //renderApp();
 };
 
 const clearSendData = () => {
   // mainConsole.log('STARTED clearSendData');
+  feeRequested = '';
   GuiUtils.setValue('sendAmount', '');
   GuiUtils.setValue('sendToAddress', '');
-  GuiUtils.setValue('feeAmount', fee);
+  GuiUtils.setValue('feeAmount', feeRequested);
+  GuiUtils.setValue('sendPassword', '');
+  GuiUtils.setValue('votePassword', '');
   sendAmount = '';
-  feeAmountSats = fee;
+  feeAmountSats = '';
   feeAmountEla = '';
   sendToAddressStatuses.length = 0;
   sendToAddressLinks.length = 0;
-  // mainConsole.log('SUCCESS clearSendData');
+  sendToAddress = '';
+  setSendStep(1);  
+  requestFee();
+  //mainConsole.log('SUCCESS clearSendData');
 };
 
 const isValidAddress = (testAddress) => {
@@ -753,7 +762,12 @@ const validateInputs = () => {
   sendToAddress = GuiUtils.getValue('sendToAddress');
   sendAmount = GuiUtils.getValue('sendAmount');  
   feeAmountSats = GuiUtils.getValue('feeAmount');
-
+  
+  const isValid = checkTransactionHistory();
+  if (!isValid) {
+    return false;
+  }
+  
   if (!isValidAddress(sendToAddress)) {
     bannerStatus = `Please enter valid Address.`;
     bannerClass = 'bg_red color_white banner-look';
@@ -837,11 +851,11 @@ const getTxByteLength = (transactionHex) => {
 };
 
 const sendAmountToAddress = () => {
-  const isValid = checkTransactionHistory();
+  const isValid = validateInputs();
   if (!isValid) {
+    //console.log("isValid",isValid);
     return false;
   }
-
   const unspentTransactionOutputs = parsedUnspentTransactionOutputs;
   //mainConsole.log('sendAmountToAddress.unspentTransactionOutputs ' + JSON.stringify(unspentTransactionOutputs));
   let encodedTx;
@@ -871,6 +885,8 @@ const sendAmountToAddress = () => {
   } else {
 	if (usePasswordFlag) {
 	  walletNameLogin = GuiUtils.getValue('walletNameLogin');
+	  if (!walletNameLogin) walletNameLogin = walletNameCreate;	  
+	  
 	  const sendPassword = GuiUtils.getValue('sendPassword');
 	  let encryptedWallet = readWalletFile(walletNameLogin);	  
 	  if (sendPassword.length < minPasswordLength) {
@@ -895,10 +911,11 @@ const sendAmountToAddress = () => {
 	if (privateKey) {
 	  const encodedTx = TxFactory.createSignedSendToTx(privateKey, unspentTransactionOutputs, sendToAddress, sendAmount, feeAmountSats, feeAccount);
       if (encodedTx == undefined) {
-        return;
+        return false;
       }
       sendAmountToAddressCallback(encodedTx);	
-	}
+	  return true;
+	}	
   }
 };
 // success: success,
@@ -1122,18 +1139,14 @@ const requestListOfCandidateVotes = () => {
 
 const sendVoteTx = () => {
   try {
-    checkTransactionHistory();
     const unspentTransactionOutputs = parsedUnspentTransactionOutputs;
     // mainConsole.log('sendVoteTx.unspentTransactionOutputs ' + JSON.stringify(unspentTransactionOutputs));
-
-    if (parsedTransactionHistory[0].type == 'Sending') {
-      bannerStatus = `Please wait for previous transaction to confirm.`;
-      bannerClass = 'bg_red color_white banner-look';
-      GuiToggles.showAllBanners(false);
-      renderApp();
-      return;
-    }
-
+	
+	const isValid = checkTransactionHistory();
+	if (!isValid) {
+	  return false;
+	}
+	
     if (parsedProducerList.producersCandidateCount === 0) {
       bannerStatus = 'No Candidates Selected.';
       bannerClass = 'bg_red color_white banner-look';
@@ -1149,19 +1162,7 @@ const sendVoteTx = () => {
       renderApp();
       return;
     }
-
-    if (!isValidDecimal(feeAmountSats) || (feeAmountSats == 0)) {
-	  if (feeAmountSats.length == 0) {
-	    bannerStatus = `Please enter valid Fee amount.`;
-	  } else {
-		bannerStatus = `[`+feeAmountSats+`] is NOT valid Fee amount.`;
-	  } 
-      bannerClass = 'bg_red color_white banner-look';
-      GuiToggles.showAllBanners(false);
-      renderApp();
-      return false;
-	}
-
+	
     const candidates = [];
     parsedProducerList.producers.forEach((parsedProducer) => {
       if (parsedProducer.isCandidate) {
@@ -1170,7 +1171,9 @@ const sendVoteTx = () => {
     });
 
     // mainConsole.log('sendVoteTx.candidates ' + JSON.stringify(candidates));
-
+	
+	feeAmountSats = feeRequested;
+	if (!isValidDecimal(feeAmountSats) || (feeAmountSats == 0)) feeAmountSats = 1;
     let encodedTx;
 
     // mainConsole.log('sendVoteTx.useLedgerFlag ' + JSON.stringify(useLedgerFlag));
@@ -1193,7 +1196,7 @@ const sendVoteTx = () => {
             bannerClass = 'bg_red color_white banner-look';
             GuiToggles.showAllBanners(false);
             renderApp();
-            return;
+            return false;
           }
           const signature = Buffer.from(message.signature, 'hex');
           const encodedTx = TxSigner.addSignatureToTx(tx, publicKey, signature);
@@ -1202,11 +1205,16 @@ const sendVoteTx = () => {
         candidateVoteListStatus += ' please confirm tx on ledger.';
         LedgerComm.sign(encodedUnsignedTx, sendVoteLedgerCallback);
       } else {
-        alert('please wait, UTXOs have not been retrieved yet.');
+        bannerStatus = `UTXOs have not been retrieved yet, please wait.`;
+		bannerClass = 'landing-btnbg color_white banner-look';
+		GuiToggles.showAllBanners(false);
+        renderApp();
+		//alert('please wait, UTXOs have not been retrieved yet.');
       }
     } else {
 	  if (usePasswordFlag) {
 	    walletNameLogin = GuiUtils.getValue('walletNameLogin');
+		if (!walletNameLogin) walletNameLogin = walletNameCreate;
 	    const votePassword = GuiUtils.getValue('votePassword');
 	    let encryptedWallet = readWalletFile(walletNameLogin);	  
 	    if (votePassword.length < minPasswordLength) {
@@ -1229,12 +1237,10 @@ const sendVoteTx = () => {
 	  }
 	
 	  if (privateKey) {
-		//console.log(feeAmountSats);
-		//return false;
-		// feeAmountSats = 1; // TESTING FEE AMOUNT, removing would reset to API one
+		console.log(privateKey, unspentTransactionOutputs, feeAmountSats, candidates, feeAccount);
 	    const encodedTx = TxFactory.createSignedVoteTx(privateKey, unspentTransactionOutputs, feeAmountSats, candidates, feeAccount);
         if (encodedTx == undefined) {
-          return;
+          return false;
         }
         sendVoteCallback(encodedTx);
 	  }
@@ -1244,8 +1250,10 @@ const sendVoteTx = () => {
     }
   } catch (error) {
     mainConsole.trace(error);
+	return false;
   }
   renderApp();
+  return true;
 };
 // success: success,
 // message: lastResponse,
@@ -1285,12 +1293,12 @@ const sendVoteReadyCallback = (transactionJson) => {
 	GuiToggles.showAllBanners(false);
   } else {
     candidateVoteListStatus = `Voting transaction successful.`;
-    bannerStatus = candidateVoteListStatus;
+    GuiToggles.showHome();
+	bannerStatus = candidateVoteListStatus;
     bannerClass = 'bg_green color_white banner-look';
     requestTransactionHistory();
 	GuiToggles.showAllBanners(true);
-  }
-  
+  }  
   renderApp();
 };
 
@@ -1511,11 +1519,23 @@ const isLedgerConnected = () => {
 const clearGlobalData = () => {
   // mainConsole.log('STARTED clearGlobalData');
   GuiUtils.setValue('privateKeyElt', '');
-  //GuiUtils.setValue('mnemonic', '');
-  GuiUtils.setValue('feeAmount', fee);
+  GuiUtils.setValue('mnemonic', '');
+  GuiUtils.setValue('feeAmount', feeRequested);
   GuiUtils.setValue('nodeUrl', '');
-
+  //GuiUtils.setValue('walletNameLogin', '');
+  GuiUtils.setValue('loginPassword', '');
+  
+  // clear wallet creation
+  GuiUtils.setValue('walletNameCreate', '');
+  GuiUtils.setValue('newPassword', '');
+  GuiUtils.setValue('confirmPassword', '');
+  GuiUtils.setValue('mnemonic', '');
+  
+  sendStep = 1;
+  isLoggedIn = false;
   useLedgerFlag = false;
+  usePasswordFlag = false;
+  
   publicKey = undefined;
   address = undefined;
   balance = undefined;
@@ -1542,7 +1562,7 @@ const clearGlobalData = () => {
   parsedRssFeedStatus = 'No Rss Feed Requested Yet';
 
   feeStatus = 'No Fee Requested Yet';
-  fee = '';
+  feeRequested = '';
   feeAccountStatus = 'No Fee Account Requested Yet';
   feeAccount = '';
 
@@ -1554,10 +1574,9 @@ const clearGlobalData = () => {
   
   walletNameCreate = '';
   walletNameLogin = '';
-  usePasswordFlag = false;
 
   renderApp();
-  // mainConsole.log('SUCCESS clearGlobalData');
+  //mainConsole.log('SUCCESS clearGlobalData');
 };
 
 const getLedgerDeviceInfo = () => {
@@ -1730,13 +1749,15 @@ const requestFee = async () => {
 const getFeeErrorCallback = (error) => {
   // mainConsole.log('getFeeErrorCallback ', error);
   feeStatus = `Rss Feed Error ${error.message}`;
-  fee = '';
+  feeRequested = '';
   renderApp();
 };
 
 const getFeeReadyCallback = (response) => {
   feeStatus = 'Fee Received';
-  fee = response.result.toString();
+  if (feeRequested === '') { 
+    feeRequested = response.result.toString();
+  }
   // mainConsole.log('getFeeReadyCallback ', response, fee);
   renderApp();
 };
@@ -1776,7 +1797,7 @@ const getBannerClass = () => {
 };
 
 const getFee = () => {
-  return fee;
+  return feeRequested;
 };
 
 const generatePrivateKeyHex = () => {
@@ -1797,6 +1818,7 @@ const getGeneratedMnemonic = () => {
 
 const insertELA = (type) => {
   feeAmountSats = GuiUtils.getValue('feeAmount');
+  feeRequested = feeAmountSats;
   var subtractFee = BigNumber(Number(feeAmountSats) + minerFee, 10).dividedBy(Asset.satoshis).toString();
   
   if (type == "quarter") {

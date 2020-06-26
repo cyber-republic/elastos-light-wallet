@@ -56,15 +56,7 @@ module.exports = (props) => {
 
   const sendAmountToAddress = () => {
 	App.setSendHasFocus(false);
-    const isValid = App.checkTransactionHistory();
-    if (isValid) {      
-      const isSent = App.sendAmountToAddress();
-	  //console.log("isSent", isSent);
-	  if (isSent) {
-		App.setSendStep(1);	    
-	  }
-    }
-	App.renderApp();
+    App.sendAmountToAddress();
   }
 
   const SendScreen = (props) => {

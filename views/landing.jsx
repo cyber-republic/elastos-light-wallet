@@ -92,7 +92,7 @@ module.exports = (props) => {
   };
   
   const changeWallet = (props) => {
-    walletNameLogin = GuiUtils.getValue('walletNameLogin')
+    walletNameLogin = GuiUtils.getValue('walletNameLogin');
     App.renderApp();  
   }
   
@@ -108,6 +108,12 @@ module.exports = (props) => {
 	  return <option key={item}>{item}</option>;
   }
   //console.log(walletFiles.length,walletFiles);
+  
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      useWalletLogin();
+    }
+  }
   
   return (<div id="landing">
 	<Banner App={App} GuiToggles={GuiToggles} page="landing"/>
@@ -139,12 +145,12 @@ module.exports = (props) => {
         </button>
       </div>*/}
       <p className="address-text font_size24 margin_none display_inline_block gradient-font">Login</p>
-	  <select className="walletPicker" id="walletNameLogin" name="walletNameLogin" onChange={(e) => changeWallet()}>
+	  <select tabIndex="1" className="walletPicker" id="walletNameLogin" name="walletNameLogin" onChange={(e) => changeWallet()}>
 	    <option value="">Select wallet</option>
 		{walletFiles.map(MakeItem)}
 	  </select>
 	  
-	  <input style={(walletNameLogin !== "") ? {display: 'block'} : {display: 'none'}} className="enterPassword" type="password" size="18" id="loginPassword" placeholder="Enter Password" name="loginPassword"/>
+	  <input tabIndex="2" style={(walletNameLogin !== "") ? {display: 'block'} : {display: 'none'}} className="enterPassword" type="password" size="18" id="loginPassword" placeholder="Enter Password" name="loginPassword" onKeyDown={handleKeyDown}/>
 	  <button style={(walletNameLogin !== "") ? {display: 'block'} : {display: 'none'}} className="loginWallet scale-hover landing-btnbg" onClick={(e) => useWalletLogin()}>Login</button>
       <p className={(ledgerConnected) ? "address-text font_size16 w80pct word-breakword clearElement" : "address-text font_size16 w80pct word-breakword"}>Ledger Status:&nbsp;
         <LedgerMessage App={App}/></p>

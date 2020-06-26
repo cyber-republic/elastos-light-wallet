@@ -77,13 +77,13 @@ npm ls node-gyp
 
 
 # to auto build a releases
-  git commit -am v1.0.0-RC37-MB;
-  git tag v1.0.0-RC37-MB;
+  git commit -am v1.0.0-RC38-MB;
+  git tag v1.0.0-RC38-MB;
   git push;
   git push --tags;
 
 ## to delete release tags
-  git push --delete origin v1.0.0-RC37-MB;
-  git tag -d v1.0.0-RC37-MB;
+  git push --delete origin v1.0.0-RC38-MB;
+  git tag -d v1.0.0-RC38-MB;
   git pull;
   git push;
