@@ -496,6 +496,7 @@ const getPublicKeyFromMnemonic = () => {
   isLoggedIn = true;  
     
   derivationPathMnemonic = GuiUtils.getValue('derivationPathMnemonic');
+  const passphrase = GuiUtils.getValue('passphrase');
     
   if (derivationPathMnemonic == "") {
 	indexPathMnemonic = 0; 
@@ -520,7 +521,7 @@ const getPublicKeyFromMnemonic = () => {
     return false;
   }
   
-  privateKey = Mnemonic.getPrivateKeyFromMnemonic(mnemonic, indexPathMnemonic);
+  privateKey = Mnemonic.getPrivateKeyFromMnemonic(mnemonic, indexPathMnemonic, passphrase);
   if (privateKey.length != PRIVATE_KEY_LENGTH) {
     bannerStatus = `Mnemonic must create a of length ${PRIVATE_KEY_LENGTH}, not ${privateKey.length}`;
     bannerClass = 'bg_red color_white banner-look';
@@ -529,9 +530,8 @@ const getPublicKeyFromMnemonic = () => {
     return false;
   }
   
-  let saveWallet = GuiUtils.getChecked('saveWallet');
-  //console.log("saveWallet",saveWallet);
-  if (saveWallet) {
+  walletNameCreate = GuiUtils.getValue('walletNameCreate');
+  if (walletNameCreate.length > 0) {
 	let walletCreated = saveWalletLocally(privateKey);
 	// console.log("walletCreated",walletCreated);
 	if (!walletCreated) {
@@ -547,7 +547,9 @@ const getPublicKeyFromMnemonic = () => {
 };
 
 const saveWalletLocally = (privateKey) => {
-  walletNameCreate = GuiUtils.getValue('walletNameCreate');
+  //console.log("pre",walletNameCreate);
+  //walletNameCreate = GuiUtils.getValue('walletNameCreate');
+  //console.log("post",walletNameCreate);
   if (walletNameCreate.length === 0) {
 	bannerStatus = `Please enter Wallet name`;
     bannerClass = 'bg_red color_white banner-look';
@@ -668,8 +670,8 @@ const getPublicKeyFromPrivateKey = () => {
     return false;
   }
   
-  let saveWallet = GuiUtils.getChecked('saveWallet');
-  if (saveWallet) {
+  walletNameCreate = GuiUtils.getValue('walletNameCreate');
+  if (walletNameCreate.length > 0) {
 	let walletCreated = saveWalletLocally(privateKey);
 	//console.log("walletCreated",walletCreated);
 	if (!walletCreated) {
@@ -1529,6 +1531,7 @@ const clearGlobalData = () => {
   GuiUtils.setValue('walletNameCreate', '');
   GuiUtils.setValue('newPassword', '');
   GuiUtils.setValue('confirmPassword', '');
+  GuiUtils.setValue('passphrase', '');
   GuiUtils.setValue('mnemonic', '');
   
   sendStep = 1;
@@ -1965,6 +1968,10 @@ const getPasswordFlag = () => {
   return usePasswordFlag;
 }
 
+const getLoggedIn = () => {
+  return isLoggedIn;
+}
+
 exports.REST_SERVICES = REST_SERVICES;
 exports.init = init;
 exports.log = mainConsole.log;
@@ -2048,3 +2055,4 @@ exports.listWalletFiles = listWalletFiles;
 exports.getPasswordFlag = getPasswordFlag;
 exports.saveWalletLocally = saveWalletLocally;
 exports.createWalletFolder = createWalletFolder;
+exports.getLoggedIn = getLoggedIn;
