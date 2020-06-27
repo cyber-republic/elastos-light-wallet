@@ -45,9 +45,9 @@ module.exports = (props) => {
         <input className="display_inline menu-change-input" type="text" size="20" id="nodeUrl" style={{background: "inherit"}} placeholder={App.getRestService()}></input>
         <div className="display_inline dark-hover menu-change-btn cursor_def" onClick={(e) => changeNodeUrl()}>Change</div>
       </div>
-      {/*<div className="padding_5px display_inline dark-hover br10 cursor_def" onClick={(e) => App.resetNodeUrl()}>Reset</div>*/}
+      <div className="padding_5px display_inline dark-hover br10 cursor_def" onClick={(e) => App.resetNodeUrl()}>Reset</div>
       <div className="padding_5px display_inline dark-hover br10 cursor_def" onClick={(e) => openDevTools()}>Dev Tools</div>
-      <img src="artwork/settings.png" className="scale-hover menu-settings" onClick={(e) => showSettings()}/>
+      {/*<img src="artwork/settings.png" className="scale-hover menu-settings" onClick={(e) => showSettings()}/>*/}
       <div id={page+'MenuClose'} className="padding_5px display_inline dark-hover br10 marginright_20px" title="close" onClick={(e) => hideMenu()}>
         <img src="artwork/menuclose.svg" />
       </div>
