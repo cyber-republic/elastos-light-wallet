@@ -1790,29 +1790,19 @@ select, input {
 }
 
 .derivationPathPicker {
-  opacity: 0.7;
-  background: rgba(30, 32, 36, 0.0);
+  background: none;
   border-radius: 8px;
   height: 30px;
-  display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  font-family: inherit;
-  color: #B2B4C3;
-  /*border: 0.7px solid #787981;*/
   border: 0;
   padding-left: 8px;
-  
-}
-
-.derivationPathPicker::placeholder {
-  opacity: 0.7;
-  color: #B2B4C3;
+  color: #FFFFFF;
 }
 
 .mnemonicPicker {
-  top: 449px;
+  top: 445px;
   right: 463px;
   position: absolute;
 }
@@ -1831,7 +1821,7 @@ select, input {
 .editPath {  
   width: 19px;
   height: 19px;
-  top: 449px;
+  top: 445px;
   right: 465px;
   position: absolute;
 }
@@ -1897,7 +1887,7 @@ select, input {
   background: none;
   position: relative;
   top: 0;
-  font-size: 16px;
+  font-size: 14px;
   color: #FFFFFF;
   padding-bottom: 2px;
 }
@@ -1945,7 +1935,7 @@ select, input {
   background: rgba(168, 170, 174, 0.22);
   border-radius: 15px;
   width: 480px;
-  height: 95px;
+  height: 65px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1955,20 +1945,20 @@ select, input {
   -moz-text-align-last: center; /* Firefox 12+ */
   text-align-last: center;
   position: absolute;
-  top: 340px;
+  top: 225px;
 }
 
 .saveWalletCheckbox {
-  top: 220px;
-  left: 480px;
+  top: 1px;
+  left: 397px;
   position: absolute;
 }
 
 .saveWalletLabel {
   opacity: 0.7;
   color: #FFFFFF;
-  top: 219px;
-  left: 500px;
+  top: 0px;
+  left: 417px;
   position: absolute;
   
 }
@@ -1988,7 +1978,7 @@ select, input {
   letter-spacing: 0;
   height: 30px;
   width: 150px;
-  top: 255px;
+  top: 360px;
   left: 485px;
   text-align: center;
   border: none;
@@ -1997,14 +1987,21 @@ select, input {
 }
 
 .newPassword {
-  top: 295px;
-  left: 420px;
+  top: 405px;
+  left: 402px;
   position: absolute;
 }
 
 .confirmPassword {
-  top: 295px;
-  left: 580px;
+  top: 405px;
+  left: 575px;
+  position: absolute;
+}
+
+.passphrase {
+  top: 307px;
+  left: 480px;
+  width: 160px;
   position: absolute;
 }
 
@@ -2054,14 +2051,14 @@ select, input {
   opacity: 0.8;
   width: 18px;
   height: 18px;
-  top: 453px;
+  top: 306px;
   left: 338px;
   position: absolute;
 }
 
 .radioMnemonicLabel {
   /*opacity: 0.8;*/
-  top: 456px;
+  top: 309px;
   left: 365px;
   position: absolute;
   font-size: 14px;
@@ -2071,15 +2068,23 @@ select, input {
   opacity: 0.8;
   width: 18px;
   height: 18px;
-  top: 453px;
+  top: 306px;
   left: 770px;
   position: absolute;
 }
 
 .radioPrivateKeyLabel {
   /*opacity: 0.8;*/
-  top: 455px;
+  top: 309px;
   left: 700px;
   position: absolute;
   font-size: 14px;
+}
+
+.menu-settings {
+  opacity: 0.7;
+  background-color: transparent;
+  width: 25px; 
+  height: 25px;
+  position: relative;
 }

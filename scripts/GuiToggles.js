@@ -29,6 +29,7 @@ const hideEverything = () => {
   hide('voting');
   hide('qrcode');
   hide('generateMnemonic');
+  hide('settings');
   //hide('generatePrivateKey');
   hideAllBanners();
   hideAllMenus();
@@ -52,6 +53,7 @@ const showLanding = () => {
   app.clearGlobalData();
   app.refreshBlockchainData();
   show('landing');
+  show('landingMenuOpen');
 };
 
 const showLoginMnemonic = () => {
@@ -103,6 +105,12 @@ const showQRCode = () => {
   show('qrcode');
 };
 
+const showSettings = () => {
+  hideEverything();
+  app.clearSendData();
+  show('settings');
+};
+
 const showBanner = (name) => {
   clearTimeout(bannerID);
   bannerID = setTimeout(() => hide(name+'Banner'), bannerTimeout);
@@ -140,6 +148,7 @@ const showAllBanners = (timeout) => {
   GuiUtils.show('loginMnemonicBanner');
   GuiUtils.show('generateMnemonicBanner');
   GuiUtils.show('qrcodeBanner');
+  GuiUtils.show('settingsBanner');
 };
 
 const hideAllBanners = () => {
@@ -150,6 +159,7 @@ const hideAllBanners = () => {
   GuiUtils.hide('loginMnemonicBanner');
   GuiUtils.hide('generateMnemonicBanner');
   GuiUtils.hide('qrcodeBanner');
+  GuiUtils.hide('settingsBanner');
 };
 
 exports.init = init;
@@ -161,6 +171,7 @@ exports.showMenu = showMenu;
 exports.hideMenu = hideMenu;
 exports.showVoting = showVoting;
 exports.showQRCode = showQRCode;
+exports.showSettings = showSettings;
 exports.showBanner = showBanner;
 exports.hideBanner = hideBanner;
 //exports.showGenerateNewPrivateKey = showGenerateNewPrivateKey;

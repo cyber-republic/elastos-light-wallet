@@ -18,6 +18,7 @@ const LoginMnemonic = require('./login-mnemonic.jsx');
 const GenerateMnemonic = require('./generate-mnemonic.jsx');
 const Voting = require('./voting.jsx');
 const QRCode = require('./qrcode.jsx');
+const Settings = require('./settings.jsx');
 
 /** modules */
 const App = require('../scripts/App.js');
@@ -109,7 +110,7 @@ class AppView extends React.Component {
       <GenerateMnemonic App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
       <Voting App={App} openDevTools={openDevTools} onLinkClick={onLinkClick} GuiToggles={GuiToggles} Version={Version}/>
       <QRCode App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
-
+	  <Settings App={App} openDevTools={openDevTools} onLinkClick={onLinkClick} GuiToggles={GuiToggles} Version={Version}/>
     </div>
 
     </div>)
