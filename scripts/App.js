@@ -14,10 +14,22 @@ const path = require('path');
 const { remote } = require('electron');
 const Electron = remote.app;
 const userDataPath = Electron.getPath("userData");
-const walletFilePath = path.join(userDataPath,"Wallets");
+const defaultWalletPath = path.join(userDataPath,"Wallets");
+const defaultShowBalance = false;
 const algorithm = 'aes-256-cbc';
 let walletNameCreate = '';
 let walletNameLogin = '';
+let showBalance = '';
+let walletPath = '';
+
+/* Config.ini */
+let configFile = "Config.ini";
+let configFilePath = path.join(userDataPath, configFile);
+let defaultConfigContent = "userNodeURL=\nuserWalletPath=\nuserShowBalance="+defaultShowBalance;
+let userNodeURL = '';
+let userWalletPath = '';
+let userShowBalance = '';
+let configInitialized = false;
 
 /* modules */
 const LedgerComm = require('./LedgerComm.js');
@@ -174,11 +186,10 @@ let derivationPathMnemonic = '';
 /** functions */
 const init = (_GuiToggles) => {
   sendToAddressStatuses.push('No Send-To Transaction Requested Yet');
-
   GuiToggles = _GuiToggles;
-
-  setRestService(0);
-
+	
+	//setRestService(0);
+	
   mainConsole.log('Console Logging Enabled.');
 };
 
@@ -205,9 +216,17 @@ const getRestService = () => {
 };
 
 const setRestService = (ix) => {
-  currentNetworkIx = ix;
-  restService = REST_SERVICES[ix].url;
-  GuiUtils.setValue('nodeUrl', restService);
+	currentNetworkIx = ix;	
+	if (ix === 99) {
+		restService = userNodeURL;		
+		//GuiUtils.setValue('userNodeURL', restService); replace
+	} else {
+		restService = REST_SERVICES[ix].url;
+		//GuiUtils.setValue('userNodeURL', ''); replace
+		//userNodeURL = '';
+	}
+	//GuiUtils.setValue('nodeURL', restService); // set correct URL in menu replace
+	//renderApp();
 };
 
 const getTransactionHistoryUrl = (address) => {
@@ -258,23 +277,17 @@ const formatDate = (date, type) => {
   if (type == "date") {
     return [year, month, day].join('-');
   } else {
-	return [hour, minute].join(':');
+		return [hour, minute].join(':');
   }
 };
 
-const changeNetwork = (event) => {
-  currentNetworkIx = event.target.value;
-  setRestService(currentNetworkIx);
-  refreshBlockchainData();
-};
-
-const resetNodeUrl = () => {
+const resetNodeURL = () => {
   setRestService(currentNetworkIx);
   renderApp();
 };
 
-const changeNodeUrl = () => {
-  restService = GuiUtils.getValue('nodeUrl');
+const changeNodeURL = () => {
+  restService = GuiUtils.getValue('userNodeURL');
   renderApp();
 };
 
@@ -650,7 +663,8 @@ const loginWithWallet = () => {
 	const privateKeyElt = document.getElementById('privateKeyElt');
     privateKeyElt.value = privateKeyWallet;
     publicKey = KeyTranscoder.getPublic(privateKeyWallet);
-    requestBlockchainData();
+    requestBlockchainData();	
+	isLoggedIn = true;
     return true;
   }
 }
@@ -1523,7 +1537,7 @@ const clearGlobalData = () => {
   GuiUtils.setValue('privateKeyElt', '');
   GuiUtils.setValue('mnemonic', '');
   GuiUtils.setValue('feeAmount', feeRequested);
-  GuiUtils.setValue('nodeUrl', '');
+  GuiUtils.setValue('nodeURL', '');
   //GuiUtils.setValue('walletNameLogin', '');
   GuiUtils.setValue('loginPassword', '');
   
@@ -1538,6 +1552,8 @@ const clearGlobalData = () => {
   isLoggedIn = false;
   useLedgerFlag = false;
   usePasswordFlag = false;
+	
+	configInitialized = false;
   
   publicKey = undefined;
   address = undefined;
@@ -1901,34 +1917,29 @@ const decryptWallet = (text, password) => {
     renderApp();
     //console.log('Wallet file is not compatible');
 	return false;
-	
   }
 }
 
 const createWalletFolder = () => {
-  if (!fs.existsSync(walletFilePath)) {
-    fs.mkdirSync(walletFilePath);
-	//console.log("Created "+walletFilePath);
-  } else {
-	//console.log("Wallet Exists");
+  if (!fs.existsSync(walletPath)) {
+    fs.mkdirSync(walletPath);
   }
   return true;
 }
 
-const createWalletFile = (walletName, password, text) => {    
-  if (!fs.existsSync(path.join(walletFilePath,walletName+".dat"))) {
-	//console.log("Not exists",fs.existsSync(path.join(walletFilePath,walletName+".dat")));
-	fs.writeFile(path.join(walletFilePath,walletName+".dat"), encryptWallet(text, password), "utf8", (err) => {
+const createWalletFile = (walletName, password, text) => {
+  var filePath = path.join(walletPath, walletName+".dat");
+  if (!fs.existsSync(filePath)) {
+	fs.writeFile(filePath , encryptWallet(text, password), "utf8", (err) => {
 	  if (err) throw err;
 		bannerStatus = `Local wallet created successfully.`;
 		bannerClass = 'bg_green color_white banner-look';    
 		GuiToggles.showAllBanners(true);
-		renderApp();	
+		renderApp();
 		//console.log('Wallet file created');
 		return true;
 	});
   } else {
-	//console.log("Exists",fs.existsSync(path.join(walletFilePath,walletName+".dat")));
 	bannerStatus = `Wallet with entered name already exist.`;
     bannerClass = 'bg_red color_white banner-look';
     GuiToggles.showAllBanners(false);
@@ -1936,31 +1947,80 @@ const createWalletFile = (walletName, password, text) => {
     return false;
   }
   return true;
-}	
+}
 
-const readWalletFile = (walletName) => {
-  var FilePath = path.join(walletFilePath,walletName+".dat");
-  if (fs.existsSync(FilePath)) {
-    var data = fs.readFileSync(FilePath,'utf8');
-    return data;
-  } else {
-    // make banner
-	bannerStatus = path.join(walletFilePath,walletName+".dat")+" does NOT exist.";
+const removeWalletFile = () => {
+  let walletNameRemove = GuiUtils.getValue('walletNameRemove');  
+  let removePassword = GuiUtils.getValue('removePassword');
+  
+  if (walletNameRemove.length === 0) {
+	bannerStatus = `Please select wallet name to remove`;
     bannerClass = 'bg_red color_white banner-look';
     GuiToggles.showAllBanners(false);
     renderApp();
-    //console.log(path.join(walletFilePath,walletName+".dat")+" does NOT exist.");
 	return false;
+  }
+  
+  var filePath = path.join(walletPath, walletNameRemove+".dat");
+  if (fs.existsSync(filePath)) {
+    let encryptedWallet = readWalletFile(walletNameRemove);
+    let walletTxt = decryptWallet(encryptedWallet, removePassword);
+    
+    if (!walletTxt) {
+	  bannerStatus = "Wrong password.";
+      bannerClass = 'bg_red color_white banner-look';
+      GuiToggles.showAllBanners(false);
+      renderApp();    
+      return false;
+    } else {
+	  fs.unlink(filePath, (err) => {
+	    if (err) {
+		  bannerStatus = "Unable to remove wallet file.";
+		  bannerClass = 'bg_red color_white banner-look';
+		  GuiToggles.showAllBanners(false);
+		  renderApp();    
+		  return false;
+	    }
+		bannerStatus = `Local wallet removed successfully.`;
+		bannerClass = 'bg_green color_white banner-look';    
+		GuiToggles.showAllBanners(true);
+		renderApp();
+		GuiUtils.setValue('removePassword', '');		
+	    return true;
+	  });
+    }
+  } else {	
+	bannerStatus = filePath+" does NOT exist.";
+    bannerClass = 'bg_red color_white banner-look';
+    GuiToggles.showAllBanners(false);
+    renderApp();    
+    return false;
+  }
+}
+
+const readWalletFile = (walletName) => {
+  var filePath = path.join(walletPath,walletName+".dat");
+  if (fs.existsSync(filePath)) {
+    var data = fs.readFileSync(filePath,'utf8');
+    return data;
+  } else {
+    // make banner
+		bannerStatus = filePath+" does NOT exist.";
+    bannerClass = 'bg_red color_white banner-look';
+    GuiToggles.showAllBanners(false);
+    renderApp();
+    return false;
   }
 }
 
 const listWalletFiles = () => {
+	//console.log("listWalletFiles",walletPath);
   let walletFiles = [];
-  if (fs.existsSync(walletFilePath)) {	
-	fs.readdirSync(walletFilePath).forEach(file => {
-      walletFiles.push(file.substring(0,file.length-4));
-    });
-	return walletFiles;	
+	if (fs.existsSync(walletPath)) {	
+		fs.readdirSync(walletPath).forEach(file => {
+			walletFiles.push(file.substring(0,file.length-4));
+		});
+		return walletFiles;	
   }
 }
 
@@ -1970,6 +2030,119 @@ const getPasswordFlag = () => {
 
 const getLoggedIn = () => {
   return isLoggedIn;
+}
+
+const getWalletPath = () => {
+  return walletPath;
+}
+
+const setWalletPath = (tempWalletPath) => {
+  walletPath = tempWalletPath;
+}
+
+const getDefaultWalletPath = () => {
+  return defaultWalletPath;
+}
+
+const getUserNodeURL = () => {
+  return userNodeURL;
+}
+
+const setUserNodeURL = (nodeURL) => {
+  userNodeURL = nodeURL;
+}
+
+const createConfigFile = () => {    
+  if (!fs.existsSync(configFilePath)) {	
+	fs.writeFile(configFilePath, defaultConfigContent, "utf8", (err) => {
+	  if (err) throw err;
+	});
+  }
+}
+
+const readConfigFile = () => {
+  if (!configInitialized) {
+		if (fs.existsSync(configFilePath)) {
+			var data = fs.readFileSync(configFilePath,'utf8');
+			var dataArr = data.split("\n");	
+			dataArr.forEach(element => {
+				var [item, value] = element.split("=");	  
+				if (item.indexOf('userNodeURL') >= 0) userNodeURL = value;
+				if (item.indexOf('userWalletPath') >= 0) userWalletPath = value;
+				if (item.indexOf('userShowBalance') >= 0) userShowBalance = value.toLowerCase() == "true" ? true : false;;
+				});
+			
+			if (userWalletPath.length > 0) {
+				walletPath = userWalletPath;
+			} else {
+				walletPath = defaultWalletPath;
+			}
+			showBalance = userShowBalance;						
+			if (userNodeURL.length > 0) {
+				setRestService(99);
+			} else {
+				setRestService(0);
+			}
+			
+			//mainConsole.log(`Configuration file initialized.`)
+			configInitialized = true;
+			return data;
+		} else {
+			createConfigFile();
+			var data = readConfigFile();
+			return data;
+		}		
+	}
+}
+
+const updateConfigFile = (updateUserNodeURL, updateUserWalletPath, updateUserShowBalance) => {
+  let updateConfigContent = "userNodeURL="+updateUserNodeURL+"\nuserWalletPath="+updateUserWalletPath+"\nuserShowBalance="+updateUserShowBalance;
+  fs.writeFile(configFilePath, updateConfigContent, "utf8", (err) => {
+	if (err) throw err;
+	  //if (getLoggedIn()) {
+      //  GuiToggles.showHome();
+	  //} else {
+	  //  GuiToggles.showLanding();
+	  //}
+	  bannerStatus = `Configuration file was saved successfully.`;
+	  bannerClass = 'bg_green color_white banner-look';    
+	  GuiToggles.showAllBanners(true);
+	  
+	  if (userWalletPath.length > 0) {
+	    walletPath = userWalletPath;
+	  } else {
+	    walletPath = defaultWalletPath;
+	  }
+	  showBalance = updateUserShowBalance;
+		
+		configInitialized = false;
+		readConfigFile();
+		
+	  renderApp();
+	  return true;
+	});
+  //console.log("updateConfigContent",updateConfigContent);
+}
+
+const getUserShowBalance = () => {
+  return userShowBalance;
+}
+
+const getShowBalance = () => {
+  if (showBalance === "") showBalance =  userShowBalance;
+  return showBalance;
+}
+
+const setShowBalance = (showToggledBalance) => {
+  showBalance = showToggledBalance;
+}
+
+const resetConfigInitialized = () => {
+	configInitialized = false;
+}
+
+const getWalletNameLogin = () => {
+  return walletNameLogin;
 }
 
 exports.REST_SERVICES = REST_SERVICES;
@@ -2014,8 +2187,8 @@ exports.sendAmountToAddress = sendAmountToAddress;
 exports.getRestService = getRestService;
 exports.setRestService = setRestService;
 exports.getCurrentNetworkIx = getCurrentNetworkIx;
-exports.changeNodeUrl = changeNodeUrl;
-exports.resetNodeUrl = resetNodeUrl;
+exports.changeNodeURL = changeNodeURL;
+exports.resetNodeURL = resetNodeURL;
 exports.getCandidateVoteListStatus = getCandidateVoteListStatus;
 exports.getParsedCandidateVoteList = getParsedCandidateVoteList;
 exports.toggleProducerSelection = toggleProducerSelection;
@@ -2050,9 +2223,23 @@ exports.encryptWallet = encryptWallet;
 exports.decryptWallet = decryptWallet;
 exports.createWalletFile = createWalletFile;
 exports.readWalletFile = readWalletFile;
+exports.removeWalletFile = removeWalletFile;
 exports.loginWithWallet = loginWithWallet;
 exports.listWalletFiles = listWalletFiles;
 exports.getPasswordFlag = getPasswordFlag;
 exports.saveWalletLocally = saveWalletLocally;
 exports.createWalletFolder = createWalletFolder;
 exports.getLoggedIn = getLoggedIn;
+exports.getWalletPath = getWalletPath;
+exports.setWalletPath = setWalletPath;
+exports.getDefaultWalletPath = getDefaultWalletPath;
+exports.createConfigFile = createConfigFile;
+exports.readConfigFile = readConfigFile;
+exports.updateConfigFile = updateConfigFile;
+exports.getUserShowBalance = getUserShowBalance;
+exports.getShowBalance = getShowBalance;
+exports.setShowBalance = setShowBalance;
+exports.getUserNodeURL = getUserNodeURL;
+exports.setUserNodeURL = setUserNodeURL;
+exports.resetConfigInitialized = resetConfigInitialized;
+exports.getWalletNameLogin = getWalletNameLogin;

@@ -92,7 +92,7 @@ module.exports = (props) => {
 	<label className="radioPrivateKeyLabel gradient-font">Private Key</label>
 	
 	{/*<input type="checkbox" className="saveWalletCheckbox" id="saveWallet" name="saveWallet" defaultChecked onChange={(e)=> showWalletDefinitions()}/><span className="saveWalletLabel">Save Wallet locally</span>*/}
-	<input tabIndex="6" type="text" tabIndex="1" className="walletNameCreate" size="18" id="walletNameCreate" placeholder="Enter Wallet name" name="walletNameCreate" onChange={(e) => toggleWalletName()}/>
+	<input tabIndex="6" type="text" tabIndex="1" className="walletNameCreate" size="18" id="walletNameCreate" placeholder="Enter wallet name" name="walletNameCreate" onChange={(e) => toggleWalletName()}/>
 	<div style={enableSaveWallet ? {display: 'block'} : {display: 'none'}}>
 	  <input tabIndex="7" type="password" className="enterPassword newPassword" size="18" id="newPassword" placeholder="Enter Password" name="newPassword"/>
 	  <input tabIndex="8" type="password" className="enterPassword confirmPassword" size="18" id="confirmPassword" placeholder="Confirm Password" name="confirmPassword"/>

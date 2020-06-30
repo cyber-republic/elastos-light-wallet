@@ -1,15 +1,15 @@
 const React = require('react');
 
-let showBalance = false;
-
 module.exports = (props) => {
   const App = props.App;
+  let showBalance = App.getShowBalance();
   
-  const balanceVisibility = () => {
+  const balanceVisibility = () => {	
 	if (showBalance) {
-	  showBalance = false;
+	  App.setShowBalance(false);
+	  //showBalance = false;
 	} else {
-	  showBalance = true;
+	  App.setShowBalance(true);
 	}
 	App.renderApp();
   }

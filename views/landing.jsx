@@ -49,7 +49,9 @@ module.exports = (props) => {
   const GuiToggles = props.GuiToggles;
   const openDevTools = props.openDevTools;
   const Version = props.Version;
+	let configFile = App.readConfigFile();
   let folderStatus = App.createWalletFolder();
+  
   const showMenu = () => {
     GuiToggles.showMenu('landing');
   }

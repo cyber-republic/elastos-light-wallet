@@ -18,7 +18,7 @@ module.exports = (props) => {
       <div className="flex1"></div>
       </div>
       <p className="address-text font_size24 margin_none display_inline_block gradient-font">Create New Wallet (Mnemonics)</p>
-      <div className="qraddress-div">
+      <div className="qraddress-div bordered">
         <p className="address-ex display_inline_block font_size20 padding_5px" onClick={(e) => App.copyMnemonicToClipboard()}>{App.getGeneratedMnemonic()}</p>
       </div>
       <div className="flex_center">

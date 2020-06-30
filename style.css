@@ -1085,12 +1085,6 @@ select, input {
   vertical-align: center;
 }
 
-.bordered {
-  border: solid;
-  border-width: 1px;
-  border-color: gray;
-}
-
 .bottom-border {
   border: none;
   border-bottom: black 2px solid;
@@ -1382,6 +1376,12 @@ select, input {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.flex_left {
+  display: flex;
+  justify-content: left;
+  align-items: left;
 }
 
 .flex1 {
@@ -1694,6 +1694,7 @@ select, input {
   background: inherit;
   border: none;
   font-size: 14px;
+  color: gray;
 }
 
 .menu-change-btn {
@@ -1704,7 +1705,8 @@ select, input {
 }
 
 .menu-selector {
-  color: #B2B4C3; 
+  color: #B2B4C3;
+  border-radius: 5px;
   font-size: 14px;
   width: 70;
   height: 40px;
@@ -1793,12 +1795,13 @@ select, input {
   background: none;
   border-radius: 8px;
   height: 30px;
-  align-items: center;
-  justify-content: center;
+  align-items: right;
+  justify-content: right;
+  text-align: right;
   font-size: 14px;
   border: 0;
-  padding-left: 8px;
-  color: #FFFFFF;
+  padding-right: 40px;
+  color: gray;
 }
 
 .mnemonicPicker {
@@ -1811,11 +1814,6 @@ select, input {
   bottom: 229px;
   right: 40px;
   position: absolute;
-}
-
-.derivationPathPicker input {
-  font-weight: 400;
-  color: #B2B4C3;
 }
 
 .editPath {  
@@ -1863,7 +1861,7 @@ select, input {
 .walletPicker {
   opacity: 0.7;
   border: 0.7px solid #787981;
-  border-radius: 8px;
+  border-radius: 5px;
   font-size: 16px;
   color: #FFFFFF;
   text-align: center;
@@ -1875,7 +1873,7 @@ select, input {
 }
 
 .walletPicker option{
-  color: #B2B4C3;
+  color: gray;
 }
 
 .enterPassword {
@@ -1976,14 +1974,19 @@ select, input {
   font-size: 16px;
   color: #FFFFFF;
   letter-spacing: 0;
-  height: 30px;
+  height: 35px;
   width: 150px;
-  top: 360px;
+  top: 355px;
   left: 485px;
   text-align: center;
   border: none;
   text-align: left;
-  padding-left: 8px;
+  padding-left: 10px;
+}
+
+.walletNameCreate::placeholder {
+  opacity: 1;
+  color: gray;
 }
 
 .newPassword {
@@ -2087,4 +2090,137 @@ select, input {
   width: 25px; 
   height: 25px;
   position: relative;
+}
+
+/* Settings page */
+.settings-main-div {
+  width: 560px;
+  height: 650px;
+  top: 50px;
+  left: 280px;
+  background-image: linear-gradient(2deg, #36373B 0%, #65666E 100%);
+  box-shadow: 6px 30px 60px -13px rgba(0, 0, 0, 0.50);
+  border-radius: 38px;  
+  text-align: left;
+  position: absolute;
+}
+
+.settingsTitle {
+  top: 5px;
+  left: 235px;
+  font-size: 24px;
+  opacity: 0.8;
+  color: #B2B4C3;
+  letter-spacing: 0;
+  position: relative;
+}
+
+.settingsBack {
+  top: 40px;
+  left: 40px;
+  position: relative;
+}
+
+.settingsTableDiv {
+  /*height: 500px;*/
+  margin-top: 50px;
+  overflow: auto;
+  width: 100%;
+  -webkit-app-region: none;
+}
+
+.settingsTable {
+  /*height: 500px;*/
+  overflow: auto;
+  width: 100%;
+  -webkit-app-region: none;
+  border-spacing: 0 15px;
+  border: 0;
+}
+
+.settingsTableRow {
+  /*opacity: 0.9;
+  font-family: "BioSans-Light";
+  border: 0;
+  line-height: 17px;*/
+}
+
+.settingCol1 {
+  width: 140px;
+  text-align: right;
+  font-size: 14px;
+  color: #B2B4C3;
+}
+
+.settingCol2 {
+  width: 350px;
+  font-size: 14px;
+  color: gray;
+}
+
+.settingCol3 {
+  padding-right: 20px;
+  text-align: left;
+}
+
+.settingsOptions {
+  color: #B2B4C3;
+  border-radius: 5px;
+  margin-left: 10px;
+  font-size: 14px;
+  height: 40px;
+  border-color: #787981;
+}
+
+.settingsInput {
+  margin-left: 10px;
+  border-radius: 5px;
+  padding: 11px;
+  background: inherit;
+  border: 1px solid #787981;
+  font-size: 14px;
+}
+
+.settingsButton {
+  background: rgba(217,218,223,0.47);
+  border-radius: 4px;
+  padding: 9px 15px;
+  color: #D9DADF;
+  border: 0;
+}
+
+.saveConfig {
+  background-image: linear-gradient(-214deg, #F4D2AE 0%, #E5A776 100%);
+  box-shadow: 0 3px 6px -2px rgba(25, 23, 41, 0.66);
+  border-radius: 8px;
+  width: 161px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  margin: 0;
+  font-weight: 600;
+  font-size: 16px;
+  color: #FFFFFF;
+  letter-spacing: 0;
+  top: 550px;
+  left: 205px;
+  position: absolute;
+}
+
+.m15L {
+  margin-left: 15px;
+}
+
+.m10L {
+  margin-left: 10px;
+}
+
+.m5L {
+  margin-left: 5px;
+}
+
+.m10R {
+  margin-right: 10px;
 }
