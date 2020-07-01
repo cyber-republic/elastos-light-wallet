@@ -218,15 +218,10 @@ const getRestService = () => {
 const setRestService = (ix) => {
 	currentNetworkIx = ix;	
 	if (ix === 99) {
-		restService = userNodeURL;		
-		//GuiUtils.setValue('userNodeURL', restService); replace
+		restService = userNodeURL;
 	} else {
 		restService = REST_SERVICES[ix].url;
-		//GuiUtils.setValue('userNodeURL', ''); replace
-		//userNodeURL = '';
-	}
-	//GuiUtils.setValue('nodeURL', restService); // set correct URL in menu replace
-	//renderApp();
+	}	
 };
 
 const getTransactionHistoryUrl = (address) => {
@@ -478,8 +473,7 @@ const getUnspentTransactionOutputsReadyCallback = (response) => {
       parsedUnspentTransactionOutputs.push(utxo);
     });
   }
-
-  renderApp();
+	renderApp();
 };
 
 const getPublicKeyFromLedger = () => {
@@ -512,17 +506,17 @@ const getPublicKeyFromMnemonic = () => {
   const passphrase = GuiUtils.getValue('passphrase');
     
   if (derivationPathMnemonic == "") {
-	indexPathMnemonic = 0; 
+		indexPathMnemonic = 0; 
   } else {
-	var pathArr = derivationPathMnemonic.split("/");
-	indexPathMnemonic = pathArr[pathArr.length-1];
-	if (!isValidDecimal(indexPathMnemonic)) {
-	  bannerStatus = `Derivation path is not valid.`;
-      bannerClass = 'bg_red color_white banner-look';
-      GuiToggles.showAllBanners(false);
-      renderApp();
-      return false;
-	}
+		var pathArr = derivationPathMnemonic.split("/");
+		indexPathMnemonic = pathArr[pathArr.length-1];
+		if (!isValidDecimal(indexPathMnemonic)) {
+			bannerStatus = `Derivation path is not valid.`;
+			bannerClass = 'bg_red color_white banner-look';
+			GuiToggles.showAllBanners(false);
+			renderApp();
+			return false;
+		}
   }
   
   const mnemonic = GuiUtils.getValue('mnemonic');
@@ -545,11 +539,10 @@ const getPublicKeyFromMnemonic = () => {
   
   walletNameCreate = GuiUtils.getValue('walletNameCreate');
   if (walletNameCreate.length > 0) {
-	let walletCreated = saveWalletLocally(privateKey);
-	// console.log("walletCreated",walletCreated);
-	if (!walletCreated) {
-	  return false;
-	}
+		let walletCreated = saveWalletLocally(privateKey);	
+		if (!walletCreated) {
+			return false;
+		}
   }
   
   const privateKeyElt = document.getElementById('privateKeyElt');
@@ -560,11 +553,8 @@ const getPublicKeyFromMnemonic = () => {
 };
 
 const saveWalletLocally = (privateKey) => {
-  //console.log("pre",walletNameCreate);
-  //walletNameCreate = GuiUtils.getValue('walletNameCreate');
-  //console.log("post",walletNameCreate);
   if (walletNameCreate.length === 0) {
-	bannerStatus = `Please enter Wallet name`;
+		bannerStatus = `Please enter Wallet name`;
     bannerClass = 'bg_red color_white banner-look';
     GuiToggles.showAllBanners(false);
     renderApp();
@@ -574,31 +564,29 @@ const saveWalletLocally = (privateKey) => {
   let newPassword = GuiUtils.getValue('newPassword');
   let confirmPassword = GuiUtils.getValue('confirmPassword');
   if (newPassword.length < minPasswordLength) {
-	bannerStatus = `Password must be at least ${minPasswordLength} characters long`;
+		bannerStatus = `Password must be at least ${minPasswordLength} characters long`;
     bannerClass = 'bg_red color_white banner-look';
     GuiToggles.showAllBanners(false);
     renderApp();
     return false;  
   } else {
-	if (newPassword !== confirmPassword) {
-	  bannerStatus = `New password and confirm password do not match`;
-      bannerClass = 'bg_red color_white banner-look';
-      GuiToggles.showAllBanners(false);
-      renderApp();
-      return false;
+		if (newPassword !== confirmPassword) {
+			bannerStatus = `New password and confirm password do not match`;
+			bannerClass = 'bg_red color_white banner-look';
+			GuiToggles.showAllBanners(false);
+			renderApp();
+			return false;
   	}
   }
   
   let isSaved = createWalletFile(walletNameCreate, newPassword, privateKey);
-  //console.log("isSaved",isSaved);
   if (isSaved) {
     usePasswordFlag = true;
-	return true;
+		return true;
   } else {
-	usePasswordFlag = false;
-	return false;
+		usePasswordFlag = false;
+		return false;
   }
-  //createWalletFile(walletNameCreate, newPassword, mnemonic+"|"+indexPathMnemonic);
 }
 
 
@@ -620,52 +608,16 @@ const loginWithWallet = () => {
   let privateKeyWallet = "";
   
   if (!walletTxt) {
-	return false;
+		return false;
   } else {
-	privateKeyWallet = walletTxt;
-  
-    /* file was from mnemonic
-    let loginMnemonicString = '';
-
-  
-    if (walletTxt.indexOf("|") > 0) {	
-      var walletTxtParts = walletTxt.split('|');
-	  loginMnemonicString = walletTxtParts[0].trim();
-	  indexPathMnemonic = walletTxtParts[1].trim();	
-    } else {
-	  loginMnemonicString = walletTxt;
-    }
-  
-    if (!bip39.validateMnemonic(loginMnemonicString)) {
-    //  bannerStatus = `Mnemonic is not valid.`;
-    //  bannerClass = 'bg_red color_white banner-look';
-    //  GuiToggles.showAllBanners(false);
-    //  renderApp();
-    //  return false;
-      // make banner
-      console.log(`Mnemonic is not valid.`);
-    }
-  
-    //privateKey = Mnemonic.getPrivateKeyFromMnemonic(loginMnemonicString, indexPathMnemonic);
-    */
-  
-  
-    //if (privateKeyWallet.length != PRIVATE_KEY_LENGTH) {
-    //  bannerStatus = `Mnemonic must create a of length ${PRIVATE_KEY_LENGTH}, not ${privateKey.length}`;
-    //  bannerClass = 'bg_red color_white banner-look';
-    //  GuiToggles.showAllBanners(false);
-    //  renderApp();
-    //  return false;
-    //  make banner
-    //  console.log(`Mnemonic must create a of length ${PRIVATE_KEY_LENGTH}, not ${privateKeyWallet.length}`);
-    //}
-    
-	const privateKeyElt = document.getElementById('privateKeyElt');
-    privateKeyElt.value = privateKeyWallet;
-    publicKey = KeyTranscoder.getPublic(privateKeyWallet);
-    requestBlockchainData();	
-	isLoggedIn = true;
-    return true;
+		privateKeyWallet = walletTxt;
+			
+		const privateKeyElt = document.getElementById('privateKeyElt');
+		privateKeyElt.value = privateKeyWallet;
+		publicKey = KeyTranscoder.getPublic(privateKeyWallet);
+		requestBlockchainData();
+		isLoggedIn = true;
+		return true;
   }
 }
 
@@ -686,11 +638,10 @@ const getPublicKeyFromPrivateKey = () => {
   
   walletNameCreate = GuiUtils.getValue('walletNameCreate');
   if (walletNameCreate.length > 0) {
-	let walletCreated = saveWalletLocally(privateKey);
-	//console.log("walletCreated",walletCreated);
-	if (!walletCreated) {
-	  return false;
-	}
+		let walletCreated = saveWalletLocally(privateKey);
+		if (!walletCreated) {
+			return false;
+		}
   }
   publicKey = KeyTranscoder.getPublic(privateKey);
   requestBlockchainData();
@@ -869,7 +820,6 @@ const getTxByteLength = (transactionHex) => {
 const sendAmountToAddress = () => {
   const isValid = validateInputs();
   if (!isValid) {
-    //console.log("isValid",isValid);
     return false;
   }
   const unspentTransactionOutputs = parsedUnspentTransactionOutputs;
@@ -878,8 +828,9 @@ const sendAmountToAddress = () => {
 
   if (useLedgerFlag) {
     const tx = TxFactory.createUnsignedSendToTx(unspentTransactionOutputs, sendToAddress, sendAmount, publicKey, feeAmountSats, feeAccount);
-    const encodedUnsignedTx = TxTranscoder.encodeTx(tx, false);
-    showLedgerConfirmBanner(getTxByteLength(encodedUnsignedTx));
+		const encodedUnsignedTx = TxTranscoder.encodeTx(tx, false);
+		//console.log(Math.ceil(encodedUnsignedTx.length/2));		
+		showLedgerConfirmBanner(getTxByteLength(encodedUnsignedTx));
     const sendAmountToAddressLedgerCallback = (message) => {
       if (LOG_LEDGER_POLLING) {
         mainConsole.log(`sendAmountToAddressLedgerCallback ${JSON.stringify(message)}`);
@@ -1157,11 +1108,11 @@ const sendVoteTx = () => {
   try {
     const unspentTransactionOutputs = parsedUnspentTransactionOutputs;
     // mainConsole.log('sendVoteTx.unspentTransactionOutputs ' + JSON.stringify(unspentTransactionOutputs));
-	
-	const isValid = checkTransactionHistory();
-	if (!isValid) {
-	  return false;
-	}
+
+		const isValid = checkTransactionHistory();
+		if (!isValid) {
+			return false;
+		}
 	
     if (parsedProducerList.producersCandidateCount === 0) {
       bannerStatus = 'No Candidates Selected.';
@@ -1188,8 +1139,8 @@ const sendVoteTx = () => {
 
     // mainConsole.log('sendVoteTx.candidates ' + JSON.stringify(candidates));
 	
-	feeAmountSats = feeRequested;
-	if (!isValidDecimal(feeAmountSats) || (feeAmountSats == 0)) feeAmountSats = 1;
+		feeAmountSats = feeRequested;
+		if (!isValidDecimal(feeAmountSats) || (feeAmountSats == 0)) feeAmountSats = 1;
     let encodedTx;
 
     // mainConsole.log('sendVoteTx.useLedgerFlag ' + JSON.stringify(useLedgerFlag));
@@ -1222,51 +1173,48 @@ const sendVoteTx = () => {
         LedgerComm.sign(encodedUnsignedTx, sendVoteLedgerCallback);
       } else {
         bannerStatus = `UTXOs have not been retrieved yet, please wait.`;
-		bannerClass = 'landing-btnbg color_white banner-look';
-		GuiToggles.showAllBanners(false);
-        renderApp();
-		//alert('please wait, UTXOs have not been retrieved yet.');
+				bannerClass = 'landing-btnbg color_white banner-look';
+				GuiToggles.showAllBanners(false);
+        renderApp();				
       }
     } else {
-	  if (usePasswordFlag) {
-	    walletNameLogin = GuiUtils.getValue('walletNameLogin');
-		if (!walletNameLogin) walletNameLogin = walletNameCreate;
-	    const votePassword = GuiUtils.getValue('votePassword');
-	    let encryptedWallet = readWalletFile(walletNameLogin);	  
-	    if (votePassword.length < minPasswordLength) {
-	      bannerStatus = `Password must be at least ${minPasswordLength} characters long`;
-          bannerClass = 'bg_red color_white banner-look';
-          GuiToggles.showAllBanners(false);
-          renderApp();
-          return false;  
-        } else {
-          let walletTxt = decryptWallet(encryptedWallet, votePassword);
-		  privateKey = walletTxt;
-		  if (!privateKey) {
-		    // wrong password
-            return false;
-	      }
-	    }
+			if (usePasswordFlag) {
+				walletNameLogin = GuiUtils.getValue('walletNameLogin');
+				if (!walletNameLogin) walletNameLogin = walletNameCreate;
+				const votePassword = GuiUtils.getValue('votePassword');
+				let encryptedWallet = readWalletFile(walletNameLogin);	  
+				if (votePassword.length < minPasswordLength) {
+					bannerStatus = `Password must be at least ${minPasswordLength} characters long`;
+					bannerClass = 'bg_red color_white banner-look';
+					GuiToggles.showAllBanners(false);
+					renderApp();
+					return false;  
+				} else {
+					let walletTxt = decryptWallet(encryptedWallet, votePassword);
+					privateKey = walletTxt;
+					if (!privateKey) {
+						// wrong password
+						return false;
+					}
+				}
 	  } else {
 	    const privateKeyElt = document.getElementById('privateKeyElt');
-        privateKey = privateKeyElt.value;
+			privateKey = privateKeyElt.value;
 	  }
 	
 	  if (privateKey) {
-		console.log(privateKey, unspentTransactionOutputs, feeAmountSats, candidates, feeAccount);
+			//console.log(privateKey, unspentTransactionOutputs, feeAmountSats, candidates, feeAccount);
 	    const encodedTx = TxFactory.createSignedVoteTx(privateKey, unspentTransactionOutputs, feeAmountSats, candidates, feeAccount);
-        if (encodedTx == undefined) {
-          return false;
-        }
-        sendVoteCallback(encodedTx);
+			if (encodedTx == undefined) {
+				return false;
+			}
+			sendVoteCallback(encodedTx);
 	  }
-	
-      // mainConsole.log('sendVoteTx.encodedTx ' + JSON.stringify(encodedTx));
-
+		// mainConsole.log('sendVoteTx.encodedTx ' + JSON.stringify(encodedTx));
     }
   } catch (error) {
     mainConsole.trace(error);
-	return false;
+		return false;
   }
   renderApp();
   return true;
@@ -1337,10 +1285,10 @@ const getTransactionHistoryReadyCallback = (transactionHistory) => {
     if (transactionHistory.result.History !== undefined) {
       transactionHistory.result.History.forEach((tx, txIx) => {
         let date = formatDate(new Date(tx.CreateTime * 1000),"date");
-		let time = formatDate(new Date(tx.CreateTime * 1000),"time");
-		if (tx.CreateTime == 0) {
+				let time = formatDate(new Date(tx.CreateTime * 1000),"time");
+				if (tx.CreateTime == 0) {
           date = formatDate(new Date(),"date");
-		  time = "";
+					time = "";
         }
         const parsedTransaction = {};
         parsedTransaction.sortTime = tx.CreateTime;
@@ -1362,14 +1310,14 @@ const getTransactionHistoryReadyCallback = (transactionHistory) => {
         if (tx.Type == 'income' && tx.Status == 'pending') {
           parsedTransaction.type = 'Receiving';
         }
-		parsedTransaction.status = tx.Status;
+				parsedTransaction.status = tx.Status;
         parsedTransaction.valueSat = tx.Value;
         
-		parsedTransaction.value = BigNumber(parsedTransaction.valueSat, 10).dividedBy(Asset.satoshis).toFixed(roundDecimalELA);
-		parsedTransaction.valueShort = BigNumber(parsedTransaction.valueSat, 10).dividedBy(Asset.satoshis).toFixed(4);
-		//mainConsole.log(parsedTransaction.valueShort);
-		//parsedTransaction.value = formatTxValue(tx.Value);
-		parsedTransaction.address = tx.Address;
+				parsedTransaction.value = BigNumber(parsedTransaction.valueSat, 10).dividedBy(Asset.satoshis).toFixed(roundDecimalELA);
+				parsedTransaction.valueShort = BigNumber(parsedTransaction.valueSat, 10).dividedBy(Asset.satoshis).toFixed(4);
+				//mainConsole.log(parsedTransaction.valueShort);
+				//parsedTransaction.value = formatTxValue(tx.Value);
+				parsedTransaction.address = tx.Address;
         parsedTransaction.txHash = tx.Txid;
         parsedTransaction.txHashWithEllipsis = tx.Txid;
         if (parsedTransaction.txHashWithEllipsis.length > 7) {
@@ -1377,19 +1325,19 @@ const getTransactionHistoryReadyCallback = (transactionHistory) => {
         }
         parsedTransaction.txDetailsUrl = getTransactionHistoryLink(tx.Txid);
         parsedTransaction.date = date;
-		parsedTransaction.time = time;
-		parsedTransaction.memoLong = tx.Memo;
-		if (parsedTransaction.memoLong.length > 14) {
-		  parsedTransaction.memoLong = parsedTransaction.memoLong.substring(14, parsedTransaction.memoLong.length).trim();
-		}
-		parsedTransaction.memo = tx.Memo;
-	    if (parsedTransaction.memo.length > 14) {
-		  var n = 14;
-		  if (parsedTransaction.memo.indexOf("From ELABank,") >= 0) n = n + 13;
-		  parsedTransaction.memo = parsedTransaction.memo.substring(n, n + 23) + '...'.trim();
-		}		
+				parsedTransaction.time = time;
+				parsedTransaction.memoLong = tx.Memo;
+				if (parsedTransaction.memoLong.length > 14) {
+					parsedTransaction.memoLong = parsedTransaction.memoLong.substring(14, parsedTransaction.memoLong.length).trim();
+				}
+				parsedTransaction.memo = tx.Memo;
+				if (parsedTransaction.memo.length > 14) {
+					var n = 14;
+					if (parsedTransaction.memo.indexOf("From ELABank,") >= 0) n = n + 13;
+					parsedTransaction.memo = parsedTransaction.memo.substring(n, n + 23) + '...'.trim();
+				}		
         parsedTransactionHistory.push(parsedTransaction);
-		// mainConsole.log(parsedTransaction);
+				// mainConsole.log(parsedTransaction);
       });
     }
   }
@@ -1483,7 +1431,7 @@ const copyAddressToClipboard = () => {
     GuiToggles.showAllBanners(true);
     renderApp();
   } else {
-	getPublicKeyFromLedger();
+		getPublicKeyFromLedger();
   }
 };
 
@@ -1493,14 +1441,6 @@ const copyMnemonicToClipboard = () => {
   bannerClass = 'bg_green color_white banner-look';
   GuiToggles.showAllBanners(true);
   renderApp();
-};
-
-const pasteMnemonicFromClipboard = () => {
-  //GuiUtils.setValue('mnemonic', appClipboard.readText());
-  //bannerStatus = `Pasted mnemonic from clipboard`;
-  //bannerClass = 'bg_green color_white banner-look';
-  //GuiToggles.showAllBanners(true);
-  //renderApp();
 };
 
 const copyPrivateKeyToClipboard = () => {
@@ -1553,7 +1493,7 @@ const clearGlobalData = () => {
   useLedgerFlag = false;
   usePasswordFlag = false;
 	
-	configInitialized = false;
+	//configInitialized = false;
   
   publicKey = undefined;
   address = undefined;
@@ -1891,32 +1831,30 @@ const encryptWallet = (text, password) => {
 
 const decryptWallet = (text, password) => {
   const textParts = text.split('!');
-  if (textParts.length === 2) {
-    const keyBytes = crypto.createHash('sha256').update(password).digest();
-	const ivBytes = Buffer.from(textParts.shift(), 'hex');	
+	if (textParts.length === 2) {
+		const keyBytes = crypto.createHash('sha256').update(password).digest();
+		const ivBytes = Buffer.from(textParts.shift(), 'hex');	
+			
+		let encryptedString = Buffer.from(textParts.join('!'), 'hex');
 		
-    let encryptedString = Buffer.from(textParts.join('!'), 'hex');
-	
-	let decryptKey = crypto.createDecipheriv(algorithm, keyBytes, ivBytes);
-    let decryptedString = decryptKey.update(encryptedString);
-    try {
-	  decryptedString = Buffer.concat([decryptedString, decryptKey.final()]);
-	} catch {
-	  bannerStatus = `Wrong password`;
-      bannerClass = 'bg_red color_white banner-look';
-      GuiToggles.showAllBanners(false);
-      renderApp();
-      //console.log('Wrong password');
-	  return false;
-	}  
-    return decryptedString.toString();
+		let decryptKey = crypto.createDecipheriv(algorithm, keyBytes, ivBytes);
+			let decryptedString = decryptKey.update(encryptedString);
+			try {
+			decryptedString = Buffer.concat([decryptedString, decryptKey.final()]);
+		} catch {
+			bannerStatus = `Wrong password`;
+			bannerClass = 'bg_red color_white banner-look';
+			GuiToggles.showAllBanners(false);
+			renderApp();      
+			return false;
+		}  
+		return decryptedString.toString();
   } else {
-	bannerStatus = `Wallet file is not compatible`;
+		bannerStatus = `Wallet file is not compatible`;
     bannerClass = 'bg_red color_white banner-look';
     GuiToggles.showAllBanners(false);
-    renderApp();
-    //console.log('Wallet file is not compatible');
-	return false;
+    renderApp();    
+		return false;
   }
 }
 
@@ -1930,15 +1868,14 @@ const createWalletFolder = () => {
 const createWalletFile = (walletName, password, text) => {
   var filePath = path.join(walletPath, walletName+".dat");
   if (!fs.existsSync(filePath)) {
-	fs.writeFile(filePath , encryptWallet(text, password), "utf8", (err) => {
-	  if (err) throw err;
-		bannerStatus = `Local wallet created successfully.`;
-		bannerClass = 'bg_green color_white banner-look';    
-		GuiToggles.showAllBanners(true);
-		renderApp();
-		//console.log('Wallet file created');
-		return true;
-	});
+		fs.writeFile(filePath , encryptWallet(text, password), "utf8", (err) => {
+			if (err) throw err;
+			bannerStatus = `Local wallet created successfully.`;
+			bannerClass = 'bg_green color_white banner-look';    
+			GuiToggles.showAllBanners(true);
+			renderApp();				
+			return true;
+		});
   } else {
 	bannerStatus = `Wallet with entered name already exist.`;
     bannerClass = 'bg_red color_white banner-look';
@@ -2014,7 +1951,6 @@ const readWalletFile = (walletName) => {
 }
 
 const listWalletFiles = () => {
-	//console.log("listWalletFiles",walletPath);
   let walletFiles = [];
 	if (fs.existsSync(walletPath)) {	
 		fs.readdirSync(walletPath).forEach(file => {
@@ -2099,11 +2035,6 @@ const updateConfigFile = (updateUserNodeURL, updateUserWalletPath, updateUserSho
   let updateConfigContent = "userNodeURL="+updateUserNodeURL+"\nuserWalletPath="+updateUserWalletPath+"\nuserShowBalance="+updateUserShowBalance;
   fs.writeFile(configFilePath, updateConfigContent, "utf8", (err) => {
 	if (err) throw err;
-	  //if (getLoggedIn()) {
-      //  GuiToggles.showHome();
-	  //} else {
-	  //  GuiToggles.showLanding();
-	  //}
 	  bannerStatus = `Configuration file was saved successfully.`;
 	  bannerClass = 'bg_green color_white banner-look';    
 	  GuiToggles.showAllBanners(true);
@@ -2121,7 +2052,6 @@ const updateConfigFile = (updateUserNodeURL, updateUserWalletPath, updateUserSho
 	  renderApp();
 	  return true;
 	});
-  //console.log("updateConfigContent",updateConfigContent);
 }
 
 const getUserShowBalance = () => {
@@ -2214,7 +2144,6 @@ exports.selectActiveVotes = selectActiveVotes;
 exports.clearSelection = clearSelection;
 exports.validateInputs = validateInputs;
 exports.insertELA = insertELA;
-exports.pasteMnemonicFromClipboard = pasteMnemonicFromClipboard;
 exports.getTotalSpendingELA = getTotalSpendingELA;
 exports.isValidAddress = isValidAddress;
 exports.isLedgerConnected = isLedgerConnected;

@@ -280,11 +280,11 @@ const sign = (transactionHex, callback) => {
   if (transactionByteLength > MAX_SIGNED_TX_LEN) {
     callback({
       success: false,
-      message: `Transaction length of ${transactionByteLength} bytes exceeds max length of ${MAX_SIGNED_TX_LEN} bytes. Send less candidates and consolidate utxos.`,
+      message: `Transaction length of ${transactionByteLength} bytes exceeds max length of ${MAX_SIGNED_TX_LEN} bytes. Consolidate UTXOs or select less candidates if voting.`,
     });
     return;
   } else {
-    mainConsole.log(`transaction length of ${transactionByteLength} bytes is under ${MAX_SIGNED_TX_LEN} bytes. Sending.`);
+    mainConsole.log(`transaction length of ${transactionByteLength} bytes is under ${MAX_SIGNED_TX_LEN} bytes. Sending ...`);
   }
 
   const ledgerMessage = transactionHex + bip44Path;

@@ -9,6 +9,7 @@ let userNodeURL = '';
 let walletPath = '';
 let initUserNodeURL = false;
 let initUserWalletPath = false;
+let showRemovePassword = false;
 
 module.exports = (props) => {
   const App = props.App;
@@ -48,8 +49,7 @@ module.exports = (props) => {
 			userDefinedNodeURL = true;
 			userNetworkIx = "99";
 			App.setUserNodeURL(userNodeURL);
-		}
-		
+		}		
 		App.setRestService(userNetworkIx);
 		GuiUtils.setValue('networkPicker', userNetworkIx);
 		App.refreshBlockchainData();
@@ -111,18 +111,27 @@ module.exports = (props) => {
 		} else {
 			updateUserShowBalance = false;
 		}
-		App.updateConfigFile(updateUserNodeURL, updateUserWalletPath, updateUserShowBalance);
-		//App.resetConfigInitialized();
-		//App.readConfigFile();
+		App.updateConfigFile(updateUserNodeURL, updateUserWalletPath, updateUserShowBalance);		
   }
 	
-	const exitPage = () => {	
+	const exitPage = () => {
+		showRemovePassword = false;
+		GuiUtils.setValue('removePassword', '');
 		if (App.getLoggedIn()) {
 			GuiToggles.showHome();
 		} else {
 			GuiToggles.showLanding();
 		}
   }
+	
+	const showPassword = () => {
+		if (showRemovePassword) {
+			showRemovePassword = false;
+		} else {
+			showRemovePassword = true;
+		}
+		App.renderApp();		
+	}
   
   return (<div id="settings">
   <Banner App={App} GuiToggles={GuiToggles} page="settings"/>
@@ -176,8 +185,9 @@ module.exports = (props) => {
 						<select className="settingsOptions" style={{background: "inherit"}} id="walletNameRemove" name="walletNameRemove">
 							<option value="">Select wallet</option>
 							{walletFiles.map(MakeItem)}
-						</select>			  
-						<input className="enterPassword m15L" type="password" size="18" id="removePassword" placeholder="Enter Password" name="removePassword" />
+						</select>
+						<input className="enterPassword m15L" type={showRemovePassword ? "text" : "password"} size="18" id="removePassword" placeholder="Enter Password" name="removePassword" />
+						<img className={showRemovePassword ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword()} />						
 					</td>
 					<td className="settingCol3"><button className="settingsButton dark-hover" onClick={(e) => removeWallet()}>Remove</button>
 					</td>

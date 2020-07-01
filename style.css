@@ -1800,7 +1800,7 @@ select, input {
   text-align: right;
   font-size: 14px;
   border: 0;
-  padding-right: 40px;
+  padding-right: 45px;
   color: gray;
 }
 
@@ -1878,7 +1878,7 @@ select, input {
 
 .enterPassword {
   height: 25px;
-  width: 140px;
+  width: 150px;
   text-align: center;
   border: none;
   border-bottom: 1px solid #E5A776;
@@ -1888,6 +1888,25 @@ select, input {
   font-size: 14px;
   color: #FFFFFF;
   padding-bottom: 2px;
+}
+
+.passwordIcon {
+  position: relative;
+  display: inline-block;
+  top: 3px;
+  left: -15px;
+  opacity: 0.6;
+  width: 15px;
+  height: 15px;
+  z-index: 2;
+}
+
+.passwordShow {
+  content: url("artwork/eye-on.png");
+}
+
+.passwordHide {
+  content: url("artwork/eye-off.png");
 }
 
 .loginWallet {
@@ -2004,7 +2023,7 @@ select, input {
 .passphrase {
   top: 307px;
   left: 480px;
-  width: 160px;
+  width: 170px;
   position: absolute;
 }
 

@@ -8,6 +8,7 @@ let derivationPathLedger = '';
 let indexPathLedger = 0;
 let ledgerConnected = false;
 let walletNameLogin = '';
+let showLoginPassword = false;
 
 const LedgerMessage = (props) => {
   const App = props.App;
@@ -95,7 +96,7 @@ module.exports = (props) => {
   
   const changeWallet = (props) => {
     walletNameLogin = GuiUtils.getValue('walletNameLogin');
-    App.renderApp();  
+    App.renderApp();
   }
   
   const useWalletLogin = () => {	
@@ -108,14 +109,23 @@ module.exports = (props) => {
   let walletFiles = App.listWalletFiles(),
     MakeItem = function(item) {
 	  return <option key={item}>{item}</option>;
-  }
-  //console.log(walletFiles.length,walletFiles);
+  }  
   
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
       useWalletLogin();
     }
   }
+	
+	const showPassword = () => {
+		//var elementID = event.target.id;
+		if (showLoginPassword) {
+			showLoginPassword = false;
+		} else {
+			showLoginPassword = true;
+		}
+		App.renderApp();		
+	}
   
   return (<div id="landing">
 	<Banner App={App} GuiToggles={GuiToggles} page="landing"/>
@@ -152,7 +162,10 @@ module.exports = (props) => {
 		{walletFiles.map(MakeItem)}
 	  </select>
 	  
-	  <input tabIndex="2" style={(walletNameLogin !== "") ? {display: 'block'} : {display: 'none'}} className="enterPassword" type="password" size="18" id="loginPassword" placeholder="Enter Password" name="loginPassword" onKeyDown={handleKeyDown}/>
+	  <div style={(walletNameLogin !== "") ? {display: 'block'} : {display: 'none'}}>
+			<input tabIndex="2" className="enterPassword" type={showLoginPassword ? "text" : "password"} size="18" id="loginPassword" placeholder="Enter Password" name="loginPassword" onKeyDown={handleKeyDown}/>
+			<img className={showLoginPassword ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword()} />
+		</div>
 	  <button style={(walletNameLogin !== "") ? {display: 'block'} : {display: 'none'}} className="loginWallet scale-hover landing-btnbg" onClick={(e) => useWalletLogin()}>Login</button>
       <p className={(ledgerConnected) ? "address-text font_size16 w80pct word-breakword clearElement" : "address-text font_size16 w80pct word-breakword"}>Ledger Status:&nbsp;
         <LedgerMessage App={App}/></p>

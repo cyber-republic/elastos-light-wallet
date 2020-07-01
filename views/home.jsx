@@ -94,43 +94,6 @@ module.exports = (props) => {
       <button className="next-button" onClick={(e) => showConfirmAndSeeFees()}>
         <p>Next</p>
       </button>
-
-      {/* <div className="h100px w100pct overflow_auto">
-      <div id="sendOne" className={`bordered w250px h200px bgcolor_black_hover ${visibility}`}>
-        Send
-        <div>Send Amount</div>
-        <br/>
-        <input className="monospace" type="text" size="14" id="sendAmount" placeholder="Send Amount" defaultValue={App.getSendAmount()} onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}></input>
-        <div className="gray_on_white">To Address</div>
-        <br/>
-        <input className="monospace" type="text" size="34" id="sendToAddress" placeholder="Send To Address"  defaultValue={App.getSendToAddress()} onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}></input>
-        <br/>
-        <div>Send Status</div>
-        <br/>
-        <div className="h90px w100pct overflow_auto">
-        <table>
-          <tbody>
-            {
-              App.getSendToAddressStatuses().map((sendToAddressStatus, index) => {
-                return (<tr key={index}>
-                <td>{sendToAddressStatus}</td>
-                </tr>)
-              })
-            }
-            {
-              App.getSendToAddressLinks().map((item, index) => {
-                return (<tr key={index}>
-                  <td>
-                    <a href={item.txDetailsUrl} onClick={(e) => onLinkClick(e)}>{item.txHash}</a>
-                  </td>
-                </tr>)
-              })
-            }
-          </tbody>
-        </table>
-        </div> */
-      }
-
     </div>);
   }
 
@@ -140,14 +103,14 @@ module.exports = (props) => {
       <div id="sendTwo" className={`send-area ${visibility}`}>
         <img src="artwork/sendicon.svg" className="send-icon" title="Refresh Blockchain Data"  onClick={(e) => App.refreshBlockchainData()}/>
         <p className="send-text">Send</p>
-		<p className="confirm-send-address-label">Receiving Address</p>
-	    <p className="confirm-send address"><span>{App.getSendToAddress()}</span></p>		
-		<input type="password" style={(App.getPasswordFlag()) ? {display: 'block'} : {display: 'none'}} className="enterPassword sendPassword" size="18" id="sendPassword" placeholder="Enter Password" name="sendPassword"/>
-		<p className="confirm-send total">Total spending amount with fees is <span>{App.getTotalSpendingELA()} ELA</span></p>
-          <span className="send-back dark-hover cursor_def" onClick={(e) => cancelSend()}><img src="artwork/arrow.svg" alt="" className="rotate_180 arrow-back" />Back </span>
-          <button className="sendela-button" onClick={(e) => sendAmountToAddress()}>
-          <p>Send ELA</p>
-          </button>
+				<p className="confirm-send-address-label">Receiving Address</p>
+				<p className="confirm-send address"><span>{App.getSendToAddress()}</span></p>		
+				<input type="password" style={(App.getPasswordFlag()) ? {display: 'block'} : {display: 'none'}} className="enterPassword sendPassword" size="18" id="sendPassword" placeholder="Enter Password" name="sendPassword"/>
+				<p className="confirm-send total">Total spending amount with fees is <span>{App.getTotalSpendingELA()} ELA</span></p>
+				<span className="send-back dark-hover cursor_def" onClick={(e) => cancelSend()}><img src="artwork/arrow.svg" alt="" className="rotate_180 arrow-back" />Back </span>
+				<button className="sendela-button" onClick={(e) => sendAmountToAddress()}>
+				<p>Send ELA</p>
+				</button>
       </div>
     )
   }
@@ -210,8 +173,8 @@ module.exports = (props) => {
       <img src="artwork/separator.svg" className="rec-separator"/>
       <p className="ledger-heading">Ledger</p>
       {isLedgerConnected && <img src="artwork/ledgericon.svg" alt="" className="ledger-icon scale-hover" height="36px" width="57px" title="Please verify above address on Ledger" onClick={(e) => App.verifyLedgerBanner()}/>}
-	  {isLedgerConnected && <p className="verifyledger-text">Please verify above address<br/><strong>on Ledger Device</strong></p>}
-	  {!isLedgerConnected && <img src="artwork/ledgericon.svg" alt="" className="ledger-icon scale-hover" height="36px" width="57px" title="No Ledger device connected"/>}
+			{isLedgerConnected && <p className="verifyledger-text">Please verify above address<br/><strong>on Ledger Device</strong></p>}
+			{!isLedgerConnected && <img src="artwork/ledgericon.svg" alt="" className="ledger-icon scale-hover" height="36px" width="57px" title="No Ledger device connected"/>}
       {!isLedgerConnected && <p className="verifyledger-text">No Ledger device<br/><strong>connected</strong></p>}
     </div>
 
@@ -235,7 +198,7 @@ module.exports = (props) => {
               <td>DATE</td>
               <td>TYPE</td>
               <td>TX</td>
-			  <td>MEMO</td>
+							<td>MEMO</td>
             </tr>
 
             {
@@ -244,27 +207,24 @@ module.exports = (props) => {
                   <td title={item.value}>{item.valueShort}&nbsp;<span className="dark-font">ELA</span>
                   </td>
                   <td>{item.date}&nbsp;&nbsp;<span className="dark-font">{item.time}</span>
-				  </td>
+									</td>
                   <td className={(item.status === "pending") ? "tx-pending" : "" }>{item.type}</td>
                   <td>
                     <a className="exit_link" href={item.txDetailsUrl} onClick={(e) => onLinkClick(e)}>{item.txHashWithEllipsis}</a>
                   </td>
-				  <td>
-				    <span title={item.memoLong} className="tx-memo">{item.memo}</span>
-				  </td>
+									<td>
+										<span title={item.memoLong} className="tx-memo">{item.memo}</span>
+									</td>
                 </tr>)
               })
             }
 
           </tbody>
         </table>
-
       </div>
 
       <div>
-
         <SocialMedia GuiToggles={GuiToggles} onLinkClick={onLinkClick}/>
-
       </div>
 
     </div>
