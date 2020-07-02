@@ -33,7 +33,7 @@ const createSignedSendToTx = (privateKey, unspentTransactionOutputs, sendToAddre
   return encodedSignedTx;
 };
 
-const createUnsignedSendToTx = (unspentTransactionOutputs, sendToAddress, sendAmount, publicKey, feeAmountSats, feeAccount) => {
+const createUnsignedSendToTx = (unspentTransactionOutputs, sendToAddress, sendAmount, publicKey, feeAmountSats, feeAccount, showOutput) => {
   if (unspentTransactionOutputs == undefined) {
     throw new Error(`unspentTransactionOutputs is undefined`);
   }
@@ -55,10 +55,10 @@ const createUnsignedSendToTx = (unspentTransactionOutputs, sendToAddress, sendAm
   /* eslint-disable */
   const sendAmountSats = BigNumber(sendAmount, 10).times(Asset.satoshis);
   /* eslint-enable */
-  return createUnsignedSendToTxSats(unspentTransactionOutputs, sendToAddress, sendAmountSats, publicKey, feeAmountSats, feeAccount);
+  return createUnsignedSendToTxSats(unspentTransactionOutputs, sendToAddress, sendAmountSats, publicKey, feeAmountSats, feeAccount, showOutput);
 };
 
-const createUnsignedSendToTxSats = (unspentTransactionOutputs, sendToAddress, sendAmountSats, publicKey, feeAmountStr, feeAccount) => {
+const createUnsignedSendToTxSats = (unspentTransactionOutputs, sendToAddress, sendAmountSats, publicKey, feeAmountStr, feeAccount, showOutput) => {
   // mainConsole.log('STARTED createUnsignedSendToTxSats');
   if (unspentTransactionOutputs == undefined) {
     throw new Error(`unspentTransactionOutputs is undefined`);
@@ -107,13 +107,13 @@ const createUnsignedSendToTxSats = (unspentTransactionOutputs, sendToAddress, se
 
   /* eslint-enable */
 
-  mainConsole.log(`createUnsignedSendToTx.inputValueSats[${sendAmountSats}]`);
+  if (showOutput) mainConsole.log(`createUnsignedSendToTx.inputValueSats[${sendAmountSats}]`);
 
   const sendAmountAndFeeAmountSats = sendAmountSats.plus(feeAmountSats).plus(FEE_SATS);
 
-  mainConsole.log(`createUnsignedSendToTx.FEE_SATS[${FEE_SATS}]`);
+  if (showOutput) mainConsole.log(`createUnsignedSendToTx.FEE_SATS[${FEE_SATS}]`);
 
-  mainConsole.log(`createUnsignedSendToTx.feeAmountSats[${feeAmountSats}]`);
+  if (showOutput) mainConsole.log(`createUnsignedSendToTx.feeAmountSats[${feeAmountSats}]`);
 
   // console.log(`createUnsignedSendToTx.sendAmountAndFeeAmountSats[${sendAmountAndFeeAmountSats}]`);
 
@@ -142,15 +142,15 @@ const createUnsignedSendToTxSats = (unspentTransactionOutputs, sendToAddress, se
     }
   });
 
-  mainConsole.log(`createUnsignedSendToTx.sendAmountAndFeeAmountSats[${sendAmountAndFeeAmountSats}]`);
+  if (showOutput) mainConsole.log(`createUnsignedSendToTx.sendAmountAndFeeAmountSats[${sendAmountAndFeeAmountSats}]`);
 
-  mainConsole.log(`createUnsignedSendToTx.inputValueSats[${inputValueSats}]`);
+  if (showOutput) mainConsole.log(`createUnsignedSendToTx.inputValueSats[${inputValueSats}]`);
 
   const changeValueSats = inputValueSats.minus(sendAmountAndFeeAmountSats);
 
-  mainConsole.log(`createUnsignedSendToTx.changeValueSats[${changeValueSats}]`);
+  if (showOutput) mainConsole.log(`createUnsignedSendToTx.changeValueSats[${changeValueSats}]`);
 
-  mainConsole.log(`createUnsignedSendToTx.feeAmountSats[${feeAmountSats}]`);
+  if (showOutput) mainConsole.log(`createUnsignedSendToTx.feeAmountSats[${feeAmountSats}]`);
 
   {
     const sendOutput = {};
@@ -183,10 +183,37 @@ const createUnsignedSendToTxSats = (unspentTransactionOutputs, sendToAddress, se
   }
 
   tx.Programs = [];
-
   // mainConsole.log('SUCCESS createUnsignedSendToTxSats', tx);
 
   return tx;
+};
+
+const getMaxAmountToSpendSats = (unspentTransactionOutputs, utxoMaxCount) => {
+  // mainConsole.log('STARTED createUnsignedSendToTxSats');
+  if (unspentTransactionOutputs == undefined) {
+    throw new Error(`unspentTransactionOutputs is undefined`);
+  }
+  if (utxoMaxCount == undefined) {
+    throw new Error(`utxoMaxCount is undefined`);
+  }
+  
+  /* eslint-disable */
+  let inputValueSats = BigNumber(0, 10);
+  /* eslint-enable */
+  const usedUtxos = new Set();
+  
+  let i = 1
+  unspentTransactionOutputs.forEach((utxo) => {
+    if (utxo.valueSats.isGreaterThan(ZERO) && i < utxoMaxCount) {
+      inputValueSats = inputValueSats.plus(utxo.valueSats);
+      i++;
+      //console.log(i);
+    }
+  });
+  
+  //const maxAmountToSpend = inputValueSats.minus(FEE_SATS).minus(feeAmountSats).dividedBy(Asset.satoshis);  
+  const maxAmountToSpend = inputValueSats; //.dividedBy(Asset.satoshis);  
+  return maxAmountToSpend.toString();
 };
 
 const updateValueSats = (utxo, utxoIx) => {
@@ -271,3 +298,4 @@ exports.createSignedSendToTx = createSignedSendToTx;
 exports.updateValueSats = updateValueSats;
 exports.createUnsignedVoteTx = createUnsignedVoteTx;
 exports.createSignedVoteTx = createSignedVoteTx;
+exports.getMaxAmountToSpendSats = getMaxAmountToSpendSats;

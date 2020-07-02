@@ -16,13 +16,17 @@ const Staking = require('./partial/staking.jsx');
 
 const SocialMedia = require('./partial/social-media.jsx');
 
+let consolidesCount = 0;
+
 module.exports = (props) => {
   const App = props.App;
   const openDevTools = props.openDevTools;
   const Version = props.Version;
   const GuiToggles = props.GuiToggles;
   const onLinkClick = props.onLinkClick;
-  const isLedgerConnected = App.isLedgerConnected();  
+  const isLedgerConnected = App.isLedgerConnected();
+  consolidesCount = Math.ceil(Number(App.getTotalUTXOs())/Number(App.getMaxUTXOsPerTX()));
+  let consolidateTitle = "Total number of UTXOs is "+App.getTotalUTXOs()+". You can consolidate UTXOs up to "+consolidesCount+" times.";
   
   const showMenu = () => {
     GuiToggles.showMenu('home');
@@ -55,8 +59,13 @@ module.exports = (props) => {
   }
 
   const sendAmountToAddress = () => {
-	App.setSendHasFocus(false);
+    App.setSendHasFocus(false);
     App.sendAmountToAddress();
+  }
+  
+  const consolidateUTXOs = () => {
+    App.setSendHasFocus(false);
+    App.consolidateUTXOs();
   }
 
   const SendScreen = (props) => {
@@ -81,19 +90,18 @@ module.exports = (props) => {
       <img src="artwork/sendicon.svg" className="send-icon"/>
       <p className="send-text">Send</p>
       <input type="text" size="34" maxLength={34} id="sendToAddress" className="ela-address_input" placeholder="Enter ELA Address" defaultValue={App.getSendToAddress()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*//>
-      <input type="text" size="14" maxLength={14} id="sendAmount" className="ela-send_amount" placeholder="Amount" defaultValue={App.getSendAmount()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*//>	  
-	  <div className="quick-elaselector">
-	    <button className="quick-elaselector-icon quarter" onClick={() => App.insertELA('quarter')}>25%</button>
-	    <button className="quick-elaselector-icon half" onClick={() => App.insertELA('half')}>50%</button>
-	    <button className="quick-elaselector-icon max" onClick={() => App.insertELA('max')}>Max</button>
-	  </div>
-	  <hr className="ela-send_amount_line" />
-	  <p className="elatext-send">ELA</p>
-	  <input type="text" size="5" maxLength={5} id="feeAmount" placeholder="Fees" defaultValue={App.getFee()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*/></input>
-	  <div className="fees-text">Fees (in Satoshi ELA)</div>
-      <button className="next-button" onClick={(e) => showConfirmAndSeeFees()}>
-        <p>Next</p>
-      </button>
+      <input type="text" size="14" maxLength={14} id="sendAmount" className="ela-send_amount" placeholder="Amount" defaultValue={App.getSendAmount()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*//>    
+    <div className="quick-elaselector">
+      <button className="quick-elaselector-icon quarter" onClick={() => App.insertELA('quarter')}>25%</button>
+      <button className="quick-elaselector-icon half" onClick={() => App.insertELA('half')}>50%</button>
+      <button className="quick-elaselector-icon max" onClick={() => App.insertELA('max')}>Max</button>
+    </div>
+    <hr className="ela-send_amount_line" />
+    <p className="elatext-send">ELA</p>
+    <input type="text" size="5" maxLength={5} id="feeAmount" placeholder="Fees" defaultValue={App.getFee()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*/></input>
+    <div className="fees-text">Fees (in Satoshi ELA)</div>
+      <button className="next-button scale-hover" onClick={(e) => showConfirmAndSeeFees()}><p>Next</p></button>
+      <button style={App.showConsolidateButton() ? {display: 'block'} : {display: 'none'}} className="consolidate-button dark-hover cursor_def" title={consolidateTitle} onClick={(e) => consolidateUTXOs()}>Consolidate ({consolidesCount})<img src="artwork/arrow.svg" alt="" className="arrow-forward"/></button>
     </div>);
   }
 
@@ -103,14 +111,12 @@ module.exports = (props) => {
       <div id="sendTwo" className={`send-area ${visibility}`}>
         <img src="artwork/sendicon.svg" className="send-icon" title="Refresh Blockchain Data"  onClick={(e) => App.refreshBlockchainData()}/>
         <p className="send-text">Send</p>
-				<p className="confirm-send-address-label">Receiving Address</p>
-				<p className="confirm-send address"><span>{App.getSendToAddress()}</span></p>		
-				<input type="password" style={(App.getPasswordFlag()) ? {display: 'block'} : {display: 'none'}} className="enterPassword sendPassword" size="18" id="sendPassword" placeholder="Enter Password" name="sendPassword"/>
-				<p className="confirm-send total">Total spending amount with fees is <span>{App.getTotalSpendingELA()} ELA</span></p>
-				<span className="send-back dark-hover cursor_def" onClick={(e) => cancelSend()}><img src="artwork/arrow.svg" alt="" className="rotate_180 arrow-back" />Back </span>
-				<button className="sendela-button" onClick={(e) => sendAmountToAddress()}>
-				<p>Send ELA</p>
-				</button>
+        <p className="confirm-send-address-label">Receiving Address</p>
+        <p className="confirm-send address"><span>{App.getSendToAddress()}</span></p>    
+        <input type="password" style={(App.getPasswordFlag()) ? {display: 'block'} : {display: 'none'}} className="enterPassword sendPassword" size="18" id="sendPassword" placeholder="Enter Password" name="sendPassword"/>
+        <p className="confirm-send total">Total spending amount with fees is <span>{App.getTotalSpendingELA()} ELA</span></p>
+        <button className="send-back dark-hover cursor_def" onClick={(e) => cancelSend()}><img src="artwork/arrow.svg" alt="" className="rotate_180 arrow-back" /><span className="send-back-text">Back</span></button>
+        <button className="sendela-button scale-hover" onClick={(e) => sendAmountToAddress()}><p>Send ELA</p></button>
       </div>
     )
   }
@@ -173,8 +179,8 @@ module.exports = (props) => {
       <img src="artwork/separator.svg" className="rec-separator"/>
       <p className="ledger-heading">Ledger</p>
       {isLedgerConnected && <img src="artwork/ledgericon.svg" alt="" className="ledger-icon scale-hover" height="36px" width="57px" title="Please verify above address on Ledger" onClick={(e) => App.verifyLedgerBanner()}/>}
-			{isLedgerConnected && <p className="verifyledger-text">Please verify above address<br/><strong>on Ledger Device</strong></p>}
-			{!isLedgerConnected && <img src="artwork/ledgericon.svg" alt="" className="ledger-icon scale-hover" height="36px" width="57px" title="No Ledger device connected"/>}
+      {isLedgerConnected && <p className="verifyledger-text">Please verify above address<br/><strong>on Ledger Device</strong></p>}
+      {!isLedgerConnected && <img src="artwork/ledgericon.svg" alt="" className="ledger-icon scale-hover" height="36px" width="57px" title="No Ledger device connected"/>}
       {!isLedgerConnected && <p className="verifyledger-text">No Ledger device<br/><strong>connected</strong></p>}
     </div>
 
@@ -198,7 +204,7 @@ module.exports = (props) => {
               <td>DATE</td>
               <td>TYPE</td>
               <td>TX</td>
-							<td>MEMO</td>
+              <td>MEMO</td>
             </tr>
 
             {
@@ -207,14 +213,14 @@ module.exports = (props) => {
                   <td title={item.value}>{item.valueShort}&nbsp;<span className="dark-font">ELA</span>
                   </td>
                   <td>{item.date}&nbsp;&nbsp;<span className="dark-font">{item.time}</span>
-									</td>
+                  </td>
                   <td className={(item.status === "pending") ? "tx-pending" : "" }>{item.type}</td>
                   <td>
                     <a className="exit_link" href={item.txDetailsUrl} onClick={(e) => onLinkClick(e)}>{item.txHashWithEllipsis}</a>
                   </td>
-									<td>
-										<span title={item.memoLong} className="tx-memo">{item.memo}</span>
-									</td>
+                  <td>
+                    <span title={item.memoLong} className="tx-memo">{item.memo}</span>
+                  </td>
                 </tr>)
               })
             }

@@ -139,7 +139,7 @@ const showGenerateNewMnemonic = () => {
 const showAllBanners = (timeout) => {
   clearTimeout(bannerID);
   if (timeout === true) {
-	bannerID = setTimeout(() => hideAllBanners(), bannerTimeout);
+  bannerID = setTimeout(() => hideAllBanners(), bannerTimeout);
   }
   GuiUtils.show('landingBanner');
   GuiUtils.show('homeBanner');

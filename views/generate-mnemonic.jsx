@@ -11,7 +11,7 @@ module.exports = (props) => {
   return (
     <div id="generateMnemonic">
     <div className="login-div ">
-	  <Banner App={App} GuiToggles={GuiToggles} page="generateMnemonic"/>
+    <Banner App={App} GuiToggles={GuiToggles} page="generateMnemonic"/>
       <div className="flex_center w100pct">
       <img className="flex1 scale-hover" src="artwork/voting-back.svg" height="38px" width="38px" onClick={(e)=> GuiToggles.showLanding()}/>
       <img src="artwork/logonew.svg" height="80px" width="240px" />
