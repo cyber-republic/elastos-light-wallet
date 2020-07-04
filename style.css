@@ -741,6 +741,9 @@ button {
   color: #B2B4C3;
   letter-spacing: 0;
   text-align: center;
+}
+
+.address-position {
   left: 808px;
   top: 127px;
 }
@@ -892,7 +895,7 @@ button {
 
 .txtable {
   margin-left: 20px;
-  margin-bottom: 36px;
+  margin-bottom: 10px;
   width: 95%;
   border-spacing: 0 7px;
 }
@@ -1161,6 +1164,10 @@ select, input {
   width: 400px;
 }
 
+.w350px {
+  width: 350px;
+}
+
 .w250px {
   width: 250px;
 }
@@ -1171,6 +1178,10 @@ select, input {
 
 .w195px {
   width: 195px;
+}
+
+.w175px {
+  width: 175px;
 }
 
 .w150px {
@@ -1215,6 +1226,10 @@ select, input {
 
 .h300px {
   height: 300px;
+}
+
+.h250px {
+  height: 250px;
 }
 
 .h200px {
@@ -1335,6 +1350,11 @@ select, input {
   left: 0px;
   transform-origin: 0px 0px;
   transform: rotate(-90deg);
+}
+
+.rotate_90 {
+  transform-origin: 0px 0px;
+  transform: rotate(90deg);
 }
 
 .rotate_180 {
@@ -1813,6 +1833,12 @@ select, input {
   /*cursor: pointer;*/
 }
 
+.flex-middle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .derivationPathPicker {
   background: none;
   border-radius: 8px;
@@ -1822,35 +1848,29 @@ select, input {
   text-align: right;
   font-size: 14px;
   border: 0;
-  padding-right: 45px;
+  padding-right: 10px;
   color: gray;
 }
 
-.mnemonicPicker {
-  top: 445px;
-  right: 463px;
-  position: absolute;
-}
-
 .ledgerPicker {
+  padding-right: 45px;
   bottom: 229px;
-  right: 40px;
+  right: 32px;
   position: absolute;
 }
 
 .editPath {  
   width: 19px;
   height: 19px;
-  top: 445px;
-  right: 465px;
-  position: absolute;
+  position: relative;
+  top: 10px;
 }
 
 .editPathLedger {  
   width: 19px;
   height: 19px;
   bottom: 230px;
-  right: 46px;
+  right: 42px;
   position: absolute;
 }
 
@@ -1931,94 +1951,17 @@ select, input {
   content: url("artwork/eye-off.png");
 }
 
-.loginWallet {
-  /*background-image: linear-gradient(-214deg, #F4D2AE 0%, #E5A776 100%);*/
-  box-shadow: 0 3px 6px -2px rgba(25, 23, 41, 0.66);
-  border-radius: 8px;
-  width: 120px;
-  height: 35px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border: none;
-  margin: 0;
-  font-weight: 600;
-  font-size: 18px;
-  color: #FFFFFF;
-  letter-spacing: 0;
-}
-
 /* new landing css (absolute) */
-.landingBack {
-  position: absolute;
-  top: 68px;
-  left: 333px;
-}
-
-.logoTop {
-  position: absolute;
-  top: 47px;  
-}
-
-.address-text-ab {
-  opacity: 0.8;  
-  color: #B2B4C3;
-  letter-spacing: 0;
-  text-align: center;
-  top: 173px;
-  position: absolute;
-}
-
-.qraddress-div-ab {
-  opacity: 0.5;
-  background: rgba(168, 170, 174, 0.22);
-  border-radius: 15px;
-  width: 480px;
-  height: 65px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  font-family: inherit;
-  font-weight: 600;
-  -moz-text-align-last: center; /* Firefox 12+ */
-  text-align-last: center;
-  position: absolute;
-  top: 225px;
-}
-
-.saveWalletCheckbox {
-  top: 1px;
-  left: 397px;
-  position: absolute;
-}
-
-.saveWalletLabel {
-  opacity: 0.7;
-  color: #FFFFFF;
-  top: 0px;
-  left: 417px;
-  position: absolute;
-  
-}
-
-.logoDiv {
-  top: 50px;
-  position: absolute;
-}
 
 .walletNameCreate {
   opacity: 1;
   background: rgba(168, 170, 174, 0.22);
   border-radius: 8px;
-  position: absolute;
   font-size: 16px;
   color: #FFFFFF;
   letter-spacing: 0;
   height: 35px;
   width: 150px;
-  top: 355px;
-  left: 485px;
   text-align: center;
   border: none;
   text-align: left;
@@ -2028,25 +1971,6 @@ select, input {
 .walletNameCreate::placeholder {
   opacity: 1;
   color: gray;
-}
-
-.newPassword {
-  top: 405px;
-  left: 402px;
-  position: absolute;
-}
-
-.confirmPassword {
-  top: 405px;
-  left: 575px;
-  position: absolute;
-}
-
-.passphrase {
-  top: 307px;
-  left: 480px;
-  width: 170px;
-  position: absolute;
 }
 
 .proceed-btn {
@@ -2066,15 +1990,8 @@ select, input {
   letter-spacing: 0;  
 }
 
-.login-btn {
-  top: 490px;
-  position: absolute;
-}
-
-.tips {
-  width: 55%;
-  position: absolute;
-  top: 540px;
+.passphrase {
+  width: 170px;
 }
 
 /* END: new landing css (absolute) */
@@ -2085,45 +2002,23 @@ select, input {
   left: 725px;
 }
 
-.sendPassword {
+/*.sendPassword { remove
   position: absolute;
   top: 318px;
   left: 550px;
-}
+}*/
 
-.radioMnemonic {
+.radioLogin {
   opacity: 0.8;
   width: 18px;
   height: 18px;
-  top: 306px;
-  left: 338px;
-  position: absolute;
 }
 
-.radioMnemonicLabel {
+.radioLabelLogin {
   /*opacity: 0.8;*/
-  top: 309px;
-  left: 365px;
-  position: absolute;
   font-size: 14px;
 }
 
-.radioPrivateKey {
-  opacity: 0.8;
-  width: 18px;
-  height: 18px;
-  top: 306px;
-  left: 770px;
-  position: absolute;
-}
-
-.radioPrivateKeyLabel {
-  /*opacity: 0.8;*/
-  top: 309px;
-  left: 700px;
-  position: absolute;
-  font-size: 14px;
-}
 
 .menu-settings {
   opacity: 0.7;
@@ -2139,7 +2034,8 @@ select, input {
   height: 650px;
   top: 50px;
   left: 280px;
-  background-image: linear-gradient(2deg, #36373B 0%, #65666E 100%);
+  /*background-image: linear-gradient(2deg, #36373B 0%, #65666E 100%);*/
+  background-image: linear-gradient(2deg, #33373D 0%, rgba(51, 55, 61, 1) 100%);
   box-shadow: 6px 30px 60px -13px rgba(0, 0, 0, 0.50);
   border-radius: 38px;  
   text-align: left;
@@ -2213,6 +2109,10 @@ select, input {
   border-color: #787981;
 }
 
+.settingsOptions option{
+  color: gray;
+}
+
 .settingsInput {
   margin-left: 10px;
   border-radius: 5px;
@@ -2267,22 +2167,138 @@ select, input {
   position: absolute;
 }
 
-.m30L {
-  margin-left: 30px;
-}
-
-.m15L {
-  margin-left: 15px;
+.m5L {
+  margin-left: 5px;
 }
 
 .m10L {
   margin-left: 10px;
 }
 
-.m5L {
-  margin-left: 5px;
+.m15L {
+  margin-left: 15px;
+}
+
+.m30L {
+  margin-left: 30px;
+}
+
+.m50L {
+  margin-left: 50px;
+}
+
+.m150L {
+  margin-left: 150px;
 }
 
 .m10R {
   margin-right: 10px;
+}
+
+.m15T {
+  margin-top: 15px;
+}
+
+.m10B {
+  margin-bottom: 10px;
+}
+
+.bg-modal {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modalContent {
+  /*background-image: linear-gradient(2deg, #33373D 0%, rgba(51, 55, 61, 1) 110%);*/
+  background-image: url(artwork/BG7.svg);
+  /*box-shadow: 6px 30px 60px -13px rgba(0, 0, 0, 0.50);*/
+  border-radius: 24px;
+  text-align: center;
+  padding: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+.modalContent::after {
+  background-image: url(artwork/BG7.svg);
+  opacity: 0.8;
+  
+}
+
+.closeModal {
+  position: absolute;
+  display: block;  
+  color: white;
+  font-size: 32px;
+  width: 38px;
+  height: 38px;
+  top: 20px;
+  left: 20px;  
+  cursor: default;
+}
+
+.submitModal {
+  /*background-image: linear-gradient(-214deg, #F4D2AE 0%, #E5A776 100%);*/
+  background: #E5A776;
+  box-shadow: 0 3px 6px -2px rgba(25, 23, 41, 0.66);
+  border-radius: 8px;
+  width: 120px;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  font-weight: 600;
+  font-size: 18px;
+  color: #FFFFFF;
+  letter-spacing: 0;
+  padding: 10px;
+}
+
+.skipModal {
+  background: none;
+  border-radius: 8px;
+  width: 120px;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  font-weight: 600;
+  font-size: 16px;
+  color: #B2B4C3;
+  letter-spacing: 0;
+  padding: 10px 10px 15px 10px;
+}
+
+.modal-title {
+  font-size: 22px;
+  position: relative;
+  top: -10px;
+}
+
+.history-button {
+  background: none;
+  border-radius: 8px;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  font-weight: 600;
+  font-size: 16px;
+  color: #B2B4C3;
+  letter-spacing: 0;
+  width: 50px;
+  padding: 5px;
+}
+
+.arrow-history {
+  position: relative;
+  top: 7px;
+  left: 13px;
 }

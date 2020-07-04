@@ -9,6 +9,7 @@ let indexPathLedger = 0;
 let ledgerConnected = false;
 let walletNameLogin = '';
 let showLoginPassword = false;
+let showWalletLogin = false;
 
 const LedgerMessage = (props) => {
   const App = props.App;
@@ -102,6 +103,7 @@ module.exports = (props) => {
   const useWalletLogin = () => {  
   const success = App.loginWithWallet();
     if(success) {
+      showWalletLogin = false;
       GuiToggles.showHome();
     }
   }
@@ -127,53 +129,77 @@ module.exports = (props) => {
     App.renderApp();    
   }
   
+  const closeModal = () => {
+    showWalletLogin = false;
+    App.renderApp();    
+  }
+  
+  const showWalletLoginModal = () => {
+    showWalletLogin = true;
+    App.renderApp();    
+  }
+  
   return (<div id="landing">
   <Banner App={App} GuiToggles={GuiToggles} page="landing"/>
   <Menu App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} page="landing"/>
   <header>
-      <img src="artwork/refreshicon.svg" className="refresh-icon" title="Refresh" onClick={(e) => refreshLedger()} />
+    <img src="artwork/refreshicon.svg" className="refresh-icon" title="Refresh" onClick={(e) => refreshLedger()} />
     <nav id="landingMenuOpen" title="menu" onClick={(e) => showMenu()}>
-        <img src="artwork/nav.svg" className="nav-icon dark-hover" onClick={(e) => showMenu()}/>
-      </nav>
-    </header>
-    <div className="login-div ">
-      <img src="artwork/logonew.svg" height="80px" width="240px" className="flexgrow_pt35"/>
-
-      <p className="address-text font_size24 margin_none display_inline_block gradient-font">Create New Wallet</p>
-      <div className="flex_center">
-        <button className="home-btn scale-hover landing-btnbg" onClick={(e) => GuiToggles.showGenerateNewMnemonic()}>
-          Create
-        </button>
+      <img src="artwork/nav.svg" className="nav-icon dark-hover" onClick={(e) => showMenu()}/>
+    </nav>
+  </header>
+  <div className="login-div ">
+    <img src="artwork/logonew.svg" height="80px" width="240px" className="flexgrow_pt35"/>
+    <p className="address-text font_size24 margin_none display_inline_block gradient-font">Create New Wallet</p>
+    <div className="flex_center">
+      <button className="home-btn scale-hover landing-btnbg" onClick={(e) => GuiToggles.showGenerateMnemonic()}>
+        Create
+      </button>
+    </div>
+    <p className="address-text font_size24 margin_none display_inline_block gradient-font">Import Wallet</p>
+    <div className="flex_center">
+      <button className="home-btn scale-hover landing-btnbg" onClick={(e) => GuiToggles.showLoginMnemonic()}>
+        From Mnemonics or Private key
+      </button>
+    </div>
+    {/*<div className="flex_center">
+      <button className="home-btn scale-hover landing-btnbg" onClick={(e) => GuiToggles.showLoginPrivateKey()}>
+        Login with Private Key
+      </button>
+    </div>*/}
+    <p className="address-text font_size24 margin_none display_inline_block gradient-font">Login</p>    
+    <button className="home-btn scale-hover landing-btnbg" onClick={(e) => showWalletLoginModal()}>Login with Password</button>
+    <p className={(ledgerConnected) ? "address-text font_size16 w80pct word-breakword clearElement" : "address-text font_size16 w80pct word-breakword"}>Ledger Status:&nbsp;
+      <LedgerMessage App={App}/></p>
+    <div style={App.getCurrentAdvancedFeatures() ? {display: 'block'} : {display: 'none'}}>
+      <input style={(ledgerConnected) ? {display: 'flex'} : {display: 'none'}} type="text" size="21" maxLength={21} className={!editablePath ? "derivationPathPicker ledgerPicker w0px" : "derivationPathPicker ledgerPicker w195px"} id="derivationPathLedger" name="derivationPathLedger" readOnly={!editablePath ? true : false} placeholder="Elastos account (default)" onChange={(e) => validatePath()}/><img style={(ledgerConnected) ? {display: 'flex'} : {display: 'none'}} title="For Advanced users only" className={!editablePath ? "editPathLedger dark-hover padding_5px br5 editOn" : "editPathLedger dark-hover padding_5px br5 editOff"} onClick={(e) => editPath()}/>
+    </div>
+  </div>
+  <div>
+    <UseLedgerButton App={App} GuiToggles={GuiToggles}/>
+  </div>
+  <div className="bg-modal" style={showWalletLogin ? {display: 'flex'} : {display: 'none'}}>
+    <div className="modalContent w450px h250px">
+      <div className="closeModal" onClick={(e) => closeModal()}>
+        <img className="scale-hover" src="artwork/voting-back.svg" height="38px" width="38px"/>
       </div>
-      <p className="address-text font_size24 margin_none display_inline_block gradient-font">Import Wallet</p>
-      <div className="flex_center">
-        <button className="home-btn scale-hover landing-btnbg" onClick={(e) => GuiToggles.showLoginMnemonic()}>
-          From Mnemonics or Private key
-        </button>
+      <div>
+        <span className="address-text modal-title gradient-font">Login to wallet</span>
       </div>
-      {/*<div className="flex_center">
-        <button className="home-btn scale-hover landing-btnbg" onClick={(e) => GuiToggles.showLoginPrivateKey()}>
-          Login with Private Key
-        </button>
-      </div>*/}
-      <p className="address-text font_size24 margin_none display_inline_block gradient-font">Login</p>
-    <select tabIndex="1" className="walletPicker" id="walletNameLogin" name="walletNameLogin" onChange={(e) => changeWallet()}>
-      <option value="">Select wallet</option>
-    {walletFiles.map(MakeItem)}
-    </select>
-    
-    <div style={(walletNameLogin !== "") ? {display: 'block'} : {display: 'none'}}>
-      <input tabIndex="2" className="enterPassword" type={showLoginPassword ? "text" : "password"} size="18" id="loginPassword" placeholder="Enter Password" name="loginPassword" onKeyDown={handleKeyDown}/>
-      <img className={showLoginPassword ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword()} />
+      <div className="m15T">
+        <select tabIndex="1" className="walletPicker" id="walletNameLogin" name="walletNameLogin" /*onChange={(e) => changeWallet()}*/>
+          <option value="">Select wallet</option>
+          {walletFiles.map(MakeItem)}
+        </select>
+      </div>
+      <div className="m15T">
+        <input tabIndex="2" className="enterPassword" type={showLoginPassword ? "text" : "password"} size="18" id="loginPassword" placeholder="Enter Password" name="loginPassword" onKeyDown={handleKeyDown}/>
+        <img className={showLoginPassword ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword()} />
+      </div>
+      <div className="m15T">
+        <button className="submitModal scale-hover" onClick={(e) => useWalletLogin()}>Login</button>
+      </div>      
     </div>
-    <button style={(walletNameLogin !== "") ? {display: 'block'} : {display: 'none'}} className="loginWallet scale-hover landing-btnbg" onClick={(e) => useWalletLogin()}>Login</button>
-      <p className={(ledgerConnected) ? "address-text font_size16 w80pct word-breakword clearElement" : "address-text font_size16 w80pct word-breakword"}>Ledger Status:&nbsp;
-        <LedgerMessage App={App}/></p>
-    <input style={(ledgerConnected) ? {display: 'block'} : {display: 'none'}} type="text" size="21" maxLength={21} className={!editablePath ? "derivationPathPicker ledgerPicker w0px" : "derivationPathPicker ledgerPicker w195px"} id="derivationPathLedger" name="derivationPathLedger" readOnly={!editablePath ? true : false} placeholder="Elastos account (default)" onChange={(e) => validatePath()}/><img style={(ledgerConnected) ? {display: 'block'} : {display: 'none'}} title="For Advanced users only" className={!editablePath ? "editPathLedger dark-hover padding_5px br5 editOn" : "editPathLedger dark-hover padding_5px br5 editOff"} onClick={(e) => editPath()}/>
-    </div>
-    <div>
-      <UseLedgerButton App={App} GuiToggles={GuiToggles}/>
-    </div>
-
-  </div>);
+  </div>
+</div>);
 }

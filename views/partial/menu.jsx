@@ -23,6 +23,7 @@ module.exports = (props) => {
       walletInfo = "Ledger Device"
     } else if (menuPasswordFlag) {
       walletInfo = App.getWalletNameLogin();
+      if (walletInfo.length === 0) walletInfo = App.getWalletNameCreate();
     } else {
       walletInfo = "One Time Login";
     }

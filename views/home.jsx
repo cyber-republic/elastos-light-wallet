@@ -17,6 +17,11 @@ const Staking = require('./partial/staking.jsx');
 const SocialMedia = require('./partial/social-media.jsx');
 
 let consolidesCount = 0;
+let showPasswordModal = false;
+let showPasswordToggle = false;
+let sendTxType = false;
+let consolidateTxType = false;
+let isSent = false;
 
 module.exports = (props) => {
   const App = props.App;
@@ -60,12 +65,20 @@ module.exports = (props) => {
 
   const sendAmountToAddress = () => {
     App.setSendHasFocus(false);
-    App.sendAmountToAddress();
+    let isSent = App.sendAmountToAddress();
+    if (isSent) {
+      showPasswordModal = false;
+    }
+    App.renderApp();
   }
   
   const consolidateUTXOs = () => {
     App.setSendHasFocus(false);
-    App.consolidateUTXOs();
+    isSent = App.consolidateUTXOs();
+    if (isSent) {
+      showPasswordModal = false;
+    }
+    App.renderApp();
   }
 
   const SendScreen = (props) => {
@@ -84,6 +97,44 @@ module.exports = (props) => {
     }
   }
   
+  const showSendModal = () => {
+    App.setSendHasFocus(false);
+    showPasswordModal = true;
+    sendTxType = true;
+    consolidateTxType = false;
+    App.renderApp();
+    //console.log("showSendModal");
+  }
+  
+  const showConsolidateModal = () => {
+    App.setSendHasFocus(false);
+    showPasswordModal = true;
+    sendTxType = false;
+    consolidateTxType = true;
+    App.renderApp();
+    //console.log("showConsolidateModal");
+  }
+  
+  const closeModal = () => {
+    showPasswordModal = false;
+    App.renderApp();    
+  }
+  
+  const showPassword = () => {
+    if (showPasswordToggle) {
+      showPasswordToggle = false;
+    } else {
+      showPasswordToggle = true;
+    }
+    App.renderApp();    
+  }
+  
+  const loadMoreTx = () => {
+    var txRecordCount = App.getTxRecordsCount()+App.getInitTxRecordsCount();
+    App.setTxRecordsCount(txRecordCount);
+    App.renderApp();
+  }  
+  
   const SendScreenOne = (props) => {
     const visibility = props.visibility;
     return (<div id="sendOne" className={`send-area ${visibility}`}>
@@ -101,7 +152,7 @@ module.exports = (props) => {
     <input type="text" size="5" maxLength={5} id="feeAmount" placeholder="Fees" defaultValue={App.getFee()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*/></input>
     <div className="fees-text">Fees (in Satoshi ELA)</div>
       <button className="next-button scale-hover" onClick={(e) => showConfirmAndSeeFees()}><p>Next</p></button>
-      <button style={App.showConsolidateButton() ? {display: 'block'} : {display: 'none'}} className="consolidate-button dark-hover cursor_def" title={consolidateTitle} onClick={(e) => consolidateUTXOs()}>Consolidate ({consolidesCount})<img src="artwork/arrow.svg" alt="" className="arrow-forward"/></button>
+      <button style={App.showConsolidateButton() ? {display: 'block'} : {display: 'none'}} className="consolidate-button dark-hover cursor_def" title={consolidateTitle} onClick={(App.getPasswordFlag()) ? (e) => showConsolidateModal() : (e) => consolidateUTXOs()}>Consolidate ({consolidesCount})<img src="artwork/arrow.svg" alt="" className="arrow-forward"/></button>
     </div>);
   }
 
@@ -112,11 +163,10 @@ module.exports = (props) => {
         <img src="artwork/sendicon.svg" className="send-icon" title="Refresh Blockchain Data"  onClick={(e) => App.refreshBlockchainData()}/>
         <p className="send-text">Send</p>
         <p className="confirm-send-address-label">Receiving Address</p>
-        <p className="confirm-send address"><span>{App.getSendToAddress()}</span></p>    
-        <input type="password" style={(App.getPasswordFlag()) ? {display: 'block'} : {display: 'none'}} className="enterPassword sendPassword" size="18" id="sendPassword" placeholder="Enter Password" name="sendPassword"/>
+        <p className="confirm-send address"><span>{App.getSendToAddress()}</span></p>        
         <p className="confirm-send total">Total spending amount with fees is <span>{App.getTotalSpendingELA()} ELA</span></p>
-        <button className="send-back dark-hover cursor_def" onClick={(e) => cancelSend()}><img src="artwork/arrow.svg" alt="" className="rotate_180 arrow-back" /><span className="send-back-text">Back</span></button>
-        <button className="sendela-button scale-hover" onClick={(e) => sendAmountToAddress()}><p>Send ELA</p></button>
+        <button className="send-back dark-hover cursor_def" onClick={(e) => cancelSend()}><img src="artwork/arrow.svg" alt="" className="rotate_180 arrow-back" /><span className="send-back-text">Back</span></button>        
+        <button className="sendela-button scale-hover" onClick={(App.getPasswordFlag()) ? (e) => showSendModal() : (e) => sendAmountToAddress()}><p>Send ELA</p></button>        
       </div>
     )
   }
@@ -162,7 +212,7 @@ module.exports = (props) => {
     <div className="receive-area">
       <img src="artwork/sendicon.svg" className="rec-icon"/>
       <p className="rec-text">Receive</p>
-      <p className="address-text">Address</p>
+      <p className="address-text address-position">Address</p>
       <button className="copy-button scale-hover" onClick={(e) => App.copyAddressToClipboard()}>
         <img src="artwork/copycut.svg" className="copy-icon" height="20px" width="20px"/>
       </button>
@@ -208,7 +258,7 @@ module.exports = (props) => {
             </tr>
 
             {
-              App.getParsedTransactionHistory().map((item, index) => {
+              App.getParsedTransactionHistory().slice(0, App.getTxRecordsCount()).map((item, index) => {
                 return (<tr className="txtable-row" key={index}>
                   <td title={item.value}>{item.valueShort}&nbsp;<span className="dark-font">ELA</span>
                   </td>
@@ -227,12 +277,30 @@ module.exports = (props) => {
 
           </tbody>
         </table>
+        <button className="history-button dark-hover m10B" onClick={(e) => loadMoreTx()}><img src="artwork/arrow.svg" alt="" className="rotate_90 arrow-history"/></button>
       </div>
 
       <div>
         <SocialMedia GuiToggles={GuiToggles} onLinkClick={onLinkClick}/>
       </div>
 
+    </div>
+    <div className="bg-modal w400px h200px" style={showPasswordModal ? {display: 'flex'} : {display: 'none'}}>
+      <div className="modalContent w350px h180px">
+        <div className="closeModal" onClick={(e) => closeModal()}>
+          <img className="scale-hover" src="artwork/voting-back.svg" height="38px" width="38px"/>
+        </div>
+        <div>
+          <span className="address-text modal-title font_size20 gradient-font">Enter password</span>
+        </div>
+        <div className="m15T">
+          <input type="password" className="enterPassword" type={showPasswordToggle ? "text" : "password"} size="18" id="sendPassword" placeholder="Enter Password" name="sendPassword"/>
+          <img className={showPasswordToggle ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword()} />
+        </div>
+        <div className="m15T">
+          <button className="submitModal scale-hover" onClick={sendTxType ? (e) => sendAmountToAddress() : (e) => consolidateUTXOs()}>Confirm</button>
+        </div>
+      </div>
     </div>
 
   </div>)

@@ -6,10 +6,10 @@ module.exports = (props) => {
   
   const balanceVisibility = () => {  
   if (showBalance) {
-    App.setShowBalance(false);
+    App.setCurrentShowBalance(false);
     //showBalance = false;
   } else {
-    App.setShowBalance(true);
+    App.setCurrentShowBalance(true);
   }
   App.renderApp();
   }

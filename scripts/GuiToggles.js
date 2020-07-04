@@ -39,7 +39,7 @@ const hideAllMenus = () => {
   //GuiUtils.hide('loginPrivateKeyBanner');
   GuiUtils.hide('loginMnemonicBanner');
   GuiUtils.hide('generateMnemonicBanner');
-  const menus = ['home', 'landing', 'voting', 'loginMnemonic'];
+  const menus = ['home', 'landing', 'voting', 'loginMnemonic', 'generateMnemonic'];
   menus.forEach((menu) => {
     hide(menu+'Menu');
     // hide(menu+'MenuOpen');
@@ -60,12 +60,14 @@ const showLoginMnemonic = () => {
   hideEverything();
   app.clearSendData();
   show('loginMnemonic');
+  show('loginMnemonicMenuOpen');
 };
 
 const showLoginPrivateKey = () => {
   hideEverything();
   app.clearSendData();
   show('loginPrivateKey');
+  show('loginPrivateKeyMenuOpen');
 };
 
 const showHome = () => {
@@ -122,18 +124,19 @@ const hideBanner = (name) => {
   hide(name+'Banner');
 };
 
-const showGenerateNewPrivateKey = () => {
+const showGeneratePrivateKey = () => {
   hideEverything();
   app.clearGlobalData();
   app.generatePrivateKeyHex();
   //show('generatePrivateKey');
 };
 
-const showGenerateNewMnemonic = () => {
+const showGenerateMnemonic = () => {
   hideEverything();
   app.clearGlobalData();
   app.generateMnemonic();
   show('generateMnemonic');
+  show('generateMnemonicMenuOpen');
 };
 
 const showAllBanners = (timeout) => {
@@ -175,7 +178,7 @@ exports.showSettings = showSettings;
 exports.showBanner = showBanner;
 exports.hideBanner = hideBanner;
 //exports.showGenerateNewPrivateKey = showGenerateNewPrivateKey;
-exports.showGenerateNewMnemonic = showGenerateNewMnemonic;
+exports.showGenerateMnemonic = showGenerateMnemonic;
 exports.showAllBanners = showAllBanners;
 exports.hideAllBanners = hideAllBanners;
 exports.bannerID = bannerID;

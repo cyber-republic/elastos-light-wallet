@@ -17,38 +17,33 @@ const userDataPath = Electron.getPath("userData");
 const algorithm = 'aes-256-cbc';
 let walletNameCreate = '';
 let walletNameLogin = '';
-
-/* User defined variables not needed
-let userNetworkIx = '';
-let userNodeURL = '';
-let userWalletPath = '';
-let userShowBalance = '';*/
  
 /* Default variables */
 const defaultNetworkIx = 0;
 const defaultNodeURL = '';
 const defaultWalletPath = path.join(userDataPath,"Wallets"); // ok
 const defaultShowBalance = false;
+const defaultAdvancedFeatures = false;
 
 /* Config variables */
 let configNetworkIx = 0; // not used for now
 let configNodeURL = '';
 let configWalletPath = '';
 let configShowBalance = '';
+let configAdvancedFeatures = '';
 
 /* Current variables */
 let currentNetworkIx = defaultNetworkIx;
 let currentNodeURL = '';
 let currentWalletPath = defaultWalletPath;
 let currentShowBalance = defaultShowBalance;
-
+let currentAdvancedFeatures = defaultAdvancedFeatures;
 
 /* Config.ini */
 let configFile = "Config.ini";
 let configFilePath = path.join(userDataPath, configFile);
-let defaultConfigContent = "networkIx="+defaultNetworkIx+"\nnodeURL="+defaultNodeURL+"\nwalletPath=\nshowBalance="+defaultShowBalance;
+let defaultConfigContent = "networkIx="+defaultNetworkIx+"\nnodeURL="+defaultNodeURL+"\nwalletPath=\nshowBalance="+defaultShowBalance+"\nadvancedFeatures="+defaultAdvancedFeatures;
 let configInitialized = false;
-
 
 /* modules */
 const LedgerComm = require('./LedgerComm.js');
@@ -202,6 +197,8 @@ let GuiToggles;
 
 let indexPathMnemonic = 0;
 let derivationPathMnemonic = '';
+const initTxRecordsCount = 20;
+let txRecordsCount = initTxRecordsCount;
 
 /** functions */
 const init = (_GuiToggles) => {
@@ -519,7 +516,7 @@ const requestBlockchainData = () => {
   }
 };
 
-const getPublicKeyFromMnemonic = () => {
+const getPublicKeyFromMnemonic = (_saveWallet) => {
   useLedgerFlag = false;
   isLoggedIn = true;  
     
@@ -558,9 +555,9 @@ const getPublicKeyFromMnemonic = () => {
     return false;
   }
   
-  walletNameCreate = GuiUtils.getValue('walletNameCreate');
-  if (walletNameCreate.length > 0) {
-    let walletCreated = saveWalletLocally(privateKey);  
+  if (_saveWallet) {
+    //let walletCreated = saveWalletLocally(mnemonic, indexPathMnemonic); // save mnemonic / pvt key, passphrase issue
+    let walletCreated = saveWalletLocally(privateKey);
     if (!walletCreated) {
       return false;
     }
@@ -573,7 +570,10 @@ const getPublicKeyFromMnemonic = () => {
   return true;
 };
 
-const saveWalletLocally = (privateKey) => {
+//const saveWalletLocally = (secret, indexPathMnemonic) => { // save mnemonic / pvt key, passphrase issue
+const saveWalletLocally = (secret) => {
+  let isSaved = false;
+  walletNameCreate = GuiUtils.getValue('walletNameCreate');
   if (walletNameCreate.length === 0) {
     bannerStatus = `Please enter Wallet name`;
     bannerClass = 'bg_red color_white banner-look';
@@ -600,7 +600,17 @@ const saveWalletLocally = (privateKey) => {
     }
   }
   
-  let isSaved = createWalletFile(walletNameCreate, newPassword, privateKey);
+  /*if (indexPathMnemonic === false) { // save mnemonic / pvt key, passphrase issue 
+    // pvt key
+    console.log("pvt key wallet");
+    isSaved = createWalletFile(walletNameCreate, newPassword, secret);
+  } else {
+    // mnemonic
+    console.log("mnemonic wallet");
+    isSaved = createWalletFile(walletNameCreate, newPassword, secret+"|"+indexPathMnemonic);
+  }*/
+  
+  isSaved = createWalletFile(walletNameCreate, newPassword, secret);
   if (isSaved) {
     usePasswordFlag = true;
     return true;
@@ -615,6 +625,14 @@ const loginWithWallet = () => {
   usePasswordFlag = true;
   walletNameLogin = GuiUtils.getValue('walletNameLogin');
   let loginPassword = GuiUtils.getValue('loginPassword');
+  
+  if (walletNameLogin.length === 0) {
+    bannerStatus = `Wallet must be selected.`;
+    bannerClass = 'bg_red color_white banner-look';
+    GuiToggles.showAllBanners(false);
+    renderApp();
+    return false;  
+  }
   
   if (loginPassword.length < minPasswordLength) {
   bannerStatus = `Password must be at least ${minPasswordLength} characters long`;
@@ -632,6 +650,41 @@ const loginWithWallet = () => {
     return false;
   } else {
     privateKeyWallet = walletTxt;
+    
+    /* file was from mnemonic
+    let loginMnemonicString = '';
+
+    if (walletTxt.indexOf("|") > 0) {	
+      var walletTxtParts = walletTxt.split('|');
+      loginMnemonicString = walletTxtParts[0].trim();
+      indexPathMnemonic = walletTxtParts[1].trim();	
+    } else {
+      loginMnemonicString = walletTxt;
+    }
+
+    if (!bip39.validateMnemonic(loginMnemonicString)) {
+    //  bannerStatus = `Mnemonic is not valid.`;
+    //  bannerClass = 'bg_red color_white banner-look';
+    //  GuiToggles.showAllBanners(false);
+    //  renderApp();
+    //  return false;
+      // make banner
+      console.log(`Mnemonic is not valid.`);
+    }
+
+    //privateKeyWallet = Mnemonic.getPrivateKeyFromMnemonic(loginMnemonicString, indexPathMnemonic);
+    */
+
+
+    //if (privateKeyWallet.length != PRIVATE_KEY_LENGTH) {
+    //  bannerStatus = `Mnemonic must create a of length ${PRIVATE_KEY_LENGTH}, not ${privateKey.length}`;
+    //  bannerClass = 'bg_red color_white banner-look';
+    //  GuiToggles.showAllBanners(false);
+    //  renderApp();
+    //  return false;
+    //  make banner
+    //  console.log(`Mnemonic must create a of length ${PRIVATE_KEY_LENGTH}, not ${privateKeyWallet.length}`);
+    //}
       
     const privateKeyElt = document.getElementById('privateKeyElt');
     privateKeyElt.value = privateKeyWallet;
@@ -642,7 +695,7 @@ const loginWithWallet = () => {
   }
 }
 
-const getPublicKeyFromPrivateKey = () => {
+const getPublicKeyFromPrivateKey = (_saveWallet) => {
   useLedgerFlag = false;
   isLoggedIn = true;
   usePasswordFlag = false;
@@ -657,8 +710,7 @@ const getPublicKeyFromPrivateKey = () => {
     return false;
   }
   
-  walletNameCreate = GuiUtils.getValue('walletNameCreate');
-  if (walletNameCreate.length > 0) {
+  if (_saveWallet) {
     let walletCreated = saveWalletLocally(privateKey);
     if (!walletCreated) {
       return false;
@@ -746,13 +798,28 @@ const isValidAddress = (testAddress) => {
   }  
 };
 
+const validateFee = (_validateFee) => {
+  if (!isValidDecimal(_validateFee) || (_validateFee == 0)) {
+  if (_validateFee.length == 0) {
+    bannerStatus = `Please enter valid Fee amount.`;
+  } else {
+    bannerStatus = `[`+_validateFee+`] is NOT valid Fee amount.`;
+  } 
+    bannerClass = 'bg_red color_white banner-look';
+    GuiToggles.showAllBanners(false);
+    renderApp();
+    return false;
+  }
+  return true;
+}
+
 const validateInputs = () => {
   sendToAddress = GuiUtils.getValue('sendToAddress');
   sendAmount = GuiUtils.getValue('sendAmount');  
   feeAmountSats = GuiUtils.getValue('feeAmount');
   
-  const isValid = checkTransactionHistory();
-  if (!isValid) {
+  const isValidHistory = checkTransactionHistory();
+  if (!isValidHistory) {
     return false;
   }
   
@@ -763,7 +830,7 @@ const validateInputs = () => {
   renderApp();
   return false;
   } 
-
+  
   if (!isValidDecimal(sendAmount) || (sendAmount == 0)) {
   if (sendAmount.length == 0) {
     bannerStatus = `Please enter valid Amount.`;
@@ -776,15 +843,8 @@ const validateInputs = () => {
     return false;
   }
   
-  if (!isValidDecimal(feeAmountSats) || (feeAmountSats == 0)) {
-  if (feeAmountSats.length == 0) {
-    bannerStatus = `Please enter valid Fee amount.`;
-  } else {
-    bannerStatus = `[`+feeAmountSats+`] is NOT valid Fee amount.`;
-  } 
-    bannerClass = 'bg_red color_white banner-look';
-    GuiToggles.showAllBanners(false);
-    renderApp();
+  const isValidFee = validateFee(feeAmountSats);
+  if (!isValidFee) {
     return false;
   }
  
@@ -849,8 +909,14 @@ const consolidateUTXOs = () => {
     utxoMaxCount = MAX_UTXO_CONSOLIDATE_COUNT;
   }
   
-  const isValid = checkTransactionHistory();
-  if (!isValid) {
+  const isValidHistory = checkTransactionHistory();
+  if (!isValidHistory) {
+    return false;
+  }
+  
+  feeAmountSats = GuiUtils.getValue('feeAmount');
+  const isValidFee = validateFee(feeAmountSats);
+  if (!isValidFee) {
     return false;
   }
   
@@ -861,7 +927,6 @@ const consolidateUTXOs = () => {
     const unspentTransactionOutputs = parsedUnspentTransactionOutputs;
     let maxAmountToSend;
     
-    feeAmountSats = GuiUtils.getValue('feeAmount');    
     if (!isValidDecimal(feeAmountSats) || (feeAmountSats == 0)) feeAmountSats = feeRequested;    
     if (!isValidDecimal(feeAmountSats) || (feeAmountSats == 0)) feeAmountSats = 1;
     
@@ -875,29 +940,67 @@ const consolidateUTXOs = () => {
     if (Math.ceil(encodedUnsignedTx.length/2) > maxTXSize) {
       getCorrectSizedTX(utxoMaxCount-1); // if TX too big, try less UTXOs
     } else {
-      mainConsole.log("maxAmountToSend:", maxAmountToSend, "Size bytes",Math.ceil(encodedUnsignedTx.length/2), "utxoMaxCount", utxoMaxCount, "TotalUTXOCount", unspentTransactionOutputs.length);
-      showLedgerConfirmBanner(getTxByteLength(encodedUnsignedTx));
-      const sendAmountToAddressLedgerCallback = (message) => {
-        if (LOG_LEDGER_POLLING) {
-          mainConsole.log(`sendAmountToAddressLedgerCallback ${JSON.stringify(message)}`);
-        }
+      //mainConsole.log("maxAmountToSend:", maxAmountToSend, "Size bytes",Math.ceil(encodedUnsignedTx.length/2), "utxoMaxCount", utxoMaxCount, "TotalUTXOCount", unspentTransactionOutputs.length);
+      
+      if (useLedgerFlag) {
+        showLedgerConfirmBanner(getTxByteLength(encodedUnsignedTx));
+        const sendAmountToAddressLedgerCallback = (message) => {
+          if (LOG_LEDGER_POLLING) {
+            mainConsole.log(`sendAmountToAddressLedgerCallback ${JSON.stringify(message)}`);
+          }
 
-        hideLedgerConfirmBanner();
-        if (!message.success) {
-          bannerStatus = `Send Error: ${message.message}`;
-          bannerClass = 'bg_red color_white banner-look';
-          GuiToggles.showAllBanners(false);
-          renderApp();
-          return;
+          hideLedgerConfirmBanner();
+          if (!message.success) {
+            bannerStatus = `Send Error: ${message.message}`;
+            bannerClass = 'bg_red color_white banner-look';
+            GuiToggles.showAllBanners(false);
+            renderApp();
+            return;
+          }
+          const signature = Buffer.from(message.signature, 'hex');
+          const encodedTx = TxSigner.addSignatureToTx(tx, publicKey, signature);
+          sendAmountToAddressCallback(encodedTx);
+        };
+        LedgerComm.sign(encodedUnsignedTx, sendAmountToAddressLedgerCallback);
+      } else {
+        // continue here
+        if (usePasswordFlag) {
+          walletNameLogin = GuiUtils.getValue('walletNameLogin');
+          if (!walletNameLogin) walletNameLogin = walletNameCreate;    
+          
+          const sendPassword = GuiUtils.getValue('sendPassword');
+          let encryptedWallet = readWalletFile(walletNameLogin);    
+          if (sendPassword.length < minPasswordLength) {
+            bannerStatus = `Password must be at least ${minPasswordLength} characters long`;
+            bannerClass = 'bg_red color_white banner-look';
+            GuiToggles.showAllBanners(false);
+            renderApp();
+            return false;  
+          } else {
+            let walletTxt = decryptWallet(encryptedWallet, sendPassword);
+            privateKey = walletTxt;
+            if (!privateKey) {
+              // wrong password
+              return false;
+            }
+          }
+        } else {
+          const privateKeyElt = document.getElementById('privateKeyElt');
+          privateKey = privateKeyElt.value;
         }
-        const signature = Buffer.from(message.signature, 'hex');
-        const encodedTx = TxSigner.addSignatureToTx(tx, publicKey, signature);
-        sendAmountToAddressCallback(encodedTx);
-      };
-      LedgerComm.sign(encodedUnsignedTx, sendAmountToAddressLedgerCallback);
+          
+        if (privateKey) {            
+          const encodedTx = TxFactory.createSignedSendToTx(privateKey, unspentTransactionOutputs, getAddress(), maxAmountToSend, feeAmountSats, feeAccount);
+          if (encodedTx == undefined) {
+            return false;
+          }
+          sendAmountToAddressCallback(encodedTx);  
+          return true;
+        }
+      }
     }
   }
-  getCorrectSizedTX(utxoMaxCount);
+  return getCorrectSizedTX(utxoMaxCount);
 }
 
 const showConsolidateButton = () => {
@@ -949,31 +1052,31 @@ const sendAmountToAddress = () => {
     let encryptedWallet = readWalletFile(walletNameLogin);    
     if (sendPassword.length < minPasswordLength) {
       bannerStatus = `Password must be at least ${minPasswordLength} characters long`;
-        bannerClass = 'bg_red color_white banner-look';
-        GuiToggles.showAllBanners(false);
-        renderApp();
-        return false;  
-      } else {
-        let walletTxt = decryptWallet(encryptedWallet, sendPassword);
-    privateKey = walletTxt;
-    if (!privateKey) {
-      // wrong password
-          return false;
+      bannerClass = 'bg_red color_white banner-look';
+      GuiToggles.showAllBanners(false);
+      renderApp();
+      return false;  
+    } else {
+      let walletTxt = decryptWallet(encryptedWallet, sendPassword);
+      privateKey = walletTxt;
+      if (!privateKey) {
+        // wrong password
+            return false;
+        }
       }
+    } else {
+      const privateKeyElt = document.getElementById('privateKeyElt');
+        privateKey = privateKeyElt.value;
     }
-  } else {
-    const privateKeyElt = document.getElementById('privateKeyElt');
-      privateKey = privateKeyElt.value;
-  }
-  
-  if (privateKey) {
-    const encodedTx = TxFactory.createSignedSendToTx(privateKey, unspentTransactionOutputs, sendToAddress, sendAmount, feeAmountSats, feeAccount);
-      if (encodedTx == undefined) {
-        return false;
-      }
-      sendAmountToAddressCallback(encodedTx);  
-    return true;
-  }  
+    
+    if (privateKey) {
+      const encodedTx = TxFactory.createSignedSendToTx(privateKey, unspentTransactionOutputs, sendToAddress, sendAmount, feeAmountSats, feeAccount);
+        if (encodedTx == undefined) {
+          return false;
+        }
+        sendAmountToAddressCallback(encodedTx);  
+      return true;
+    }  
   }
 };
 // success: success,
@@ -1307,7 +1410,6 @@ const sendVoteTx = () => {
     mainConsole.trace(error);
     return false;
   }
-  renderApp();
   return true;
 };
 // success: success,
@@ -1584,6 +1686,8 @@ const clearGlobalData = () => {
   useLedgerFlag = false;
   usePasswordFlag = false;
   
+  setTxRecordsCount(initTxRecordsCount);
+  
   //configInitialized = false;
   
   publicKey = undefined;
@@ -1811,6 +1915,7 @@ const getFeeReadyCallback = (response) => {
   feeStatus = 'Fee Received';
   if (feeRequested === '') { 
     feeRequested = response.result.toString();
+    //feeRequested = 1; // testing purposes
   }
   // mainConsole.log('getFeeReadyCallback ', response, fee);
   renderApp();
@@ -1873,23 +1978,24 @@ const getGeneratedMnemonic = () => {
 const insertELA = (type) => {
   feeAmountSats = GuiUtils.getValue('feeAmount');
   feeRequested = feeAmountSats;
-  var subtractFee = BigNumber(Number(feeAmountSats) + minerFee, 10).dividedBy(Asset.satoshis).toString();
+  var subtractFee = BigNumber(Number(feeAmountSats) + minerFee, 10).dividedBy(Asset.satoshis).toFixed(roundDecimalELA);
   
   if (type == "quarter") {
-    var newAmount = BigNumber(Number(getELABalance())/4).decimalPlaces(roundDecimalELA).toString();
+    var newAmount = BigNumber(Number(getELABalance())/4).decimalPlaces(roundDecimalELA).toFixed(roundDecimalELA);    
   }
   
   if (type == "half") {
-  var newAmount = BigNumber(Number(getELABalance())/2).decimalPlaces(roundDecimalELA).toString();
+    var newAmount = BigNumber(Number(getELABalance())/2).decimalPlaces(roundDecimalELA).toFixed(roundDecimalELA);
   }
   
   if (type == "max") {
-  var newAmount = BigNumber(Number(getELABalance())-Number(subtractFee)).decimalPlaces(roundDecimalELA).toFixed(roundDecimalELA);
+    var newAmount = BigNumber(Number(getELABalance())-Number(subtractFee)).decimalPlaces(roundDecimalELA).toFixed(roundDecimalELA);
   }
   
   if (newAmount < 0) newAmount = 0;
-    //mainConsole.log(getELABalance(), subtractFee, fee, minerFee);
-  if (getELABalance() < newAmount + subtractFee) {
+  //mainConsole.log("getELABalance()", getELABalance(), "newAmount", newAmount, "subtractFee", subtractFee);
+    
+  if (Number(getELABalance()) < (Number(newAmount) + Number(subtractFee)).toFixed(roundDecimalELA)) {
     newAmount = 0;
     bannerStatus = `You have insufficient ELA balance to spend.`;
     bannerClass = 'landing-btnbg color_white banner-look';
@@ -2065,12 +2171,8 @@ const getLoggedIn = () => {
   return isLoggedIn;
 }
 
-const getWalletPath = () => {
-  return currentWalletPath;
-}
-
-const setCurrentWalletPath = (userWalletPath) => {
-  currentWalletPath = userWalletPath;
+const setCurrentWalletPath = (_currentWalletPath) => {
+  currentWalletPath = _currentWalletPath;
 }
 
 const getDefaultWalletPath = () => {
@@ -2104,6 +2206,7 @@ const readConfigFile = () => {
         if (item.indexOf('nodeURL') >= 0) configNodeURL = value;
         if (item.indexOf('walletPath') >= 0) configWalletPath = value;
         if (item.indexOf('showBalance') >= 0) configShowBalance = value.toLowerCase() == "true" ? true : false;
+        if (item.indexOf('advancedFeatures') >= 0) configAdvancedFeatures = value.toLowerCase() == "true" ? true : false;
       });
       
       currentNodeURL = configNodeURL;
@@ -2125,6 +2228,7 @@ const readConfigFile = () => {
       }
       
       currentShowBalance = configShowBalance;
+      currentAdvancedFeatures = configAdvancedFeatures;
       configInitialized = true;
       //mainConsole.log(`Configuration file initialized.`)
       return data;
@@ -2136,8 +2240,8 @@ const readConfigFile = () => {
   }
 }
 
-const updateConfigFile = (updateNetworkIx, updateNodeURL, updateWalletPath, updateShowBalance) => {
-  let updateConfigContent = "networkIx="+updateNetworkIx+"\nnodeURL="+updateNodeURL+"\nwalletPath="+updateWalletPath+"\nshowBalance="+updateShowBalance;
+const updateConfigFile = (updateNetworkIx, updateNodeURL, updateWalletPath, updateShowBalance, updateAdvancedFeatures) => {
+  let updateConfigContent = "networkIx="+updateNetworkIx+"\nnodeURL="+updateNodeURL+"\nwalletPath="+updateWalletPath+"\nshowBalance="+updateShowBalance+"\nadvancedFeatures="+updateAdvancedFeatures;
   fs.writeFile(configFilePath, updateConfigContent, "utf8", (err) => {
   if (err) throw err;
     bannerStatus = `Configuration file was saved successfully.`;
@@ -2157,6 +2261,7 @@ const updateConfigFile = (updateNetworkIx, updateNodeURL, updateWalletPath, upda
       currentWalletPath = defaultWalletPath;
     }
     currentShowBalance = updateShowBalance;
+    currentAdvancedFeatures = updateAdvancedFeatures;
     
     configInitialized = false;
     readConfigFile();
@@ -2166,13 +2271,35 @@ const updateConfigFile = (updateNetworkIx, updateNodeURL, updateWalletPath, upda
   });
 }
 
+const getCurrentWalletPath = () => {
+  return currentWalletPath;
+}
+
 const getCurrentShowBalance = () => {
   return currentShowBalance;
 }
 
-const setShowBalance = (showToggledBalance) => {
-  currentShowBalance = showToggledBalance;
+const setCurrentShowBalance = (_currentShowBalance) => {
+  currentShowBalance = _currentShowBalance;
 }
+
+const getCurrentAdvancedFeatures = () => {
+  return currentAdvancedFeatures;
+}
+
+const setAdvancedFeatures = (_setAdvancedFeatures) => {
+  setAdvancedFeatures = _setAdvancedFeatures;
+}
+
+const getDefaultAdvancedFeatures = () => {
+  return defaultAdvancedFeatures;
+}
+
+const setCurrentAdvancedFeatures = (_currentAdvancedFeatures) => {
+  currentAdvancedFeatures = _currentAdvancedFeatures;
+}
+
+
 
 const resetConfigInitialized = () => {
   configInitialized = false;
@@ -2180,6 +2307,10 @@ const resetConfigInitialized = () => {
 
 const getWalletNameLogin = () => {
   return walletNameLogin;
+}
+
+const getWalletNameCreate = () => {
+  return walletNameCreate;
 }
 
 const getConfigNetworkIx = () => {
@@ -2198,6 +2329,10 @@ const getConfigShowBalance = () => {
   return configShowBalance;
 }
 
+const getConfigAdvancedFeatures = () => {
+  return configAdvancedFeatures;
+}
+
 const getTotalUTXOs = () => {
   return parsedUnspentTransactionOutputs.length;
 }
@@ -2208,6 +2343,18 @@ const getMaxUTXOsPerTX = () => {
   } else {
     return MAX_UTXO_CONSOLIDATE_COUNT;
   }
+}
+
+const getInitTxRecordsCount = () => {
+  return initTxRecordsCount;
+}
+
+const getTxRecordsCount = () => {
+  return txRecordsCount;
+}
+
+const setTxRecordsCount = (_txRecordsCount) => {
+  txRecordsCount = _txRecordsCount;
 }
 
 exports.REST_SERVICES = REST_SERVICES;
@@ -2251,7 +2398,6 @@ exports.setSendStep = setSendStep;
 exports.sendAmountToAddress = sendAmountToAddress;
 exports.getRestService = getRestService;
 exports.setRestService = setRestService;
-exports.getCurrentNetworkIx = getCurrentNetworkIx;
 exports.changeNodeURL = changeNodeURL;
 exports.resetNodeURL = resetNodeURL;
 exports.getCandidateVoteListStatus = getCandidateVoteListStatus;
@@ -2278,6 +2424,7 @@ exports.verifyLedgerBanner = verifyLedgerBanner;
 exports.selectActiveVotes = selectActiveVotes;
 exports.clearSelection = clearSelection;
 exports.validateInputs = validateInputs;
+exports.validateFee = validateFee;
 exports.insertELA = insertELA;
 exports.getTotalSpendingELA = getTotalSpendingELA;
 exports.isValidAddress = isValidAddress;
@@ -2294,24 +2441,40 @@ exports.getPasswordFlag = getPasswordFlag;
 exports.saveWalletLocally = saveWalletLocally;
 exports.createWalletFolder = createWalletFolder;
 exports.getLoggedIn = getLoggedIn;
-exports.getWalletPath = getWalletPath;
-exports.setCurrentWalletPath = setCurrentWalletPath;
-exports.getDefaultWalletPath = getDefaultWalletPath;
+
 exports.createConfigFile = createConfigFile;
 exports.readConfigFile = readConfigFile;
 exports.updateConfigFile = updateConfigFile;
-exports.getCurrentShowBalance = getCurrentShowBalance;
-exports.setShowBalance = setShowBalance;
+exports.resetConfigData = resetConfigData;
+
+exports.getCurrentNetworkIx = getCurrentNetworkIx;
+exports.getConfigNetworkIx = getConfigNetworkIx;
+
+exports.getDefaultWalletPath = getDefaultWalletPath;
+exports.getConfigWalletPath = getConfigWalletPath;
+exports.getCurrentWalletPath = getCurrentWalletPath;
+exports.setCurrentWalletPath = setCurrentWalletPath;
+
 exports.getCurrentNodeURL = getCurrentNodeURL;
 exports.setCurrentNodeURL = setCurrentNodeURL;
+exports.getConfigNodeURL = getConfigNodeURL;
+
+exports.getCurrentShowBalance = getCurrentShowBalance;
+exports.setCurrentShowBalance = setCurrentShowBalance;
+exports.getConfigShowBalance = getConfigShowBalance;
+
+exports.getCurrentAdvancedFeatures = getCurrentAdvancedFeatures;
+exports.setCurrentAdvancedFeatures = setCurrentAdvancedFeatures;
+exports.getConfigAdvancedFeatures = getConfigAdvancedFeatures;
+
 exports.resetConfigInitialized = resetConfigInitialized;
 exports.getWalletNameLogin = getWalletNameLogin;
-exports.resetConfigData = resetConfigData;
+exports.getWalletNameCreate = getWalletNameCreate;
+
 exports.consolidateUTXOs = consolidateUTXOs;
 exports.showConsolidateButton = showConsolidateButton;
 exports.getTotalUTXOs = getTotalUTXOs;
 exports.getMaxUTXOsPerTX = getMaxUTXOsPerTX;
-exports.getConfigNetworkIx = getConfigNetworkIx;
-exports.getConfigNodeURL = getConfigNodeURL;
-exports.getConfigWalletPath = getConfigWalletPath;
-exports.getConfigShowBalance = getConfigShowBalance;
+exports.getTxRecordsCount = getTxRecordsCount;
+exports.setTxRecordsCount = setTxRecordsCount;
+exports.getInitTxRecordsCount = getInitTxRecordsCount;

@@ -10,6 +10,7 @@ let userNetworkIx;
 let userNodeURL = '';
 let userWalletPath = '';
 let userShowBalance = '';
+let userAdvancedFeatures = '';
 let walletPath = '';
 let initUserNodeURL = false;
 let initUserWalletPath = false;
@@ -22,6 +23,7 @@ module.exports = (props) => {
   const defaultWalletPath = App.getDefaultWalletPath();
   userNetworkIx = App.getCurrentNetworkIx();
   userShowBalance = App.getCurrentShowBalance();
+  userAdvancedFeatures = App.getCurrentAdvancedFeatures();
   
   if (!initUserNodeURL) {
     userNodeURL = App.getCurrentNodeURL();
@@ -35,7 +37,7 @@ module.exports = (props) => {
   }
   
   if (!initUserWalletPath) {
-    walletPath = App.getWalletPath();
+    walletPath = App.getCurrentWalletPath();
     initUserWalletPath = true;
     if (walletPath !== defaultWalletPath) {
       userDefinedWalletPath = true;
@@ -114,12 +116,18 @@ module.exports = (props) => {
     let updateNodeURL = GuiUtils.getValue('userNodeURL');
     let updateWalletPath = GuiUtils.getValue('userWalletPath');
     let updateShowBalance;
+    let updateAdvancedFeatures;
     if (GuiUtils.getChecked('userShowBalanceRadio')) {
       updateShowBalance = true;
     } else {
       updateShowBalance = false;
     }
-    App.updateConfigFile(updateNetworkIx, updateNodeURL, updateWalletPath, updateShowBalance);    
+    if (GuiUtils.getChecked('userShowAdvancedRadio')) {
+      updateAdvancedFeatures = true;
+    } else {
+      updateAdvancedFeatures = false;
+    }
+    App.updateConfigFile(updateNetworkIx, updateNodeURL, updateWalletPath, updateShowBalance, updateAdvancedFeatures);    
   }
   
   const reloadConfig = () => {
@@ -131,6 +139,7 @@ module.exports = (props) => {
     userNodeURL = App.getConfigNodeURL();
     userWalletPath = App.getConfigWalletPath();
     userShowBalance = App.getConfigShowBalance();
+    userAdvancedFeatures = App.getConfigAdvancedFeatures();
     
     if (userNodeURL.length > 0) {
       userDefinedNodeURL = true;
@@ -147,6 +156,12 @@ module.exports = (props) => {
       GuiUtils.setChecked('userShowBalanceRadio');
     } else {
       GuiUtils.setChecked('userHideBalanceRadio');
+    }
+    
+    if (userAdvancedFeatures) {
+      GuiUtils.setChecked('userShowAdvancedRadio');
+    } else {
+      GuiUtils.setChecked('userHideAdvancedRadio');
     }
     App.renderApp();
   }
@@ -198,7 +213,7 @@ module.exports = (props) => {
           <td className="settingCol1">Wallets path:
           </td>
           <td className="settingCol2">          
-            <input className="settingsInput" type="text" size="33" id="userWalletPath" name="userWalletPath" style={{background: "inherit"}} placeholder={defaultWalletPath} defaultValue={userDefinedWalletPath ? App.getWalletPath() : ""} title={App.getWalletPath()} readOnly={true} />    
+            <input className="settingsInput" type="text" size="33" id="userWalletPath" name="userWalletPath" style={{background: "inherit"}} placeholder={defaultWalletPath} defaultValue={userDefinedWalletPath ? App.getCurrentWalletPath() : ""} title={App.getCurrentWalletPath()} readOnly={true} />    
           </td>
           <td className="settingCol3">
             <button style={!userDefinedWalletPath ? {display: 'block'} : {display: 'none'}} className="settingsButton dark-hover" onClick={(e) => changeWalletPath()}>Change</button>
@@ -227,6 +242,16 @@ module.exports = (props) => {
             <img className={showRemovePassword ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword()} />            
           </td>
           <td className="settingCol3"><button className="settingsButton dark-hover" onClick={(e) => removeWallet()}>Remove</button>
+          </td>
+        </tr>
+        <tr className="settingsTableRow">          
+          <td className="settingCol1" title="Derivation path selection, ...">Advanced features:
+          </td>
+          <td className="settingCol2">          
+            <input className="m15L" type="radio" id="userShowAdvancedRadio" name="userAdvancedRadio" value="advancedShow" defaultChecked={userAdvancedFeatures ? true : false}/><label>Default Show </label>
+            <input className="m15L" type="radio" id="userHideAdvancedRadio" name="userAdvancedRadio" value="advancedHide" defaultChecked={!userAdvancedFeatures ?  true : false}/><label>Default Hide </label>
+          </td>
+          <td className="settingCol3">
           </td>
         </tr>
         </tbody>
