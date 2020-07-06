@@ -16,8 +16,8 @@ const getValue = (id) => {
   return get(id).value;
 };
 
-const setChecked = (id) => {
-  get(id).checked = true;
+const setChecked = (id, status) => {
+  get(id).checked = status;
 };
 
 const getChecked = (id) => {

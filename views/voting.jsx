@@ -46,6 +46,8 @@ module.exports = (props) => {
     let isSent = App.sendVoteTx();
     if (isSent) {
       showPasswordModal = false;
+    } else {
+      showPasswordModal = false;
     }
     App.renderApp();
   }
@@ -116,7 +118,7 @@ module.exports = (props) => {
         <table className="w100pct no_border whitespace_nowrap txtable">
           <tbody>
             <tr className="txtable-headrow">
-              <td className="no_border no_padding">N</td>
+              <td className="no_border no_padding">#</td>
               <td className="no_border no_padding">Nickname</td>
               <td className="no_border no_padding">Active</td>
               <td className="no_border no_padding">Votes</td>
@@ -160,7 +162,7 @@ module.exports = (props) => {
         <table className="w100pct no_border whitespace_nowrap font_size16 txtable">
           <tbody>
             <tr className="txtable-headrow">
-              <td className="no_border no_padding">N</td>
+              <td className="no_border no_padding">#</td>
               <td className="no_border no_padding">Nickname</td>
               <td className="no_border no_padding">Votes</td>
               <td className="no_border no_padding">State</td>

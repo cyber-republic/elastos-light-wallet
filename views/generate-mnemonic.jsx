@@ -23,7 +23,7 @@ module.exports = (props) => {
     <Menu App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} page="generateMnemonic"/>
     <header>
       <nav id="generateMnemonicMenuOpen" title="menu" onClick={(e) => showMenu()}>
-        {/*<img src="artwork/nav.svg" className="nav-icon dark-hover" onClick={(e) => showMenu()}/>*/}
+        <img src="artwork/nav.svg" className="nav-icon dark-hover" onClick={(e) => showMenu()}/>
       </nav>
     </header>
     <div className="flex_center w100pct">
@@ -33,7 +33,7 @@ module.exports = (props) => {
     </div>
     <p className="address-text font_size24 margin_none display_inline_block gradient-font">Create New Wallet (Mnemonics)</p>
     <div className="qraddress-div bordered">
-      <p className="address-ex display_inline_block font_size20 padding_5px" onClick={(e) => App.copyMnemonicToClipboard()}>{App.getGeneratedMnemonic()}</p>
+      <p className="address-ex display_inline_block font_size20 padding_5px" onClick={App.getDevelopMode() ? (e) => App.copyMnemonicToClipboard() : undefined}>{App.getGeneratedMnemonic()}</p>
     </div>
     <div className="flex_center">
       <button className="proceed-btn scale-hover" onClick={(e) => GuiToggles.showLanding()}>

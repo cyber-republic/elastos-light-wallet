@@ -1,4 +1,5 @@
 const React = require('react');
+const GuiUtils = require('../../scripts/GuiUtils.js');
 
 module.exports = (props) => {
   const App = props.App;
@@ -7,9 +8,11 @@ module.exports = (props) => {
   const balanceVisibility = () => {  
   if (showBalance) {
     App.setCurrentShowBalance(false);
+    GuiUtils.setChecked('userShowBalance', false);
     //showBalance = false;
   } else {
     App.setCurrentShowBalance(true);
+    GuiUtils.setChecked('userShowBalance', true);
   }
   App.renderApp();
   }

@@ -56,6 +56,7 @@ button {
 #homeMenu,
 #landingMenu,
 #loginPrivateKeyMenu,
+#generateMnemonicMenu,
 #loginMnemonicMenu {
   position: absolute;
   top: 0;
@@ -1516,7 +1517,6 @@ select, input {
   border-radius: 8px;
   height: 50px;
   width: 141px;
-  font-weight: 600;
   font-size: 16px;
   color: #FFFFFF;
   letter-spacing: 0;
@@ -2083,14 +2083,14 @@ select, input {
 }
 
 .settingCol1 {
-  width: 140px;
+  width: 160px;
   text-align: right;
   font-size: 14px;
   color: #B2B4C3;
 }
 
 .settingCol2 {
-  width: 350px;
+  width: 320px;
   font-size: 14px;
   color: gray;
 }
@@ -2128,6 +2128,7 @@ select, input {
   padding: 9px 15px;
   color: #D9DADF;
   border: 0;
+  width: 80px;
 }
 
 .saveConfig {
@@ -2167,6 +2168,66 @@ select, input {
   position: absolute;
 }
 
+/* The slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #818489;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .2s;
+  transition: .2s;
+}
+
+input:checked + .slider {
+  background-image: linear-gradient(-214deg, #F4D2AE 0%, #E5A776 100%);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px gray;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
 .m5L {
   margin-left: 5px;
 }
@@ -2195,12 +2256,20 @@ select, input {
   margin-right: 10px;
 }
 
+.m20R {
+  margin-right: 10px;
+}
+
 .m15T {
   margin-top: 15px;
 }
 
 .m10B {
   margin-bottom: 10px;
+}
+
+.p20R {
+  padding-right: 20px;
 }
 
 .bg-modal {

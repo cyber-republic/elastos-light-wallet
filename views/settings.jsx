@@ -107,8 +107,18 @@ module.exports = (props) => {
   }
   
   let walletFiles = App.listWalletFiles(),
-    MakeItem = function(item) {
-    return <option key={item}>{item}</option>;
+  MakeItem = function(item) {
+    if (item !== App.getWalletNameLogin()) {
+      return <option key={item}>{item}</option>;
+    }
+  }
+  
+  const enableShowBalance = () => {
+    App.setCurrentShowBalance(GuiUtils.getChecked('userShowBalance'));
+  }
+  
+  const enableAdvancedFeatures = () => {
+    App.setCurrentAdvancedFeatures(GuiUtils.getChecked('userAdvancedFeatures'));
   }
   
   const useSaveConfig = () => {
@@ -117,12 +127,12 @@ module.exports = (props) => {
     let updateWalletPath = GuiUtils.getValue('userWalletPath');
     let updateShowBalance;
     let updateAdvancedFeatures;
-    if (GuiUtils.getChecked('userShowBalanceRadio')) {
+    if (GuiUtils.getChecked('userShowBalance')) {
       updateShowBalance = true;
     } else {
       updateShowBalance = false;
     }
-    if (GuiUtils.getChecked('userShowAdvancedRadio')) {
+    if (GuiUtils.getChecked('userAdvancedFeatures')) {
       updateAdvancedFeatures = true;
     } else {
       updateAdvancedFeatures = false;
@@ -141,6 +151,7 @@ module.exports = (props) => {
     userShowBalance = App.getConfigShowBalance();
     userAdvancedFeatures = App.getConfigAdvancedFeatures();
     
+    
     if (userNodeURL.length > 0) {
       userDefinedNodeURL = true;
       GuiUtils.setValue('userNetworkIx', 99);
@@ -153,19 +164,19 @@ module.exports = (props) => {
     GuiUtils.setValue('userWalletPath', userWalletPath);
     
     if (userShowBalance) {
-      GuiUtils.setChecked('userShowBalanceRadio');
+      GuiUtils.setChecked('userShowBalance', true);
     } else {
-      GuiUtils.setChecked('userHideBalanceRadio');
+      GuiUtils.setChecked('userShowBalance', false);
     }
     
     if (userAdvancedFeatures) {
-      GuiUtils.setChecked('userShowAdvancedRadio');
-    } else {
-      GuiUtils.setChecked('userHideAdvancedRadio');
+      GuiUtils.setChecked('userAdvancedFeatures', true);
+    } else {      
+      GuiUtils.setChecked('userAdvancedFeatures', false);
     }
     App.renderApp();
   }
-  
+    
   const exitPage = () => {
     showRemovePassword = false;
     GuiUtils.setValue('removePassword', '');
@@ -213,21 +224,11 @@ module.exports = (props) => {
           <td className="settingCol1">Wallets path:
           </td>
           <td className="settingCol2">          
-            <input className="settingsInput" type="text" size="33" id="userWalletPath" name="userWalletPath" style={{background: "inherit"}} placeholder={defaultWalletPath} defaultValue={userDefinedWalletPath ? App.getCurrentWalletPath() : ""} title={App.getCurrentWalletPath()} readOnly={true} />    
+            <input className="settingsInput" type="text" size="32" id="userWalletPath" name="userWalletPath" style={{background: "inherit"}} placeholder={defaultWalletPath} defaultValue={userDefinedWalletPath ? App.getCurrentWalletPath() : ""} title={App.getCurrentWalletPath()} readOnly={true} />    
           </td>
           <td className="settingCol3">
             <button style={!userDefinedWalletPath ? {display: 'block'} : {display: 'none'}} className="settingsButton dark-hover" onClick={(e) => changeWalletPath()}>Change</button>
             <button style={userDefinedWalletPath ? {display: 'block'} : {display: 'none'}} className="settingsButton dark-hover" onClick={(e) => resetWalletFolderPath()}>Reset</button>
-          </td>
-        </tr>
-        <tr className="settingsTableRow">          
-          <td className="settingCol1">Show balance:
-          </td>
-          <td className="settingCol2">          
-            <input className="m15L" type="radio" id="userShowBalanceRadio" name="userBalanceRadio" value="balanceShow" defaultChecked={userShowBalance ? true : false}/><label>Default Show </label>
-            <input className="m15L" type="radio" id="userHideBalanceRadio" name="userBalanceRadio" value="balanceHide" defaultChecked={!userShowBalance ?  true : false}/><label>Default Hide </label>
-          </td>
-          <td className="settingCol3">
           </td>
         </tr>
         <tr className="settingsTableRow">          
@@ -245,13 +246,23 @@ module.exports = (props) => {
           </td>
         </tr>
         <tr className="settingsTableRow">          
-          <td className="settingCol1" title="Derivation path selection, ...">Advanced features:
-          </td>
-          <td className="settingCol2">          
-            <input className="m15L" type="radio" id="userShowAdvancedRadio" name="userAdvancedRadio" value="advancedShow" defaultChecked={userAdvancedFeatures ? true : false}/><label>Default Show </label>
-            <input className="m15L" type="radio" id="userHideAdvancedRadio" name="userAdvancedRadio" value="advancedHide" defaultChecked={!userAdvancedFeatures ?  true : false}/><label>Default Hide </label>
-          </td>
+          <td colSpan="2" className="settingCol1 p20R">Show balance:
+          </td>          
           <td className="settingCol3">
+            <label className="m10L switch">
+              <input id="userShowBalance" type="checkbox" defaultChecked={userShowBalance ? true : false} onChange={(e) => enableShowBalance()}/>
+              <span className="slider round"></span>
+            </label>
+          </td>
+        </tr>
+        <tr className="settingsTableRow">          
+          <td colSpan="2" className="settingCol1 p20R" title="Derivation path selection, ...">Advanced features:
+          </td>          
+          <td className="settingCol3">
+            <label className="m10L switch">
+              <input id="userAdvancedFeatures" type="checkbox" defaultChecked={userAdvancedFeatures ? true : false} onChange={(e) => enableAdvancedFeatures()}/>
+              <span className="slider round"></span>
+            </label>
           </td>
         </tr>
         </tbody>

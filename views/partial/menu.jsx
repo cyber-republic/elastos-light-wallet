@@ -25,7 +25,7 @@ module.exports = (props) => {
       walletInfo = App.getWalletNameLogin();
       if (walletInfo.length === 0) walletInfo = App.getWalletNameCreate();
     } else {
-      walletInfo = "One Time Login";
+      walletInfo = "One-time Access";
     }
   }
 

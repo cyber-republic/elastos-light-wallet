@@ -112,7 +112,6 @@ module.exports = (props) => {
     sendTxType = false;
     consolidateTxType = true;
     App.renderApp();
-    //console.log("showConsolidateModal");
   }
   
   const closeModal = () => {
@@ -277,7 +276,9 @@ module.exports = (props) => {
 
           </tbody>
         </table>
-        <button className="history-button dark-hover m10B" onClick={(e) => loadMoreTx()}><img src="artwork/arrow.svg" alt="" className="rotate_90 arrow-history"/></button>
+        <div className="flex-middle" style={(App.getParsedTransactionHistory().length > App.getInitTxRecordsCount()) ? {display: 'flex'} : {display: 'none'}}>
+          <button className="history-button dark-hover m10B" onClick={(e) => loadMoreTx()}><img src="artwork/arrow.svg" alt="" className="rotate_90 arrow-history"/></button>
+        </div>
       </div>
 
       <div>

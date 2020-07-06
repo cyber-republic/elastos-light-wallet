@@ -7,6 +7,7 @@ const mainConsoleLib = require('console');
 const BigNumber = require('bignumber.js');
 const crypto = require('crypto');
 const Parser = require('rss-parser');
+const developMode = false; // password complexity, fee amount for testing, onClick copy generated mnemonic
 
 /* Wallets */
 const fs = require('fs');
@@ -17,16 +18,16 @@ const userDataPath = Electron.getPath("userData");
 const algorithm = 'aes-256-cbc';
 let walletNameCreate = '';
 let walletNameLogin = '';
- 
+
 /* Default variables */
 const defaultNetworkIx = 0;
 const defaultNodeURL = '';
-const defaultWalletPath = path.join(userDataPath,"Wallets"); // ok
+const defaultWalletPath = path.join(userDataPath,"Wallets");
 const defaultShowBalance = false;
 const defaultAdvancedFeatures = false;
 
 /* Config variables */
-let configNetworkIx = 0; // not used for now
+let configNetworkIx = 0;
 let configNodeURL = '';
 let configWalletPath = '';
 let configShowBalance = '';
@@ -44,6 +45,11 @@ let configFile = "Config.ini";
 let configFilePath = path.join(userDataPath, configFile);
 let defaultConfigContent = "networkIx="+defaultNetworkIx+"\nnodeURL="+defaultNodeURL+"\nwalletPath=\nshowBalance="+defaultShowBalance+"\nadvancedFeatures="+defaultAdvancedFeatures;
 let configInitialized = false;
+
+/* zip test */
+//path.join(defaultWalletPath),"*");
+
+
 
 /* modules */
 const LedgerComm = require('./LedgerComm.js');
@@ -116,7 +122,12 @@ let useLedgerFlag = false;
 
 let usePasswordFlag = false;
 
-const minPasswordLength = 6;
+let passwordRegEx;
+if (!developMode) {
+  passwordRegEx = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[^\w\s]).{8,}$/;
+} else {
+  passwordRegEx = /^.{1,}$/; 
+}
 
 let refreshCandiatesFlag = true;
 
@@ -154,6 +165,8 @@ let parsedCandidateVoteList = {
   candidateVotes: [],
   lastVote: [],
 };
+let loadedProducerList = false;
+let loadedVotes = false;
 
 let unspentTransactionOutputsStatus = 'No UTXOs Requested Yet';
 
@@ -206,7 +219,9 @@ const init = (_GuiToggles) => {
   GuiToggles = _GuiToggles;
   
   //setRestService(0);
-  
+  if (developMode) {
+    mainConsole.log('Develop mode ENABLED.');
+  }
   mainConsole.log('Console Logging Enabled.');
 };
 
@@ -310,6 +325,10 @@ const refreshBlockchainData = () => {
   requestUnspentTransactionOutputs();
   requestBlockchainState();
   CoinGecko.requestPriceData();
+  //clearParsedProducerList();
+  //clearParsedCandidateVoteList();
+  loadedProducerList = false;
+  loadedVotes = false;
   requestListOfProducers(true);
   requestListOfCandidateVotes();
   renderApp();
@@ -561,10 +580,12 @@ const getPublicKeyFromMnemonic = (_saveWallet) => {
     if (!walletCreated) {
       return false;
     }
+  } else {
+    GuiUtils.setValue('privateKeyElt', privateKey);
   }
   
-  const privateKeyElt = document.getElementById('privateKeyElt');
-  privateKeyElt.value = privateKey;  
+  //const privateKeyElt = document.getElementById('privateKeyElt');
+  //privateKeyElt.value = privateKey;  
   publicKey = KeyTranscoder.getPublic(privateKey);
   requestBlockchainData();
   return true;
@@ -584,8 +605,8 @@ const saveWalletLocally = (secret) => {
   
   let newPassword = GuiUtils.getValue('newPassword');
   let confirmPassword = GuiUtils.getValue('confirmPassword');
-  if (newPassword.length < minPasswordLength) {
-    bannerStatus = `Password must be at least ${minPasswordLength} characters long`;
+  if (!passwordRegEx.test(newPassword)) {
+    bannerStatus = `Please use stronger password (min 8 characters, 1 uppercase, 1 lowercase, 1 number and 1 special character).`;
     bannerClass = 'bg_red color_white banner-look';
     GuiToggles.showAllBanners(false);
     renderApp();
@@ -602,11 +623,9 @@ const saveWalletLocally = (secret) => {
   
   /*if (indexPathMnemonic === false) { // save mnemonic / pvt key, passphrase issue 
     // pvt key
-    console.log("pvt key wallet");
     isSaved = createWalletFile(walletNameCreate, newPassword, secret);
   } else {
     // mnemonic
-    console.log("mnemonic wallet");
     isSaved = createWalletFile(walletNameCreate, newPassword, secret+"|"+indexPathMnemonic);
   }*/
   
@@ -634,22 +653,14 @@ const loginWithWallet = () => {
     return false;  
   }
   
-  if (loginPassword.length < minPasswordLength) {
-  bannerStatus = `Password must be at least ${minPasswordLength} characters long`;
-    bannerClass = 'bg_red color_white banner-look';
-    GuiToggles.showAllBanners(false);
-    renderApp();
-    return false;  
-  }
-  
   let encryptedWallet = readWalletFile(walletNameLogin);
   let walletTxt = decryptWallet(encryptedWallet, loginPassword);
-  let privateKeyWallet = "";
+  let privateKey = "";
   
   if (!walletTxt) {
     return false;
   } else {
-    privateKeyWallet = walletTxt;
+    privateKey = walletTxt;
     
     /* file was from mnemonic
     let loginMnemonicString = '';
@@ -672,23 +683,24 @@ const loginWithWallet = () => {
       console.log(`Mnemonic is not valid.`);
     }
 
-    //privateKeyWallet = Mnemonic.getPrivateKeyFromMnemonic(loginMnemonicString, indexPathMnemonic);
+    //privateKey = Mnemonic.getPrivateKeyFromMnemonic(loginMnemonicString, indexPathMnemonic);
     */
 
 
-    //if (privateKeyWallet.length != PRIVATE_KEY_LENGTH) {
+    //if (privateKey.length != PRIVATE_KEY_LENGTH) {
     //  bannerStatus = `Mnemonic must create a of length ${PRIVATE_KEY_LENGTH}, not ${privateKey.length}`;
     //  bannerClass = 'bg_red color_white banner-look';
     //  GuiToggles.showAllBanners(false);
     //  renderApp();
     //  return false;
     //  make banner
-    //  console.log(`Mnemonic must create a of length ${PRIVATE_KEY_LENGTH}, not ${privateKeyWallet.length}`);
+    //  console.log(`Mnemonic must create a of length ${PRIVATE_KEY_LENGTH}, not ${privateKey.length}`);
     //}
-      
-    const privateKeyElt = document.getElementById('privateKeyElt');
-    privateKeyElt.value = privateKeyWallet;
-    publicKey = KeyTranscoder.getPublic(privateKeyWallet);
+    
+    GuiUtils.setValue('privateKeyElt', privateKey);
+    //const privateKeyElt = document.getElementById('privateKeyElt');
+    //privateKeyElt.value = privateKey;
+    publicKey = KeyTranscoder.getPublic(privateKey);
     requestBlockchainData();
     isLoggedIn = true;
     return true;
@@ -700,8 +712,9 @@ const getPublicKeyFromPrivateKey = (_saveWallet) => {
   isLoggedIn = true;
   usePasswordFlag = false;
   
-  const privateKeyElt = document.getElementById('privateKeyElt');
-  privateKey = privateKeyElt.value;
+  privateKey = GuiUtils.getValue('privateKeyElt');
+  //const privateKeyElt = document.getElementById('privateKeyElt');
+  //privateKey = privateKeyElt.value;
   if (privateKey.length != PRIVATE_KEY_LENGTH) {
     bannerStatus = `Private key must be a hex encoded string of length ${PRIVATE_KEY_LENGTH}, not ${privateKey.length}`;
     bannerClass = 'bg_red color_white banner-look';
@@ -921,9 +934,6 @@ const consolidateUTXOs = () => {
   }
   
   const getCorrectSizedTX = (utxoMaxCount) => {
-    //console.log("utxoMaxCount",utxoMaxCount);
-    //console.log("maxTXSize",maxTXSize);
-    
     const unspentTransactionOutputs = parsedUnspentTransactionOutputs;
     let maxAmountToSend;
     
@@ -970,8 +980,9 @@ const consolidateUTXOs = () => {
           
           const sendPassword = GuiUtils.getValue('sendPassword');
           let encryptedWallet = readWalletFile(walletNameLogin);    
-          if (sendPassword.length < minPasswordLength) {
-            bannerStatus = `Password must be at least ${minPasswordLength} characters long`;
+          
+          if (sendPassword.length === 0) {
+            bannerStatus = `Please enter your Password.`;
             bannerClass = 'bg_red color_white banner-look';
             GuiToggles.showAllBanners(false);
             renderApp();
@@ -985,8 +996,9 @@ const consolidateUTXOs = () => {
             }
           }
         } else {
-          const privateKeyElt = document.getElementById('privateKeyElt');
-          privateKey = privateKeyElt.value;
+          privateKey = GuiUtils.getValue('privateKeyElt');
+          //const privateKeyElt = document.getElementById('privateKeyElt');
+          //privateKey = privateKeyElt.value;
         }
           
         if (privateKey) {            
@@ -1050,8 +1062,8 @@ const sendAmountToAddress = () => {
     
     const sendPassword = GuiUtils.getValue('sendPassword');
     let encryptedWallet = readWalletFile(walletNameLogin);    
-    if (sendPassword.length < minPasswordLength) {
-      bannerStatus = `Password must be at least ${minPasswordLength} characters long`;
+    if (sendPassword.length === 0) {
+      bannerStatus = `Please enter your Password.`;
       bannerClass = 'bg_red color_white banner-look';
       GuiToggles.showAllBanners(false);
       renderApp();
@@ -1065,8 +1077,9 @@ const sendAmountToAddress = () => {
         }
       }
     } else {
-      const privateKeyElt = document.getElementById('privateKeyElt');
-        privateKey = privateKeyElt.value;
+      privateKey = GuiUtils.getValue('privateKeyElt');
+      //const privateKeyElt = document.getElementById('privateKeyElt');
+      //privateKey = privateKeyElt.value;
     }
     
     if (privateKey) {
@@ -1119,6 +1132,7 @@ const clearParsedProducerList = () => {
 }
 
 const requestListOfProducersReadyCallback = (response, force) => {
+  loadedProducerList = false;
   if (refreshCandiatesFlag) {
     producerListStatus = 'Producers Received';
   } else {
@@ -1140,7 +1154,6 @@ const requestListOfProducersReadyCallback = (response, force) => {
     parsedProducerList.totalvotes = 0;
     parsedProducerList.totalcounts = 0;
 
-
     response.result.sort((producer0, producer1) => {
       return parseFloat(producer1.Votes) - parseFloat(producer0.Votes);
     });
@@ -1157,6 +1170,7 @@ const requestListOfProducersReadyCallback = (response, force) => {
       // mainConsole.log('INTERIM Producers Callback', parsedProducer);
       parsedProducerList.producers.push(parsedProducer);
     });
+    loadedProducerList = true;
     // mainConsole.log('INTERIM Producers Callback', response.result.producers[0]);
   }
   // mainConsole.log('SUCCESS Producers Callback');
@@ -1202,21 +1216,27 @@ const toggleProducerSelection = (item) => {
 };
 
 const selectActiveVotes = () => {
-  if (parsedCandidateVoteList.lastVote.length > 0) {
-    let activeVotes = new Set(parsedCandidateVoteList.lastVote);
-    // let activeVotes = new Set(parsedCandidateVoteList.candidateVotes.map(e => e.ownerpublickey));
-    parsedProducerList.producers.map(e => {
-      if (activeVotes.has(e.ownerpublickey)) {
-        if (!e.isCandidate) {
-          e.isCandidate = true;
-          parsedProducerList.producersCandidateCount++;
-        }
-      }
-    });
-  } else {
-    bannerStatus = `Previous voting record not found.`;
+  if (!loadedVotes) {
+    bannerStatus = `Your previous candidates selection is loading, please wait few seconds or press Refresh and try again.`;
     bannerClass = 'landing-btnbg color_white banner-look';
     GuiToggles.showAllBanners(false);
+  } else {
+    if (parsedCandidateVoteList.lastVote.length > 0) {
+      let activeVotes = new Set(parsedCandidateVoteList.lastVote);
+      // let activeVotes = new Set(parsedCandidateVoteList.candidateVotes.map(e => e.ownerpublickey));
+      parsedProducerList.producers.map(e => {
+        if (activeVotes.has(e.ownerpublickey)) {
+          if (!e.isCandidate) {
+            e.isCandidate = true;
+            parsedProducerList.producersCandidateCount++;
+          }
+        }
+      });
+    } else {
+      bannerStatus = `Previous voting record not found.`;
+      bannerClass = 'landing-btnbg color_white banner-look';
+      GuiToggles.showAllBanners(false);
+    }
   }
   renderApp();
 };
@@ -1248,6 +1268,7 @@ const clearParsedCandidateVoteList = () => {
 
 const requestListOfCandidateVotesReadyCallback = (response) => {
   candidateVoteListStatus = 'Candidate Votes Received';
+  loadedVotes = false;
 
   // mainConsole.log('STARTED Candidate Votes Callback', response);
   clearParsedCandidateVoteList();
@@ -1278,6 +1299,7 @@ const requestListOfCandidateVotesReadyCallback = (response) => {
           });
         }
       });
+      loadedVotes = true;
     }
     // mainConsole.log('INTERIM Candidate Votes Callback', response.result);
   }
@@ -1299,6 +1321,13 @@ const requestListOfCandidateVotes = () => {
 };
 
 const sendVoteTx = () => {
+  /*if (!loadedProducerList) {
+    bannerStatus = `Candidates are loading, please wait a few seconds or press Refresh and try again.`;
+    bannerClass = 'landing-btnbg color_white banner-look';
+    GuiToggles.showAllBanners(false);
+    renderApp();
+    return false;
+  }*/
   try {
     const unspentTransactionOutputs = parsedUnspentTransactionOutputs;
     // mainConsole.log('sendVoteTx.unspentTransactionOutputs ' + JSON.stringify(unspentTransactionOutputs));
@@ -1377,8 +1406,8 @@ const sendVoteTx = () => {
         if (!walletNameLogin) walletNameLogin = walletNameCreate;
         const votePassword = GuiUtils.getValue('votePassword');
         let encryptedWallet = readWalletFile(walletNameLogin);    
-        if (votePassword.length < minPasswordLength) {
-          bannerStatus = `Password must be at least ${minPasswordLength} characters long`;
+        if (votePassword.length === 0) {
+          bannerStatus = `Please enter your Password.`;
           bannerClass = 'bg_red color_white banner-look';
           GuiToggles.showAllBanners(false);
           renderApp();
@@ -1392,12 +1421,12 @@ const sendVoteTx = () => {
           }
         }
     } else {
-      const privateKeyElt = document.getElementById('privateKeyElt');
-      privateKey = privateKeyElt.value;
+      privateKey = GuiUtils.getValue('privateKeyElt');
+      //const privateKeyElt = document.getElementById('privateKeyElt');
+      //privateKey = privateKeyElt.value;
     }
   
     if (privateKey) {
-      //console.log(privateKey, unspentTransactionOutputs, feeAmountSats, candidates, feeAccount);
       const encodedTx = TxFactory.createSignedVoteTx(privateKey, unspentTransactionOutputs, feeAmountSats, candidates, feeAccount);
       if (encodedTx == undefined) {
         return false;
@@ -1407,7 +1436,11 @@ const sendVoteTx = () => {
     // mainConsole.log('sendVoteTx.encodedTx ' + JSON.stringify(encodedTx));
     }
   } catch (error) {
-    mainConsole.trace(error);
+    //mainConsole.trace(error);
+    bannerStatus = `Error vote: Check your balance, press Refresh and wait a few seconds or restart application and try again.`;
+    bannerClass = 'bg_red color_white banner-look';
+    GuiToggles.showAllBanners(false);
+    renderApp();
     return false;
   }
   return true;
@@ -1447,14 +1480,14 @@ const sendVoteReadyCallback = (transactionJson) => {
     candidateVoteListStatus = `Vote Error: ${transactionJson.Error} ${transactionJson.Result}`;
     bannerStatus = candidateVoteListStatus;
     bannerClass = 'bg_red color_white banner-look';
-  GuiToggles.showAllBanners(false);
+    GuiToggles.showAllBanners(false);
   } else {
     candidateVoteListStatus = `Voting transaction successful.`;
     GuiToggles.showHome();
-  bannerStatus = candidateVoteListStatus;
+    bannerStatus = candidateVoteListStatus;
     bannerClass = 'bg_green color_white banner-look';
     requestTransactionHistory();
-  GuiToggles.showAllBanners(true);
+    GuiToggles.showAllBanners(true);
   }  
   renderApp();
 };
@@ -1725,6 +1758,8 @@ const clearGlobalData = () => {
 
   clearParsedProducerList();
   clearParsedCandidateVoteList();
+  loadedProducerList = false;
+  loadedVotes = false;
   
   walletNameCreate = '';
   walletNameLogin = '';
@@ -1915,7 +1950,7 @@ const getFeeReadyCallback = (response) => {
   feeStatus = 'Fee Received';
   if (feeRequested === '') { 
     feeRequested = response.result.toString();
-    //feeRequested = 1; // testing purposes
+    if (developMode) feeRequested = 1;
   }
   // mainConsole.log('getFeeReadyCallback ', response, fee);
   renderApp();
@@ -2299,8 +2334,6 @@ const setCurrentAdvancedFeatures = (_currentAdvancedFeatures) => {
   currentAdvancedFeatures = _currentAdvancedFeatures;
 }
 
-
-
 const resetConfigInitialized = () => {
   configInitialized = false;
 }
@@ -2357,6 +2390,19 @@ const setTxRecordsCount = (_txRecordsCount) => {
   txRecordsCount = _txRecordsCount;
 }
 
+const getLoadedProducerList = () => {
+  return loadedProducerList;
+}
+
+const getLoadedVotes = () => {
+  return loadedVotes;
+}
+
+const getDevelopMode = () => {
+  return developMode;
+}
+
+/* basic */
 exports.REST_SERVICES = REST_SERVICES;
 exports.init = init;
 exports.log = mainConsole.log;
@@ -2367,7 +2413,6 @@ exports.setAppDocument = setAppDocument;
 exports.setRenderApp = setRenderApp;
 exports.getLedgerDeviceInfo = getLedgerDeviceInfo;
 exports.getMainConsole = getMainConsole;
-exports.getPublicKeyFromLedger = getPublicKeyFromLedger;
 exports.refreshBlockchainData = refreshBlockchainData;
 exports.clearSendData = clearSendData;
 exports.clearGlobalData = clearGlobalData;
@@ -2416,10 +2461,12 @@ exports.generatePrivateKeyHex = generatePrivateKeyHex;
 exports.getGeneratedPrivateKeyHex = getGeneratedPrivateKeyHex;
 exports.copyPrivateKeyToClipboard = copyPrivateKeyToClipboard;
 exports.copyAddressToClipboard = copyAddressToClipboard;
+/* Candidates */
 exports.setRefreshCandiatesFlag = setRefreshCandiatesFlag;
 exports.requestListOfProducers = requestListOfProducers;
 exports.requestListOfCandidateVotes = requestListOfCandidateVotes;
 exports.verifyLedgerBanner = verifyLedgerBanner;
+exports.getLoadedProducerList = getLoadedProducerList;
 //exports.formatTxValue = formatTxValue;
 exports.selectActiveVotes = selectActiveVotes;
 exports.clearSelection = clearSelection;
@@ -2428,8 +2475,10 @@ exports.validateFee = validateFee;
 exports.insertELA = insertELA;
 exports.getTotalSpendingELA = getTotalSpendingELA;
 exports.isValidAddress = isValidAddress;
-exports.isLedgerConnected = isLedgerConnected;
 exports.isValidDecimal = isValidDecimal;
+/* Wallets */
+exports.getPublicKeyFromLedger = getPublicKeyFromLedger;
+exports.isLedgerConnected = isLedgerConnected;
 exports.encryptWallet = encryptWallet;
 exports.decryptWallet = decryptWallet;
 exports.createWalletFile = createWalletFile;
@@ -2441,40 +2490,38 @@ exports.getPasswordFlag = getPasswordFlag;
 exports.saveWalletLocally = saveWalletLocally;
 exports.createWalletFolder = createWalletFolder;
 exports.getLoggedIn = getLoggedIn;
-
+exports.getWalletNameLogin = getWalletNameLogin;
+exports.getWalletNameCreate = getWalletNameCreate;
+/* config */
+exports.resetConfigInitialized = resetConfigInitialized;
 exports.createConfigFile = createConfigFile;
 exports.readConfigFile = readConfigFile;
 exports.updateConfigFile = updateConfigFile;
 exports.resetConfigData = resetConfigData;
-
-exports.getCurrentNetworkIx = getCurrentNetworkIx;
 exports.getConfigNetworkIx = getConfigNetworkIx;
-
-exports.getDefaultWalletPath = getDefaultWalletPath;
+exports.getConfigNodeURL = getConfigNodeURL;
 exports.getConfigWalletPath = getConfigWalletPath;
-exports.getCurrentWalletPath = getCurrentWalletPath;
-exports.setCurrentWalletPath = setCurrentWalletPath;
-
+exports.getConfigShowBalance = getConfigShowBalance;
+exports.getConfigAdvancedFeatures = getConfigAdvancedFeatures;
+/* current */
+exports.getCurrentNetworkIx = getCurrentNetworkIx;
 exports.getCurrentNodeURL = getCurrentNodeURL;
 exports.setCurrentNodeURL = setCurrentNodeURL;
-exports.getConfigNodeURL = getConfigNodeURL;
-
+exports.getCurrentWalletPath = getCurrentWalletPath;
+exports.setCurrentWalletPath = setCurrentWalletPath;
 exports.getCurrentShowBalance = getCurrentShowBalance;
 exports.setCurrentShowBalance = setCurrentShowBalance;
-exports.getConfigShowBalance = getConfigShowBalance;
-
 exports.getCurrentAdvancedFeatures = getCurrentAdvancedFeatures;
 exports.setCurrentAdvancedFeatures = setCurrentAdvancedFeatures;
-exports.getConfigAdvancedFeatures = getConfigAdvancedFeatures;
-
-exports.resetConfigInitialized = resetConfigInitialized;
-exports.getWalletNameLogin = getWalletNameLogin;
-exports.getWalletNameCreate = getWalletNameCreate;
-
+/* default */
+exports.getDefaultWalletPath = getDefaultWalletPath;
+/* consolidate */
 exports.consolidateUTXOs = consolidateUTXOs;
 exports.showConsolidateButton = showConsolidateButton;
 exports.getTotalUTXOs = getTotalUTXOs;
 exports.getMaxUTXOsPerTX = getMaxUTXOsPerTX;
+/* others */
 exports.getTxRecordsCount = getTxRecordsCount;
 exports.setTxRecordsCount = setTxRecordsCount;
 exports.getInitTxRecordsCount = getInitTxRecordsCount;
+exports.getDevelopMode = getDevelopMode;
