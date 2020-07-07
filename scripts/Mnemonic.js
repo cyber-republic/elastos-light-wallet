@@ -3,7 +3,7 @@
 const bip39 = require('bip39');
 const bitcoreTools = require('../libraries/bitcore-tools.js');
 
-// coin used by elephant wallet
+// coin used by Elastos Mobile and Elaphant wallets
 // const bip44path = `m/44'/0'/0'/0/0`;
 const BITCOIN_COIN = 0;
 

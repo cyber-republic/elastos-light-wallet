@@ -139,6 +139,12 @@ const showGenerateMnemonic = () => {
   show('generateMnemonicMenuOpen');
 };
 
+const showExportMnemonic = () => {
+  hideEverything();
+  show('generateMnemonic');
+  show('generateMnemonicMenuOpen');
+};
+
 const showAllBanners = (timeout) => {
   clearTimeout(bannerID);
   if (timeout === true) {
@@ -179,6 +185,7 @@ exports.showBanner = showBanner;
 exports.hideBanner = hideBanner;
 //exports.showGenerateNewPrivateKey = showGenerateNewPrivateKey;
 exports.showGenerateMnemonic = showGenerateMnemonic;
+exports.showExportMnemonic = showExportMnemonic;
 exports.showAllBanners = showAllBanners;
 exports.hideAllBanners = hideAllBanners;
 exports.bannerID = bannerID;

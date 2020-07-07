@@ -48,20 +48,13 @@ module.exports = (props) => {
   const setInputType = () => {
   if (GuiUtils.getChecked('radioMnemonic')) {
     importType = "mnemonic";
+    GuiUtils.setValue('privateKeyElt','');
   } else {
     importType = "privateKey";
+    GuiUtils.setValue('mnemonic','');
   }
   App.renderApp();
   }
-  
-  /*const toggleWalletName = () => {
-    if (GuiUtils.getValue('walletNameCreate') !== "") {
-      enableSaveWallet = true;
-    } else {
-      enableSaveWallet = false;
-    }
-    App.renderApp();
-  }*/
   
   const showPassword = (event) => {
     var elementID = event.target.id;

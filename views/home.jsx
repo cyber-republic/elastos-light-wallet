@@ -170,7 +170,8 @@ module.exports = (props) => {
     )
   }
 
-  return (<div id="home" className="gridback w780h520px">
+  return (
+  <div id="home" className="gridback w780h520px">
     <Banner App={App} GuiToggles={GuiToggles} page="home"/>
     <Menu App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} page="home"/> {/* <div id="homeMenuOpen" className="h25px bordered display_inline_block bgcolor_black_hover" title="menu" onClick={(e) => showHomeMenu()}>
        <img src="artwork/more-vertical.svg" />
@@ -292,7 +293,7 @@ module.exports = (props) => {
           <img className="scale-hover" src="artwork/voting-back.svg" height="38px" width="38px"/>
         </div>
         <div>
-          <span className="address-text modal-title font_size20 gradient-font">Enter password</span>
+          <span className="address-text modal-title font_size20 gradient-font">Send from wallet ({App.getWalletNameLogin()})</span>
         </div>
         <div className="m15T">
           <input type="password" className="enterPassword" type={showPasswordToggle ? "text" : "password"} size="18" id="sendPassword" placeholder="Enter Password" name="sendPassword"/>
@@ -303,6 +304,5 @@ module.exports = (props) => {
         </div>
       </div>
     </div>
-
   </div>)
 };

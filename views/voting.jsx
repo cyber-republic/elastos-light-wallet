@@ -190,7 +190,7 @@ module.exports = (props) => {
             <img className="scale-hover" src="artwork/voting-back.svg" height="38px" width="38px"/>
           </div>
           <div>
-            <span className="address-text modal-title font_size20 gradient-font">Enter password</span>
+            <span className="address-text modal-title font_size20 gradient-font">Vote via wallet ({App.getWalletNameLogin()})</span>
           </div>
           <div className="m15T">
             <input type="password" className="enterPassword" type={showPasswordToggle ? "text" : "password"} size="18" id="votePassword" placeholder="Enter Password" name="votePassword"/>

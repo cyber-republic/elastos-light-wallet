@@ -15,7 +15,13 @@ let walletPath = '';
 let initUserNodeURL = false;
 let initUserWalletPath = false;
 let showRemovePassword = false;
-
+let showPassphrase = false;
+let showExportPassword = false;
+let showExportPasswordModal = false;
+let showNewPasswordModal = false;
+let showOldPasswordWallet = false;
+let showNewPasswordWallet = false;
+let showConfirmPasswordWallet = false;
 
 module.exports = (props) => {
   const App = props.App;
@@ -176,6 +182,39 @@ module.exports = (props) => {
     }
     App.renderApp();
   }
+  
+  const showExportModal = () => {
+    if (App.getPassphraseFlag()) {
+      if (GuiUtils.getValue('exportPassphrase').length === 0) {
+        App.showBanner(`Please enter Passphrase`, 'bg_red color_white banner-look', false);
+        App.renderApp();
+        return false;
+      }
+    }    
+    showExportPasswordModal = true;
+    App.renderApp();
+  }
+  
+  const showNewPassword = () => {
+    showNewPasswordModal = true;
+    App.renderApp();
+  }
+  
+  const closeModal = () => {
+    showExportPasswordModal = false;
+    showNewPasswordModal = false;
+    App.renderApp();    
+  }
+  
+  const changePassword = () => {
+    let success = App.changePassword();
+    if (success)  {
+      showNewPasswordModal = false;
+      GuiUtils.setValue('oldPasswordWallet', '');
+      GuiUtils.setValue('newPasswordWallet', '');
+      GuiUtils.setValue('confirmPasswordWallet', '');
+    }
+  }
     
   const exitPage = () => {
     showRemovePassword = false;
@@ -187,16 +226,65 @@ module.exports = (props) => {
     }
   }
   
-  const showPassword = () => {
-    if (showRemovePassword) {
-      showRemovePassword = false;
+  const showPassword = (event) => {
+    var elementID = event.target.id;
+    if (elementID === "exportPassphraseEye") {
+      if (showPassphrase) {
+        showPassphrase = false;
+      } else {
+        showPassphrase = true;
+      }      
+    } else if (elementID === "removePasswordEye") {
+      if (showRemovePassword) {
+        showRemovePassword = false;
+      } else {
+        showRemovePassword = true;
+      }      
+    } else if (elementID === "exportPasswordEye") {
+      if (showExportPassword) {
+        showExportPassword = false;
+      } else {
+        showExportPassword = true;
+      }      
+    } else if (elementID === "oldPasswordWalletEye") {
+      if (showOldPasswordWallet) {
+        showOldPasswordWallet = false;
+      } else {
+        showOldPasswordWallet = true;
+      }      
+    } else if (elementID === "newPasswordWalletEye") {
+      if (showNewPasswordWallet) {
+        showNewPasswordWallet = false;
+      } else {
+        showNewPasswordWallet = true;
+      }      
+    } else if (elementID === "confirmPasswordWalletEye") {
+      if (showConfirmPasswordWallet) {
+        showConfirmPasswordWallet = false;
+      } else {
+        showConfirmPasswordWallet = true;
+      }      
+    }
+    App.renderApp();    
+  }
+  
+  const exportMnemonic = () => {
+    let isValid = App.exportMnemonic();
+    if (isValid) {
+      GuiUtils.setValue('exportPassword', '');
+      GuiUtils.setValue('exportPassphrase', '');
+      showExportPasswordModal = false;
+      App.setMnemonicScreen("export");
+      GuiToggles.showExportMnemonic();
     } else {
-      showRemovePassword = true;
+      showExportPasswordModal = false;
     }
     App.renderApp();
   }
   
-  return (<div id="settings">
+  
+  return (
+<div id="settings">
   <Banner App={App} GuiToggles={GuiToggles} page="settings"/>
   <div className="settings-main-div">    
     <div>  
@@ -240,13 +328,26 @@ module.exports = (props) => {
               {walletFiles.map(MakeItem)}
             </select>
             <input className="enterPassword m30L" type={showRemovePassword ? "text" : "password"} size="18" id="removePassword" placeholder="Enter Password" name="removePassword" />
-            <img className={showRemovePassword ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword()} />            
+            <img id="removePasswordEye" style={(showExportPasswordModal || showNewPasswordModal) ? {display: 'none'} : {display: 'inline'}} className={showRemovePassword ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />            
           </td>
           <td className="settingCol3"><button className="settingsButton dark-hover" onClick={(e) => removeWallet()}>Remove</button>
           </td>
         </tr>
+        <tr style={App.getPasswordFlag() ? {display: 'table-row'} : {display: 'none'}} className="settingsTableRow">          
+          <td className="settingCol1">Export mnemonic:
+          </td>
+          <td style={App.getPassphraseFlag() ? {display: 'table-cell'} : {display: 'none'}} className="settingCol2">          
+            <input className="enterPassword m143L" type={showPassphrase ? "text" : "password"} size="18" id="exportPassphrase" placeholder="Enter Passphrase" name="exportPassphrase" />
+            <img id="exportPassphraseEye" style={(showExportPasswordModal || showNewPasswordModal) ? {display: 'none'} : {display: 'inline'}} className={showPassphrase ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />            
+          </td>
+          <td style={App.getPassphraseFlag() ? {display: 'none'} : {display: 'table-cell'}} className="settingCol2">          
+            &nbsp;
+          </td>
+          <td className="settingCol3"><button className="settingsButton dark-hover" onClick={(e) => showExportModal()}>Export</button>
+          </td>
+        </tr>
         <tr className="settingsTableRow">          
-          <td colSpan="2" className="settingCol1 p20R">Show balance:
+          <td colSpan="2" className="settingCol1 p28R">Show balance:
           </td>          
           <td className="settingCol3">
             <label className="m10L switch">
@@ -256,7 +357,7 @@ module.exports = (props) => {
           </td>
         </tr>
         <tr className="settingsTableRow">          
-          <td colSpan="2" className="settingCol1 p20R" title="Derivation path selection, ...">Advanced features:
+          <td colSpan="2" className="settingCol1 p28R" title="Derivation path selection, ...">Advanced features:
           </td>          
           <td className="settingCol3">
             <label className="m10L switch">
@@ -268,8 +369,53 @@ module.exports = (props) => {
         </tbody>
       </table>
     </div>
-    <button className="saveConfig scale-hover" onClick={(e)=> useSaveConfig()}>Save Config</button>
-    <button className="reloadConfig scale-hover" onClick={(e)=> reloadConfig()}>Reload Config</button>  
+    <div className="flex-stretch settingsButtons">
+      <button className="grayConfigButton scale-hover" onClick={(e)=> reloadConfig()}>Reload Config</button>
+      <button style={App.getPasswordFlag() ? {display: 'block'} : {display: 'none'}} className="grayConfigButton scale-hover" onClick={(e)=> showNewPassword()}>Change password</button>
+      <button className="orangeConfigButton scale-hover" onClick={(e)=> useSaveConfig()}>Save Config</button>
+    </div>    
+  </div>
+  <div className="bg-modal w400px h200px" style={showExportPasswordModal ? {display: 'flex'} : {display: 'none'}}>
+    <div className="modalContent w350px h180px">
+      <div className="closeModal" onClick={(e) => closeModal()}>
+        <img className="scale-hover" src="artwork/voting-back.svg" height="38px" width="38px"/>
+      </div>
+      <div>
+        <span className="address-text modal-title font_size20 gradient-font">Export wallet ({App.getWalletNameLogin()})</span>
+      </div>
+      <div className="m15T">
+        <input type="password" className="enterPassword" type={showExportPassword ? "text" : "password"} size="18" id="exportPassword" placeholder="Enter Password" name="exportPassword"/>
+        <img id="exportPasswordEye" className={showExportPassword ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />
+      </div>
+      <div className="m15T">
+        <button className="submitModal scale-hover" onClick={(e) => exportMnemonic()}>Export</button>
+      </div>
+    </div>
+  </div>
+  <div className="bg-modal w400px h330px" style={showNewPasswordModal ? {display: 'flex'} : {display: 'none'}}>
+    <div className="modalContent w350px h300px">
+      <div className="closeModal" onClick={(e) => closeModal()}>
+        <img className="scale-hover" src="artwork/voting-back.svg" height="38px" width="38px"/>
+      </div>
+      <div>
+        <span className="address-text modal-title font_size20 gradient-font">Change password ({App.getWalletNameLogin()})</span>
+      </div>
+      <div className="m15T">
+        <input type="password" className="enterPassword" type={showOldPasswordWallet ? "text" : "password"} size="18" id="oldPasswordWallet" placeholder="Old Password" name="oldPasswordWallet"/>
+        <img id="oldPasswordWalletEye" className={showOldPasswordWallet ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />
+      </div>
+      <div className="m15T">
+        <input type="password" className="enterPassword" type={showNewPasswordWallet ? "text" : "password"} size="18" id="newPasswordWallet" placeholder="New Password" name="newPasswordWallet"/>
+        <img id="newPasswordWalletEye" className={showNewPasswordWallet ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />
+      </div>
+      <div className="m15T">
+        <input type="password" className="enterPassword" type={showConfirmPasswordWallet ? "text" : "password"} size="18" id="confirmPasswordWallet" placeholder="Confirm Password" name="confirmPasswordWallet"/>
+        <img id="confirmPasswordWalletEye" className={showConfirmPasswordWallet ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />
+      </div>
+      <div className="m15T">
+        <button className="submitModal scale-hover" onClick={(e) => changePassword()}>Change</button>
+      </div>
+    </div>
   </div>
 </div>);
 }

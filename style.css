@@ -756,7 +756,6 @@ button {
   top: 161px;
   left: 850px;
   margin-right: 10px;
-
 }
 
 .word-breakall{
@@ -1225,12 +1224,24 @@ select, input {
   height: 400px;
 }
 
+.h350px {
+  height: 350px;
+}
+
+.h330px {
+  height: 330px;
+}
+
 .h300px {
   height: 300px;
 }
 
 .h250px {
   height: 250px;
+}
+
+.h230px {
+  height: 200px;
 }
 
 .h200px {
@@ -1297,7 +1308,8 @@ select, input {
 }
 
 .color_red {
-  color: red;
+  color: #ff5f57;
+  /*color: red;*/
 }
 
 .bgcolor_red {
@@ -2059,10 +2071,10 @@ select, input {
 }
 
 .settingsTableDiv {
-  /*height: 500px;*/
+  height: 400px;
   margin-top: 50px;
   overflow: auto;
-  width: 100%;
+  width: 560px;
   -webkit-app-region: none;
 }
 
@@ -2083,7 +2095,7 @@ select, input {
 }
 
 .settingCol1 {
-  width: 160px;
+  width: 130px;
   text-align: right;
   font-size: 14px;
   color: #B2B4C3;
@@ -2096,7 +2108,7 @@ select, input {
 }
 
 .settingCol3 {
-  padding-right: 20px;
+  width: 110px;
   text-align: left;
 }
 
@@ -2122,6 +2134,19 @@ select, input {
   font-size: 14px;
 }
 
+.flex-stretch {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
+}
+
+.settingsButtons {
+  position: absolute;
+  top: 560px;
+  width: 560px;
+}
+
 .settingsButton {
   background: rgba(217,218,223,0.47);
   border-radius: 4px;
@@ -2131,41 +2156,32 @@ select, input {
   width: 80px;
 }
 
-.saveConfig {
+.orangeConfigButton {
   background-image: linear-gradient(-214deg, #F4D2AE 0%, #E5A776 100%);
   box-shadow: 0 3px 6px -2px rgba(25, 23, 41, 0.66);
   border-radius: 8px;
-  width: 161px;
+  width: 125px;
   height: 50px;
-  justify-content: center;
-  align-items: center;
   border: none;
-  margin: 0;
+  margin: auto;
   font-weight: 600;
   font-size: 16px;
   color: #FFFFFF;
   letter-spacing: 0;
-  top: 550px;
-  left: 345px;
-  position: absolute;
 }
 
-.reloadConfig {
+.grayConfigButton {
   background: rgba(151, 153, 166, 0.16);
   border-radius: 8px;
-  width: 161px;
+  width: 125px;
   height: 50px;
   justify-content: center;
   align-items: center;
   border: none;
-  margin: 0;
-  font-weight: 600;
+  margin: auto;
   font-size: 16px;
   color: #FFFFFF;
   letter-spacing: 0;
-  top: 550px;
-  left: 55px;
-  position: absolute;
 }
 
 /* The slider */
@@ -2248,6 +2264,10 @@ input:checked + .slider:before {
   margin-left: 50px;
 }
 
+.m143L {
+  margin-left: 143px;
+}
+
 .m150L {
   margin-left: 150px;
 }
@@ -2268,8 +2288,8 @@ input:checked + .slider:before {
   margin-bottom: 10px;
 }
 
-.p20R {
-  padding-right: 20px;
+.p28R {
+  padding-right: 28px;
 }
 
 .bg-modal {
@@ -2370,4 +2390,18 @@ input:checked + .slider:before {
   position: relative;
   top: 7px;
   left: 13px;
+}
+
+.exportMnemonicDiv {
+  opacity: 0.5;
+  background: rgba(168, 170, 174, 0.22);
+  border-radius: 15px;
+  width: 480px;
+  display: flex;
+  color: #FFFFFF;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  -moz-text-align-last: center; /* Firefox 12+ */
+  text-align-last: center;
 }
