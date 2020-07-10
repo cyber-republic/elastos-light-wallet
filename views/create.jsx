@@ -13,22 +13,22 @@ module.exports = (props) => {
   }
   
   const showMenu = () => {
-    GuiToggles.showMenu('generateMnemonic');
+    GuiToggles.showMenu('create');
   }
   
-  const MnemonicScreen = () => {
-    if (App.getMnemonicScreen() === "generate") {
-      return (<ScreenGenerate/>)
+  const CreateScreen = () => {
+    if (App.getCreateScreen() === "create") {
+      return (<ScreenCreate/>)
     }
-    if (App.getMnemonicScreen() === "export") {
+    if (App.getCreateScreen() === "export") {
       return (<ScreenExport/>)
     }
   }
   
   
-  const ScreenGenerate = () => {
+  const ScreenCreate = () => {
     return (
-  <div id="generate" className="login-div">
+  <div id="create" className="import-div">
     <div className="flex_center w100pct">
       <img className="flex1 scale-hover" src="artwork/voting-back.svg" height="38px" width="38px" onClick={(e)=> GuiToggles.showLanding()}/>
       <img src="artwork/logonew.svg" height="80px" width="240px" />
@@ -39,7 +39,7 @@ module.exports = (props) => {
       <p className="address-ex display_inline_block font_size20 padding_5px" onClick={App.getDevelopMode() ? (e) => App.copyMnemonicToClipboard() : undefined}>{App.getGeneratedMnemonic()}</p>
     </div>
     <div className="flex_center">
-      <button className="proceed-btn scale-hover" onClick={(e) => GuiToggles.showLoginMnemonic()}>
+      <button className="proceed-btn scale-hover" onClick={(e) => GuiToggles.showImport()}>
         <p>Next</p>
       </button>
     </div>
@@ -58,7 +58,7 @@ module.exports = (props) => {
   
   const ScreenExport = () => {
     return (
-  <div id="export" className="login-div">
+  <div id="export" className="import-div">
     <div className="flex_center w100pct">
       <img className="flex1 scale-hover" src="artwork/voting-back.svg" height="38px" width="38px" onClick={(e)=> GuiToggles.showHome()}/>
       <img src="artwork/logonew.svg" height="80px" width="240px" />
@@ -93,14 +93,14 @@ module.exports = (props) => {
   }
   
   return (
-<div id="generateMnemonic">
-  <Banner App={App} GuiToggles={GuiToggles} page="generateMnemonic"/>
-  <Menu App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} page="generateMnemonic"/>
+<div id="create">
+  <Banner App={App} GuiToggles={GuiToggles} page="create"/>
+  <Menu App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} page="create"/>
   <header>
-    <nav id="generateMnemonicMenuOpen" title="menu" onClick={(e) => showMenu()}>
+    <nav id="createMenuOpen" title="menu" onClick={(e) => showMenu()}>
       <img src="artwork/nav.svg" className="nav-icon dark-hover" onClick={(e) => showMenu()}/>
     </nav>
   </header>
-  <MnemonicScreen/>
+  <CreateScreen/>
 </div>);
 }

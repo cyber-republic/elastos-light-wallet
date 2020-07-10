@@ -5,16 +5,17 @@ module.exports = (props) => {
   const App = props.App;
   let showBalance = App.getCurrentShowBalance();
   
-  const balanceVisibility = () => {  
-  if (showBalance) {
-    App.setCurrentShowBalance(false);
-    GuiUtils.setChecked('userShowBalance', false);
-    //showBalance = false;
-  } else {
-    App.setCurrentShowBalance(true);
-    GuiUtils.setChecked('userShowBalance', true);
-  }
-  App.renderApp();
+  const balanceVisibility = () => {
+  App.setSendHasFocus(false);
+    if (showBalance) {      
+      App.setCurrentShowBalance(false);
+      GuiUtils.setChecked('userShowBalance', false);
+      //showBalance = false;
+    } else {
+      App.setCurrentShowBalance(true);
+      GuiUtils.setChecked('userShowBalance', true);
+    }
+    App.renderApp();
   }
   
   return (

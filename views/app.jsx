@@ -12,10 +12,8 @@ const clipboard = electron.clipboard;
 /** views */
 const Home = require('./home.jsx');
 const Landing = require('./landing.jsx');
-const LoginMnemonic = require('./login-mnemonic.jsx');
-//const LoginPrivateKey = require('./login-private-key.jsx');
-//const GeneratePrivateKey = require('./generate-private-key.jsx');
-const GenerateMnemonic = require('./generate-mnemonic.jsx');
+const Import = require('./import.jsx');
+const Create = require('./create.jsx');
 const Voting = require('./voting.jsx');
 const QRCode = require('./qrcode.jsx');
 const Settings = require('./settings.jsx');
@@ -104,10 +102,8 @@ class AppView extends React.Component {
     <div style={this.state.visible ? {display: 'block'} : {display: 'none'}}>
       <Home App={App} openDevTools={openDevTools} onLinkClick={onLinkClick} GuiToggles={GuiToggles} Version={Version}/>
       <Landing App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
-      <LoginMnemonic App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
-    {/*<LoginPrivateKey App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>*/}
-    {/*<GeneratePrivateKey App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>*/}
-      <GenerateMnemonic App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
+      <Import App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
+      <Create App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
       <Voting App={App} openDevTools={openDevTools} onLinkClick={onLinkClick} GuiToggles={GuiToggles} Version={Version}/>
       <QRCode App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
     <Settings App={App} openDevTools={openDevTools} onLinkClick={onLinkClick} GuiToggles={GuiToggles} Version={Version}/>

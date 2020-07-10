@@ -36,6 +36,7 @@ const UseLedgerButton = (props) => {
   const useLedger = () => {
     App.getPublicKeyFromLedger();
     if (!App.getLedgerDeviceInfo().error) {
+      //editablePath = false; // keep Ledger path on login
       GuiToggles.showHome();
     }
   }
@@ -59,13 +60,13 @@ module.exports = (props) => {
   }
   
   const refreshLedger = () => {
-  App.setPollForAllInfoTimer();
+    App.setPollForAllInfoTimer();
   }
   
   const editPath = (props) => {
     if (!editablePath) {
       editablePath = true;
-      GuiUtils.setValue('derivationPathLedger', "m/44'/2305'/0'/0/0");
+      GuiUtils.setValue('derivationPathLedger', "0");
     } else {
       editablePath = false;
       GuiUtils.setValue('derivationPathLedger', "");
@@ -74,7 +75,7 @@ module.exports = (props) => {
   }
   
   const validatePath = () => {
-  derivationPathLedger = GuiUtils.getValue('derivationPathLedger');
+    derivationPathLedger = GuiUtils.getValue('derivationPathLedger');
     
     if (derivationPathLedger == "") {
       indexPathLedger = 0;
@@ -84,7 +85,7 @@ module.exports = (props) => {
     }
     if (!App.isValidDecimal(indexPathLedger)) {
       GuiUtils.setValue('derivationPathLedger', '');
-    editablePath = false;
+      editablePath = false;
       App.renderApp();
     }
   }
@@ -101,9 +102,10 @@ module.exports = (props) => {
   }
   
   const useWalletLogin = () => {  
-  const success = App.loginWithWallet();
+    const success = App.loginWithWallet();
     if(success) {
       showWalletLogin = false;
+      //editablePath = false; // keep Ledger path on login
       GuiToggles.showHome();
     }
   }
@@ -148,31 +150,27 @@ module.exports = (props) => {
       <img src="artwork/nav.svg" className="nav-icon dark-hover" onClick={(e) => showMenu()}/>
     </nav>
   </header>
-  <div className="login-div ">
+  <div className="import-div ">
     <img src="artwork/logonew.svg" height="80px" width="240px" className="flexgrow_pt35"/>
     <p className="address-text font_size24 margin_none display_inline_block gradient-font">Create New Wallet</p>
     <div className="flex_center">
-      <button className="home-btn scale-hover landing-btnbg" onClick={(e) => GuiToggles.showGenerateMnemonic()}>
+      <button className="home-btn scale-hover landing-btnbg" onClick={(e) => GuiToggles.showCreate()}>
         Create
       </button>
     </div>
     <p className="address-text font_size24 margin_none display_inline_block gradient-font">Import Wallet</p>
     <div className="flex_center">
-      <button className="home-btn scale-hover landing-btnbg" onClick={(e) => GuiToggles.showLoginMnemonic()}>
+      <button className="home-btn scale-hover landing-btnbg" onClick={(e) => GuiToggles.showImport()}>
         From Mnemonics or Private key
       </button>
     </div>
-    {/*<div className="flex_center">
-      <button className="home-btn scale-hover landing-btnbg" onClick={(e) => GuiToggles.showLoginPrivateKey()}>
-        Login with Private Key
-      </button>
-    </div>*/}
     <p className="address-text font_size24 margin_none display_inline_block gradient-font">Login</p>    
     <button className="home-btn scale-hover landing-btnbg" onClick={(e) => showWalletLoginModal()}>Login with Password</button>
     <p className={(ledgerConnected) ? "address-text font_size16 w80pct word-breakword clearElement" : "address-text font_size16 w80pct word-breakword"}>Ledger Status:&nbsp;
       <LedgerMessage App={App}/></p>
     <div style={App.getCurrentAdvancedFeatures() ? {display: 'block'} : {display: 'none'}}>
-      <input style={(ledgerConnected) ? {display: 'flex'} : {display: 'none'}} type="text" size="21" maxLength={21} className={!editablePath ? "derivationPathPicker ledgerPicker w0px" : "derivationPathPicker ledgerPicker w195px"} id="derivationPathLedger" name="derivationPathLedger" readOnly={!editablePath ? true : false} placeholder="Elastos account (default)" onChange={(e) => validatePath()}/><img style={(ledgerConnected) ? {display: 'flex'} : {display: 'none'}} title="For Advanced users only" className={!editablePath ? "editPathLedger dark-hover padding_5px br5 editOn" : "editPathLedger dark-hover padding_5px br5 editOff"} onClick={(e) => editPath()}/>
+      <div style={(ledgerConnected && editablePath) ? {display: 'block'} : {display: 'none'}} className="derivationPathTextLedger">m/44'/2305'/0'/0/</div>
+      <input style={(ledgerConnected) ? {display: 'flex'} : {display: 'none'}} type="text" size="4" maxLength={4} className={!editablePath ? "derivationPathPicker ledgerPicker w0px" : "derivationPathPicker ledgerPicker w195px"} id="derivationPathLedger" name="derivationPathLedger" readOnly={!editablePath ? true : false} placeholder="Elastos account (default)" onChange={(e) => validatePath()}/><img style={(ledgerConnected) ? {display: 'flex'} : {display: 'none'}} title="For Advanced users only" className={!editablePath ? "editPathLedger dark-hover padding_5px br5 editOn" : "editPathLedger dark-hover padding_5px br5 editOff"} onClick={(e) => editPath()}/>
     </div>
   </div>
   <div>

@@ -21,7 +21,7 @@ let walletNameLogin = '';
 let mnemonicExport = '';
 let derivationPathExport = '';
 let usePassphraseFlag = false;
-let mnemonicScreen = 'generate';
+let createScreen = 'create';
 
 /* Default variables */
 const defaultNetworkIx = 0;
@@ -211,6 +211,9 @@ let indexPathMnemonic = 0;
 let derivationPathMnemonic = '';
 const initTxRecordsCount = 20;
 let txRecordsCount = initTxRecordsCount;
+let cryptoNameELAAddress = '';
+
+let requests = [];
 
 /** functions */
 const init = (_GuiToggles) => {
@@ -222,6 +225,8 @@ const init = (_GuiToggles) => {
     mainConsole.log('Develop mode ENABLED.');
   }
   mainConsole.log('Console Logging Enabled.');
+  
+  requestRssFeed();
 };
 
 const setAppClipboard = (clipboard) => {
@@ -319,6 +324,7 @@ const changeNodeURL = () => {
 };
 
 const refreshBlockchainData = () => {
+  sendHasFocus = false;
   requestTransactionHistory();
   requestBalance();
   requestUnspentTransactionOutputs();
@@ -398,7 +404,7 @@ const pollForData = () => {
         requestListOfProducers(false);
         requestListOfCandidateVotes();
       }
-      requestRssFeed();
+      //requestRssFeed();
       requestFee();
       requestFeeAccount();
       pollDataTypeIx++;
@@ -413,6 +419,10 @@ const pollForData = () => {
       throw Error('poll data index reset failed.');
     }
   } catch (error) {
+    /*bannerStatus = `Unable to poll data from source.`;
+    bannerClass = 'bg_red color_white banner-look';
+    GuiToggles.showAllBanners(false);
+    renderApp();*/
     mainConsole.trace('pollForData', pollDataTypeIx, error);
   }
 };
@@ -428,7 +438,7 @@ const postJson = (url, jsonString, readyCallback, errorCallback) => {
   const xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function () {
     if (this.readyState == 4) {
-      // sendToAddressStatuses.push( `XMLHttpRequest: status:${this.status} response:'${this.response}'` );
+      // sendToAddressStatuses.push( `XMLHttpRequest: status: ${this.status} response:'${this.response}'` );
       if (this.status == 200) {
         readyCallback(JSON.parse(this.response));
       } else {
@@ -461,6 +471,7 @@ const getRssFeed = async (url, readyCallback, errorCallback) => {
 
 const getJson = (url, readyCallback, errorCallback) => {
   const xhttp = new XMLHttpRequest();
+  //requests.push(xhttp);
   xhttp.onreadystatechange = function () {
     if (this.readyState == 4) {
       if (this.status == 200) {
@@ -807,14 +818,14 @@ const sendAmountToAddressReadyCallback = (transactionJson) => {
   // mainConsole.log('sendAmountToAddressReadyCallback ' + JSON.stringify(transactionJson));
   if (transactionJson.status == 400) {
     sendToAddressStatuses.length = 0;
-    const message = `Transaction Error.  Status:${transactionJson.status}  Result:${transactionJson.result}`;
+    const message = `Transaction Error.  Status: ${transactionJson.status}  Result:${transactionJson.result}`;
     bannerStatus = message;
     bannerClass = 'bg_red color_white banner-look';
     sendToAddressStatuses.push(message);
   GuiToggles.showAllBanners(false);
   } else if (transactionJson.Error != 0) {
     sendToAddressStatuses.length = 0;
-    const message = `Transaction Error.  Error:${transactionJson.Error}  Result:${transactionJson.Result}`;
+    const message = `Transaction Error.  Error: ${transactionJson.Error}  Result:${transactionJson.Result}`;
     bannerStatus = message;
     bannerClass = 'bg_red color_white banner-look';
     sendToAddressStatuses.push(message);
@@ -846,6 +857,7 @@ const clearSendData = () => {
   feeRequested = '';
   GuiUtils.setValue('sendAmount', '');
   GuiUtils.setValue('sendToAddress', '');
+  cryptoNameELAAddress = '';
   GuiUtils.setValue('feeAmount', feeRequested);
   GuiUtils.setValue('sendPassword', '');
   GuiUtils.setValue('votePassword', '');
@@ -903,10 +915,10 @@ const validateInputs = () => {
   if (!isValidAddress(sendToAddress)) {
     bannerStatus = `Please enter valid Address.`;
     bannerClass = 'bg_red color_white banner-look';
-  GuiToggles.showAllBanners(false);
-  renderApp();
-  return false;
-  } 
+    GuiToggles.showAllBanners(false);
+    renderApp();
+    return false;
+  }
   
   if (!isValidDecimal(sendAmount) || (sendAmount == 0)) {
   if (sendAmount.length == 0) {
@@ -1354,9 +1366,9 @@ const requestListOfCandidateVotesReadyCallback = (response) => {
             }
           });
         }
-      });
-      loadedVotes = true;
+      });      
     }
+    loadedVotes = true;
     // mainConsole.log('INTERIM Candidate Votes Callback', response.result);
   }
   // mainConsole.log('SUCCESS Candidate Votes Callback');
@@ -1699,6 +1711,7 @@ const setBlockchainLastActionHeight = () => {
 };
 
 const copyAddressToClipboard = () => {
+  sendHasFocus = false;
   if (address != undefined) {
     appClipboard.writeText(address);
     bannerStatus = `Copied to clipboard:\n${address}`;
@@ -1727,16 +1740,17 @@ const copyPrivateKeyToClipboard = () => {
 };
 
 const verifyLedgerBanner = () => {
+  sendHasFocus = false;
   if (address != undefined && useLedgerFlag) {
     bannerStatus = `Please verify address [${address}] on your Ledger Device by pressing the right button.`;
     bannerClass = 'landing-btnbg color_white banner-look';
   } else {
-  if (useLedgerFlag) {
-    getPublicKeyFromLedger();
-  } else {
-    bannerStatus = `No Ledger device connected`;
-      bannerClass = 'landing-btnbg color_white banner-look';
-  }
+    if (useLedgerFlag) {
+      getPublicKeyFromLedger();
+    } else {
+      bannerStatus = `No Ledger device connected`;
+        bannerClass = 'landing-btnbg color_white banner-look';
+    }
   }
 
   GuiToggles.showAllBanners(false);
@@ -1748,78 +1762,103 @@ const isLedgerConnected = () => {
 };
 
 const clearGlobalData = () => {
+  sendHasFocus = false;
   // mainConsole.log('STARTED clearGlobalData');
-  GuiUtils.setValue('privateKeyElt', '');
-  GuiUtils.setValue('mnemonic', '');
-  GuiUtils.setValue('feeAmount', feeRequested);
-  GuiUtils.setValue('nodeURL', '');
-  //GuiUtils.setValue('walletNameLogin', '');
-  GuiUtils.setValue('loginPassword', '');
-  GuiUtils.setValue('exportPassword', '');
-  GuiUtils.setValue('exportPassphrase', '');
+
+  /* Clear old getJson requests */
+  /*requests.forEach(function(request) {
+    request.abort();
+  });
+  requests = [];*/
   
-  // clear wallet creation
-  GuiUtils.setValue('walletNameCreate', '');
-  GuiUtils.setValue('newPassword', '');
-  GuiUtils.setValue('confirmPassword', '');
-  GuiUtils.setValue('passphrase', '');
-  GuiUtils.setValue('mnemonic', '');
+  /* Clear Cache */
+  let win = remote.getCurrentWindow();
+  win.webContents.session.clearCache(function(){
+    // mainConsole.log('Cache cleared');
+  });
   
-  mnemonicScreen = 'generate';
-  
+  /* Clear general UI */
   sendStep = 1;
   isLoggedIn = false;
   useLedgerFlag = false;
   usePasswordFlag = false;
-  
+  usePassphraseFlag = false;
   setTxRecordsCount(initTxRecordsCount);
   
-  //configInitialized = false;
-  
+  privateKey = '';
   publicKey = undefined;
   address = undefined;
   balance = undefined;
   generatedPrivateKeyHex = undefined;
   generatedMnemonic = undefined;
+  balanceStatus = 'No Balance Requested Yet';
   
+  /* Clear wallet data */
+  GuiUtils.setValue('privateKeyElt', '');
+  GuiUtils.setValue('mnemonic', '');
+  GuiUtils.setValue('derivationPathMnemonic', '');
+  //GuiUtils.setValue('derivationPathLedger', ''); // remember last wallet name on logout
+  //GuiUtils.setValue('walletNameLogin', ''); // remember last wallet name on logout
+  GuiUtils.setValue('loginPassword', '');
+  walletNameLogin = '';
+  
+  /* Clear wallet creation data */
+  GuiUtils.setValue('walletNameCreate', '');
+  GuiUtils.setValue('newPassword', '');
+  GuiUtils.setValue('confirmPassword', '');
+  GuiUtils.setValue('passphrase', '');
+  GuiUtils.setValue('mnemonic', '');
+  walletNameCreate = '';
+  
+  /* Clear Settings */
+  GuiUtils.setValue('nodeURL', '');
+  createScreen = 'create';
+  
+  /* Clear export mnemonic data */
+  GuiUtils.setValue('exportPassword', '');
+  GuiUtils.setValue('exportPassphrase', '');
   mnemonicExport = '';
-  usePassphraseFlag = false;
   derivationPathExport = '';
-
+  
+  /* Clear send data */
   sendAmount = '';
   feeAmountSats = '';
   feeAmountEla = '';
+  feeStatus = 'No Fee Requested Yet';
+  feeRequested = '';
+  GuiUtils.setValue('feeAmount', feeRequested);
+  feeAccountStatus = 'No Fee Account Requested Yet';
+  feeAccount = '';
+  
+  cryptoNameELAAddress = '';
 
   sendToAddressStatuses.length = 0;
   sendToAddressLinks.length = 0;
   sendToAddressStatuses.push('No Send-To Transaction Requested Yet');
 
-  balanceStatus = 'No Balance Requested Yet';
-
+  /* Clear transactions */
   transactionHistoryStatus = 'No History Requested Yet';
   parsedTransactionHistory.length = 0;
 
   unspentTransactionOutputsStatus = 'No UTXOs Requested Yet';
   parsedUnspentTransactionOutputs.length = 0;
-
-  parsedRssFeed.length = 0;
-  parsedRssFeedStatus = 'No Rss Feed Requested Yet';
-
-  feeStatus = 'No Fee Requested Yet';
-  feeRequested = '';
-  feeAccountStatus = 'No Fee Account Requested Yet';
-  feeAccount = '';
-
+  
+  /* Clear feed - moved to init */
+  //parsedRssFeed.length = 0;
+  //parsedRssFeedStatus = 'No Rss Feed Requested Yet';
+  
+  /* Clear banners */
   bannerStatus = '';
   bannerClass = '';
-
+  
+  /* Clear candidates */
   clearParsedProducerList();
   clearParsedCandidateVoteList();
   loadedProducerList = false;
   loadedVotes = false;
   
-  walletNameCreate = '';
-  walletNameLogin = '';
+  /* Reload config */
+  //configInitialized = false;
 
   renderApp();
   //mainConsole.log('SUCCESS clearGlobalData');
@@ -1971,7 +2010,6 @@ const requestRssFeed = async () => {
 const getRssFeedErrorCallback = (error) => {
   mainConsole.log('getRssFeedErrorCallback ', error);
   parsedRssFeedStatus = `Rss Feed Error ${error.message}`;
-
   renderApp();
 };
 
@@ -2366,6 +2404,48 @@ const updateConfigFile = (updateNetworkIx, updateNodeURL, updateWalletPath, upda
   });
 }
 
+const retrieveCryptoName = async () => {
+  sendHasFocus = false;
+  sendToAddress = GuiUtils.getValue('sendToAddress');
+  if (sendToAddress === "") {
+    bannerStatus = `Please enter CryptoName into ELA Address field.`;
+    bannerClass = `bg_red color_white banner-look`;
+    GuiToggles.showAllBanners(false);    
+  } else {
+    if (isValidAddress(sendToAddress)) {
+      bannerStatus = `Entered address is already valid ELA Address.`;
+      bannerClass = 'landing-btnbg color_white banner-look';
+      GuiToggles.showAllBanners(true);
+    } else {
+      await fetchCryptoName();  
+      if (!isValidAddress(cryptoNameELAAddress)) {
+        bannerStatus = `ELA Address for [`+sendToAddress+`] does not exist or service is unavailable.`;
+        bannerClass = 'bg_red color_white banner-look';
+        GuiToggles.showAllBanners(false);
+      } else {
+        bannerStatus = `ELA Address [`+cryptoNameELAAddress+`] for [`+sendToAddress+`] was received.`;
+        bannerClass = `bg_green color_white banner-look`;
+        GuiToggles.showAllBanners(true);
+        GuiUtils.setValue('sendToAddress', cryptoNameELAAddress);
+        sendToAddress = cryptoNameELAAddress;
+      }
+    }
+  }
+  renderApp();
+}
+
+const fetchCryptoName = async () => {
+  sendToAddress = GuiUtils.getValue('sendToAddress');
+  const url = "https://"+sendToAddress+".elastos.name/ela.address";
+  cryptoNameELAAddress = await fetch(url).then(function (response) {
+    return response.text();
+  }).then(function (html) {
+      return html 
+  }).catch(function (err) {
+    console.warn('Unable to fetch data.', err);
+  });
+}
+
 const getCurrentWalletPath = () => {
   return currentWalletPath;
 }
@@ -2462,12 +2542,12 @@ const getDevelopMode = () => {
   return developMode;
 }
 
-const getMnemonicScreen = () => {
-  return mnemonicScreen;
+const getCreateScreen = () => {
+  return createScreen;
 }
 
-const setMnemonicScreen = (_mnemonicScreen) => {
-  mnemonicScreen = _mnemonicScreen;
+const setCreateScreen = (_createScreen) => {
+  createScreen = _createScreen;
 }
 
 const getPassphraseFlag = () => {
@@ -2486,6 +2566,10 @@ const showBanner = (_bannerStatus, _bannerClass, _timer) => {
   bannerStatus = _bannerStatus;
   bannerClass = _bannerClass;
   GuiToggles.showAllBanners(_timer);
+}
+
+const getPasswordRegEx = () => {
+  return passwordRegEx;
 }
 
 /* basic */
@@ -2612,10 +2696,12 @@ exports.getTxRecordsCount = getTxRecordsCount;
 exports.setTxRecordsCount = setTxRecordsCount;
 exports.getInitTxRecordsCount = getInitTxRecordsCount;
 exports.getDevelopMode = getDevelopMode;
-exports.getMnemonicScreen = getMnemonicScreen;
-exports.setMnemonicScreen = setMnemonicScreen;
+exports.getCreateScreen = getCreateScreen;
+exports.setCreateScreen = setCreateScreen;
 exports.getMnemonicExport = getMnemonicExport;
 exports.getPassphraseFlag = getPassphraseFlag;
 exports.getDerivationPathExport = getDerivationPathExport;
 exports.exportMnemonic = exportMnemonic;
 exports.changePassword = changePassword;
+exports.getPasswordRegEx = getPasswordRegEx;
+exports.retrieveCryptoName = retrieveCryptoName;

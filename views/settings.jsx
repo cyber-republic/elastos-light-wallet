@@ -22,6 +22,8 @@ let showNewPasswordModal = false;
 let showOldPasswordWallet = false;
 let showNewPasswordWallet = false;
 let showConfirmPasswordWallet = false;
+let passwordsComplexity = true;
+let passwordsMatch = true;
 
 module.exports = (props) => {
   const App = props.App;
@@ -210,15 +212,37 @@ module.exports = (props) => {
     let success = App.changePassword();
     if (success)  {
       showNewPasswordModal = false;
-      GuiUtils.setValue('oldPasswordWallet', '');
-      GuiUtils.setValue('newPasswordWallet', '');
-      GuiUtils.setValue('confirmPasswordWallet', '');
+      clearPasswordFields();
     }
+  }
+  
+  const clearPasswordFields = () => {
+    GuiUtils.setValue('removePassword', '');
+    GuiUtils.setValue('exportPassphrase', '');
+    GuiUtils.setValue('exportPassword', '');
+    GuiUtils.setValue('oldPasswordWallet', '');
+    GuiUtils.setValue('newPasswordWallet', '');
+    GuiUtils.setValue('confirmPasswordWallet', '');
+  }
+  
+  const comparePasswords = () => {
+    if (App.getPasswordRegEx().test(GuiUtils.getValue('newPasswordWallet'))) {
+      passwordsComplexity = true;
+    } else {
+      passwordsComplexity = false;
+    }
+      
+    if (GuiUtils.getValue('newPasswordWallet') === GuiUtils.getValue('confirmPasswordWallet')) {
+      passwordsMatch = true;
+    } else {
+      passwordsMatch = false;
+    }
+    App.renderApp();
   }
     
   const exitPage = () => {
     showRemovePassword = false;
-    GuiUtils.setValue('removePassword', '');
+    clearPasswordFields();    
     if (App.getLoggedIn()) {
       GuiToggles.showHome();
     } else {
@@ -274,7 +298,7 @@ module.exports = (props) => {
       GuiUtils.setValue('exportPassword', '');
       GuiUtils.setValue('exportPassphrase', '');
       showExportPasswordModal = false;
-      App.setMnemonicScreen("export");
+      App.setCreateScreen("export");
       GuiToggles.showExportMnemonic();
     } else {
       showExportPasswordModal = false;
@@ -327,8 +351,8 @@ module.exports = (props) => {
               <option value="">Select wallet</option>
               {walletFiles.map(MakeItem)}
             </select>
-            <input className="enterPassword m30L" type={showRemovePassword ? "text" : "password"} size="18" id="removePassword" placeholder="Enter Password" name="removePassword" />
-            <img id="removePasswordEye" style={(showExportPasswordModal || showNewPasswordModal) ? {display: 'none'} : {display: 'inline'}} className={showRemovePassword ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />            
+            <input className="enterPassword m20L" type={showRemovePassword ? "text" : "password"} size="18" id="removePassword" placeholder="Enter Password" name="removePassword" />
+            <img id="removePasswordEye" className={showRemovePassword ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />            
           </td>
           <td className="settingCol3"><button className="settingsButton dark-hover" onClick={(e) => removeWallet()}>Remove</button>
           </td>
@@ -337,8 +361,8 @@ module.exports = (props) => {
           <td className="settingCol1">Export mnemonic:
           </td>
           <td style={App.getPassphraseFlag() ? {display: 'table-cell'} : {display: 'none'}} className="settingCol2">          
-            <input className="enterPassword m143L" type={showPassphrase ? "text" : "password"} size="18" id="exportPassphrase" placeholder="Enter Passphrase" name="exportPassphrase" />
-            <img id="exportPassphraseEye" style={(showExportPasswordModal || showNewPasswordModal) ? {display: 'none'} : {display: 'inline'}} className={showPassphrase ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />            
+            <input className="enterPassword m128L" type={showPassphrase ? "text" : "password"} size="18" id="exportPassphrase" placeholder="Enter Passphrase" name="exportPassphrase" />
+            <img id="exportPassphraseEye" className={showPassphrase ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />            
           </td>
           <td style={App.getPassphraseFlag() ? {display: 'none'} : {display: 'table-cell'}} className="settingCol2">          
             &nbsp;
@@ -384,7 +408,7 @@ module.exports = (props) => {
         <span className="address-text modal-title font_size20 gradient-font">Export wallet ({App.getWalletNameLogin()})</span>
       </div>
       <div className="m15T">
-        <input type="password" className="enterPassword" type={showExportPassword ? "text" : "password"} size="18" id="exportPassword" placeholder="Enter Password" name="exportPassword"/>
+        <input type="password" className="enterPassword w200px" type={showExportPassword ? "text" : "password"} size="18" id="exportPassword" placeholder="Enter Password" name="exportPassword"/>
         <img id="exportPasswordEye" className={showExportPassword ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />
       </div>
       <div className="m15T">
@@ -401,16 +425,18 @@ module.exports = (props) => {
         <span className="address-text modal-title font_size20 gradient-font">Change password ({App.getWalletNameLogin()})</span>
       </div>
       <div className="m15T">
-        <input type="password" className="enterPassword" type={showOldPasswordWallet ? "text" : "password"} size="18" id="oldPasswordWallet" placeholder="Old Password" name="oldPasswordWallet"/>
+        <input type="password" className="enterPassword w215px" type={showOldPasswordWallet ? "text" : "password"} size="18" id="oldPasswordWallet" placeholder="Old Password" name="oldPasswordWallet"/>
         <img id="oldPasswordWalletEye" className={showOldPasswordWallet ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />
       </div>
       <div className="m15T">
-        <input type="password" className="enterPassword" type={showNewPasswordWallet ? "text" : "password"} size="18" id="newPasswordWallet" placeholder="New Password" name="newPasswordWallet"/>
+        <input type="password" className="enterPassword w215px" type={showNewPasswordWallet ? "text" : "password"} size="18" id="newPasswordWallet" placeholder="New Password" name="newPasswordWallet" onChange={(e) => comparePasswords()}/>
         <img id="newPasswordWalletEye" className={showNewPasswordWallet ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />
+        <br /><span className={passwordsComplexity ? "infoText color_gray border_gray" : "infoText color_red border_red"}>Min. 8 characters, at least one uppercase, lowercase, number and special character</span>
       </div>
       <div className="m15T">
-        <input type="password" className="enterPassword" type={showConfirmPasswordWallet ? "text" : "password"} size="18" id="confirmPasswordWallet" placeholder="Confirm Password" name="confirmPasswordWallet"/>
+        <input type="password" className="enterPassword w215px" type={showConfirmPasswordWallet ? "text" : "password"} size="18" id="confirmPasswordWallet" placeholder="Confirm Password" name="confirmPasswordWallet" onChange={(e) => comparePasswords()}/>
         <img id="confirmPasswordWalletEye" className={showConfirmPasswordWallet ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />
+        <br /><span style={!passwordsMatch ? {display: 'inline-block'} : {display: 'none'}} className="infoText color_red border_red">Passwords do not match</span>
       </div>
       <div className="m15T">
         <button className="submitModal scale-hover" onClick={(e) => changePassword()}>Change</button>

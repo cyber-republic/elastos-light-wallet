@@ -44,6 +44,7 @@ module.exports = (props) => {
   }
   
   const showSettings = () => {
+    App.setSendHasFocus(false);
     GuiToggles.showSettings(); 
   }
 

@@ -129,10 +129,15 @@ module.exports = (props) => {
   }
   
   const loadMoreTx = () => {
+    App.setSendHasFocus(false);
     var txRecordCount = App.getTxRecordsCount()+App.getInitTxRecordsCount();
     App.setTxRecordsCount(txRecordCount);
     App.renderApp();
-  }  
+  }
+  
+  const retrieveCryptoName = () => {
+    App.retrieveCryptoName();    
+  }
   
   const SendScreenOne = (props) => {
     const visibility = props.visibility;
@@ -140,6 +145,7 @@ module.exports = (props) => {
       <img src="artwork/sendicon.svg" className="send-icon"/>
       <p className="send-text">Send</p>
       <input type="text" size="34" maxLength={34} id="sendToAddress" className="ela-address_input" placeholder="Enter ELA Address" defaultValue={App.getSendToAddress()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*//>
+      <img className="cryptoname" title="Retrieve ELA address from cryptoname.org" onClick={(e) => retrieveCryptoName()}/>
       <input type="text" size="14" maxLength={14} id="sendAmount" className="ela-send_amount" placeholder="Amount" defaultValue={App.getSendAmount()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*//>    
     <div className="quick-elaselector">
       <button className="quick-elaselector-icon quarter" onClick={() => App.insertELA('quarter')}>25%</button>
@@ -237,7 +243,7 @@ module.exports = (props) => {
     <div className="transaction-area">
       <p className="transactions-heading">Transactions</p>
       <p className="blockcount transactionstatus">
-        <span>Status:</span>
+        <span>Status: </span>
         <span>{App.getTransactionHistoryStatus()}</span>
       </p>
       <p className="blockcount">

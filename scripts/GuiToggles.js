@@ -23,23 +23,20 @@ const show = (id) => {
 const hideEverything = () => {
   hide('home');
   hide('landing');
-  hide('loginMnemonic');
-  //hide('loginPrivateKey');
+  hide('import');
   hide('version');
   hide('voting');
   hide('qrcode');
-  hide('generateMnemonic');
+  hide('create');
   hide('settings');
-  //hide('generatePrivateKey');
   hideAllBanners();
   hideAllMenus();
 };
 
 const hideAllMenus = () => {
-  //GuiUtils.hide('loginPrivateKeyBanner');
-  GuiUtils.hide('loginMnemonicBanner');
-  GuiUtils.hide('generateMnemonicBanner');
-  const menus = ['home', 'landing', 'voting', 'loginMnemonic', 'generateMnemonic'];
+  GuiUtils.hide('importBanner');
+  GuiUtils.hide('createBanner');
+  const menus = ['home', 'landing', 'voting', 'import', 'create'];
   menus.forEach((menu) => {
     hide(menu+'Menu');
     // hide(menu+'MenuOpen');
@@ -56,18 +53,11 @@ const showLanding = () => {
   show('landingMenuOpen');
 };
 
-const showLoginMnemonic = () => {
+const showImport = () => {
   hideEverything();
   app.clearSendData();
-  show('loginMnemonic');
-  show('loginMnemonicMenuOpen');
-};
-
-const showLoginPrivateKey = () => {
-  hideEverything();
-  app.clearSendData();
-  show('loginPrivateKey');
-  show('loginPrivateKeyMenuOpen');
+  show('import');
+  show('importMenuOpen');
 };
 
 const showHome = () => {
@@ -94,6 +84,7 @@ const hideMenu = (name) => {
 };
 
 const showVoting = () => {
+  app.setSendHasFocus(false);
   app.setRefreshCandiatesFlag(false);
   hideEverything();
   app.clearSendData();
@@ -124,25 +115,18 @@ const hideBanner = (name) => {
   hide(name+'Banner');
 };
 
-const showGeneratePrivateKey = () => {
-  hideEverything();
-  app.clearGlobalData();
-  app.generatePrivateKeyHex();
-  //show('generatePrivateKey');
-};
-
-const showGenerateMnemonic = () => {
+const showCreate = () => {
   hideEverything();
   app.clearGlobalData();
   app.generateMnemonic();
-  show('generateMnemonic');
-  show('generateMnemonicMenuOpen');
+  show('create');
+  show('createMenuOpen');
 };
 
 const showExportMnemonic = () => {
   hideEverything();
-  show('generateMnemonic');
-  show('generateMnemonicMenuOpen');
+  show('create');
+  show('createMenuOpen');
 };
 
 const showAllBanners = (timeout) => {
@@ -153,9 +137,8 @@ const showAllBanners = (timeout) => {
   GuiUtils.show('landingBanner');
   GuiUtils.show('homeBanner');
   GuiUtils.show('votingBanner');
-  //GuiUtils.show('loginPrivateKeyBanner');
-  GuiUtils.show('loginMnemonicBanner');
-  GuiUtils.show('generateMnemonicBanner');
+  GuiUtils.show('importBanner');
+  GuiUtils.show('createBanner');
   GuiUtils.show('qrcodeBanner');
   GuiUtils.show('settingsBanner');
 };
@@ -164,17 +147,15 @@ const hideAllBanners = () => {
   GuiUtils.hide('landingBanner');
   GuiUtils.hide('homeBanner');
   GuiUtils.hide('votingBanner');
-  //GuiUtils.hide('loginPrivateKeyBanner');
-  GuiUtils.hide('loginMnemonicBanner');
-  GuiUtils.hide('generateMnemonicBanner');
+  GuiUtils.hide('importBanner');
+  GuiUtils.hide('createBanner');
   GuiUtils.hide('qrcodeBanner');
   GuiUtils.hide('settingsBanner');
 };
 
 exports.init = init;
 exports.showLanding = showLanding;
-exports.showLoginMnemonic = showLoginMnemonic;
-//exports.showLoginPrivateKey = showLoginPrivateKey;
+exports.showImport = showImport;
 exports.showHome = showHome;
 exports.showMenu = showMenu;
 exports.hideMenu = hideMenu;
@@ -183,8 +164,7 @@ exports.showQRCode = showQRCode;
 exports.showSettings = showSettings;
 exports.showBanner = showBanner;
 exports.hideBanner = hideBanner;
-//exports.showGenerateNewPrivateKey = showGenerateNewPrivateKey;
-exports.showGenerateMnemonic = showGenerateMnemonic;
+exports.showCreate = showCreate;
 exports.showExportMnemonic = showExportMnemonic;
 exports.showAllBanners = showAllBanners;
 exports.hideAllBanners = hideAllBanners;
