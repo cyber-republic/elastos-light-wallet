@@ -4,6 +4,7 @@ const GuiUtils = require('../scripts/GuiUtils.js');
 const {dialog} = require('electron').remote;
 const electron = require('electron');
 const remote = electron.remote;
+let userCurrency = '';
 let userDefinedWalletPath;
 let userDefinedNodeURL = false;
 let userNetworkIx;
@@ -29,6 +30,7 @@ module.exports = (props) => {
   const App = props.App;
   const GuiToggles = props.GuiToggles;
   const defaultWalletPath = App.getDefaultWalletPath();
+  userCurrency = App.getCurrentCurrency();
   userNetworkIx = App.getCurrentNetworkIx();
   userShowBalance = App.getCurrentShowBalance();
   userAdvancedFeatures = App.getCurrentAdvancedFeatures();
@@ -68,7 +70,7 @@ module.exports = (props) => {
     }    
     App.setRestService(userNetworkIx);
     GuiUtils.setValue('userNetworkIx', userNetworkIx);
-    App.refreshBlockchainData();
+    App.requestBlockchainData(true);
     App.renderApp();
   }
   
@@ -115,10 +117,15 @@ module.exports = (props) => {
   }
   
   let walletFiles = App.listWalletFiles(),
-  MakeItem = function(item) {
+  walletItem = function(item) {
     if (item !== App.getWalletNameLogin()) {
       return <option key={item}>{item}</option>;
     }
+  }
+  
+  let currencies = App.getParsedFiatList(), 
+  currencyItem = function(item, index) {
+    return <option key={index} value={item}>{item.toUpperCase()}</option>;
   }
   
   const enableShowBalance = () => {
@@ -130,6 +137,7 @@ module.exports = (props) => {
   }
   
   const useSaveConfig = () => {
+    let updateCurrency = GuiUtils.getValue('userCurrency');
     let updateNetworkIx = GuiUtils.getValue('userNetworkIx');
     let updateNodeURL = GuiUtils.getValue('userNodeURL');
     let updateWalletPath = GuiUtils.getValue('userWalletPath');
@@ -145,7 +153,7 @@ module.exports = (props) => {
     } else {
       updateAdvancedFeatures = false;
     }
-    App.updateConfigFile(updateNetworkIx, updateNodeURL, updateWalletPath, updateShowBalance, updateAdvancedFeatures);    
+    App.updateConfigFile(updateCurrency, updateNetworkIx, updateNodeURL, updateWalletPath, updateShowBalance, updateAdvancedFeatures);    
   }
   
   const reloadConfig = () => {
@@ -182,6 +190,12 @@ module.exports = (props) => {
     } else {      
       GuiUtils.setChecked('userAdvancedFeatures', false);
     }
+    App.renderApp();
+  }
+  
+  const changeCurrency = () => {
+    userCurrency = GuiUtils.getValue('userCurrency');
+    App.setCurrentCurrency(userCurrency);
     App.renderApp();
   }
   
@@ -349,7 +363,7 @@ module.exports = (props) => {
           <td className="settingCol2">          
             <select className="settingsOptions" style={{background: "inherit"}} id="walletNameRemove" name="walletNameRemove">
               <option value="">Select wallet</option>
-              {walletFiles.map(MakeItem)}
+              {walletFiles.map(walletItem)}
             </select>
             <input className="enterPassword m20L" type={showRemovePassword ? "text" : "password"} size="18" id="removePassword" placeholder="Enter Password" name="removePassword" />
             <img id="removePasswordEye" className={showRemovePassword ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />            
@@ -369,6 +383,15 @@ module.exports = (props) => {
           </td>
           <td className="settingCol3"><button className="settingsButton dark-hover" onClick={(e) => showExportModal()}>Export</button>
           </td>
+        </tr>
+        <tr className="settingsTableRow">          
+          <td colSpan="2" className="settingCol1 p28R">Currency:
+          </td>
+          <td className="settingCol3">          
+            <select defaultValue={userCurrency} className="settingsOptions" id="userCurrency" name="userCurrency" style={{background: "inherit"}} onChange={(e) => changeCurrency()}>
+              {currencies.map(currencyItem)}
+            </select>
+          </td>          
         </tr>
         <tr className="settingsTableRow">          
           <td colSpan="2" className="settingCol1 p28R">Show balance:

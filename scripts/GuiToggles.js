@@ -48,22 +48,22 @@ const showLanding = () => {
   hideEverything();
   app.clearSendData();
   app.clearGlobalData();
-  app.refreshBlockchainData();
+  app.requestBlockchainData(false);
   show('landing');
   show('landingMenuOpen');
 };
 
 const showImport = () => {
   hideEverything();
-  app.clearSendData();
+  //app.clearSendData();
   show('import');
   show('importMenuOpen');
 };
 
 const showHome = () => {
-  app.setRefreshCandiatesFlag(true);
+  //app.setRefreshCandiatesFlag(true);
   hideEverything();
-  app.clearSendData();
+  //app.clearSendData();
   show('home');
   show('homeMenuOpen');
   show('version');
@@ -84,23 +84,22 @@ const hideMenu = (name) => {
 };
 
 const showVoting = () => {
-  app.setSendHasFocus(false);
-  app.setRefreshCandiatesFlag(false);
+  //app.setRefreshCandiatesFlag(false);
   hideEverything();
-  app.clearSendData();
+  //app.clearSendData();
   show('voting');
   show('votingMenuOpen');
 };
 
 const showQRCode = () => {
   hideEverything();
-  app.clearSendData();
+  //app.clearSendData();
   show('qrcode');
 };
 
 const showSettings = () => {
   hideEverything();
-  app.clearSendData();
+  //app.clearSendData();
   show('settings');
 };
 

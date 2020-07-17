@@ -22,6 +22,9 @@ let showPasswordToggle = false;
 let sendTxType = false;
 let consolidateTxType = false;
 let isSent = false;
+let showTxDetails = false;
+let txDetail = '';
+let txModalTop = 0;
 
 module.exports = (props) => {
   const App = props.App;
@@ -37,18 +40,12 @@ module.exports = (props) => {
     GuiToggles.showMenu('home');
   }
 
-  const sendIsFocus = () => {
-    App.setSendHasFocus(true);
-  }
-
-  const sendIsNotFocus = () => {
-    App.setSendHasFocus(false);
-    // App.checkTransactionHistory();
+  const writeSendData = () => {
+    App.writeSendData();
   }
 
   const showConfirmAndSeeFees = () => {
-    // App.log('STARTED showConfirmAndSeeFees')
-    App.setSendHasFocus(false);
+    //App.log('STARTED showConfirmAndSeeFees')
     const isValid = App.validateInputs();
     if (isValid) {
       App.setSendStep(2);
@@ -59,12 +56,10 @@ module.exports = (props) => {
   const cancelSend = () => {
     App.setSendStep(1);
     //App.clearSendData();
-    App.setSendHasFocus(false);
     App.renderApp();
   }
 
   const sendAmountToAddress = () => {
-    App.setSendHasFocus(false);
     let isSent = App.sendAmountToAddress();
     if (isSent) {
       showPasswordModal = false;
@@ -73,7 +68,6 @@ module.exports = (props) => {
   }
   
   const consolidateUTXOs = () => {
-    App.setSendHasFocus(false);
     isSent = App.consolidateUTXOs();
     if (isSent) {
       showPasswordModal = false;
@@ -98,16 +92,13 @@ module.exports = (props) => {
   }
   
   const showSendModal = () => {
-    App.setSendHasFocus(false);
     showPasswordModal = true;
     sendTxType = true;
     consolidateTxType = false;
     App.renderApp();
-    //console.log("showSendModal");
   }
   
   const showConsolidateModal = () => {
-    App.setSendHasFocus(false);
     showPasswordModal = true;
     sendTxType = false;
     consolidateTxType = true;
@@ -129,7 +120,6 @@ module.exports = (props) => {
   }
   
   const loadMoreTx = () => {
-    App.setSendHasFocus(false);
     var txRecordCount = App.getTxRecordsCount()+App.getInitTxRecordsCount();
     App.setTxRecordsCount(txRecordCount);
     App.renderApp();
@@ -139,14 +129,34 @@ module.exports = (props) => {
     App.retrieveCryptoName();    
   }
   
+  const offset = (el) => {
+    var rect = el.getBoundingClientRect(),
+    scrollLeft = window.pageXOffset || document.documentElement.scrollLeft,
+    scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    return { top: rect.top + scrollTop, left: rect.left + scrollLeft }
+  }
+  
+  const showTXDetail = (_txID, event) => {
+    txDetail = App.getTXDetails(_txID);
+    showTxDetails = true;
+    
+    txModalTop = offset(event.target).top-347;
+    App.renderApp();
+  }
+  
+  const hideTXDetail = () => {
+    showTxDetails = false;
+    App.renderApp();
+  }
+  
   const SendScreenOne = (props) => {
     const visibility = props.visibility;
     return (<div id="sendOne" className={`send-area ${visibility}`}>
       <img src="artwork/sendicon.svg" className="send-icon"/>
       <p className="send-text">Send</p>
-      <input type="text" size="34" maxLength={34} id="sendToAddress" className="ela-address_input" placeholder="Enter ELA Address" defaultValue={App.getSendToAddress()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*//>
+      <input type="text" size="34" maxLength={34} id="sendToAddress" className="ela-address_input" placeholder="Enter ELA Address" defaultValue={App.getSendToAddress()} onChange={(e) => writeSendData()}/* onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}*//>
       <img className="cryptoname" title="Retrieve ELA address from cryptoname.org" onClick={(e) => retrieveCryptoName()}/>
-      <input type="text" size="14" maxLength={14} id="sendAmount" className="ela-send_amount" placeholder="Amount" defaultValue={App.getSendAmount()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*//>    
+      <input type="text" size="14" maxLength={14} id="sendAmount" className="ela-send_amount" placeholder="Amount" defaultValue={App.getSendAmount()}  onChange={(e) => writeSendData()}/* onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}*//>    
     <div className="quick-elaselector">
       <button className="quick-elaselector-icon quarter" onClick={() => App.insertELA('quarter')}>25%</button>
       <button className="quick-elaselector-icon half" onClick={() => App.insertELA('half')}>50%</button>
@@ -154,7 +164,7 @@ module.exports = (props) => {
     </div>
     <hr className="ela-send_amount_line" />
     <p className="elatext-send">ELA</p>
-    <input type="text" size="5" maxLength={5} id="feeAmount" placeholder="Fees" defaultValue={App.getFee()} onFocus={(e) => sendIsFocus(e)} /*onBlur={(e) => sendIsNotFocus(e)}*/></input>
+    <input type="text" size="5" maxLength={5} id="feeAmount" placeholder="Fees" defaultValue={App.getFee()} onChange={(e) => writeSendData()}/* onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}*//>
     <div className="fees-text">Fees (in Satoshi ELA)</div>
       <button className="next-button scale-hover" onClick={(e) => showConfirmAndSeeFees()}><p>Next</p></button>
       <button style={App.showConsolidateButton() ? {display: 'block'} : {display: 'none'}} className="consolidate-button dark-hover cursor_def" title={consolidateTitle} onClick={(App.getPasswordFlag()) ? (e) => showConsolidateModal() : (e) => consolidateUTXOs()}>Consolidate ({consolidesCount})<img src="artwork/arrow.svg" alt="" className="arrow-forward"/></button>
@@ -165,7 +175,7 @@ module.exports = (props) => {
     const visibility = props.visibility;
     return (
       <div id="sendTwo" className={`send-area ${visibility}`}>
-        <img src="artwork/sendicon.svg" className="send-icon" title="Refresh Blockchain Data"  onClick={(e) => App.refreshBlockchainData()}/>
+        <img src="artwork/sendicon.svg" className="send-icon" title="Refresh Blockchain Data"  onClick={(e) => App.requestBlockchainData(true)}/>
         <p className="send-text">Send</p>
         <p className="confirm-send-address-label">Receiving Address</p>
         <p className="confirm-send address"><span>{App.getSendToAddress()}</span></p>        
@@ -189,7 +199,7 @@ module.exports = (props) => {
     <div className="logo-info">
       <Branding/>
       <header>
-        <img src="artwork/refreshicon.svg" className="refresh-icon" title="Refresh" onClick={(e) => App.refreshBlockchainData()} />
+        <img src="artwork/refreshicon.svg" className="refresh-icon" title="Refresh Blockchain Data1" onClick={(e) => App.requestBlockchainData(true)} />
         <nav id="homeMenuOpen" title="Menu" onClick={(e) => showMenu()}>
           <img src="artwork/nav.svg" className="nav-icon dark-hover" onClick={(e) => showMenu()}/>
         </nav>
@@ -247,7 +257,7 @@ module.exports = (props) => {
         <span>{App.getTransactionHistoryStatus()}</span>
       </p>
       <p className="blockcount">
-        <span>Blocks:</span>
+        <span>Blocks: </span>
         <span>{App.getBlockchainState().height}</span>
       </p>
 
@@ -266,7 +276,7 @@ module.exports = (props) => {
             {
               App.getParsedTransactionHistory().slice(0, App.getTxRecordsCount()).map((item, index) => {
                 return (<tr className="txtable-row" key={index}>
-                  <td title={item.value}>{item.valueShort}&nbsp;<span className="dark-font">ELA</span>
+                  <td>{item.valueShort}&nbsp;<span className="dark-font">ELA</span>
                   </td>
                   <td>{item.date}&nbsp;&nbsp;<span className="dark-font">{item.time}</span>
                   </td>
@@ -275,7 +285,10 @@ module.exports = (props) => {
                     <a className="exit_link" href={item.txDetailsUrl} onClick={(e) => onLinkClick(e)}>{item.txHashWithEllipsis}</a>
                   </td>
                   <td>
-                    <span title={item.memoLong} className="tx-memo">{item.memo}</span>
+                    <span className="tx-memo">{item.memo}</span>
+                  </td>
+                  <td className="w35px">
+                    <img id={"txDetailIcon_"+index}className="txDetail dark-hover padding_5px br5" onMouseEnter={(e) => showTXDetail(item.txHash, e)} onMouseOut={(e) => hideTXDetail()}/>
                   </td>
                 </tr>)
               })
@@ -290,9 +303,60 @@ module.exports = (props) => {
 
       <div>
         <SocialMedia GuiToggles={GuiToggles} onLinkClick={onLinkClick}/>
-      </div>
-
+      </div>    
     </div>
+    
+    <div className="statusRequests" style={App.getDevelopMode() ? {display: 'flex'} : {display: 'none'}}>
+      <button className="requestsButtons padding_5px display_inline dark-hover br10 cursor_def" onClick={(e) => App.listRequests()}>List requests</button>
+      <button className="requestsButtons padding_5px display_inline dark-hover br10 cursor_def m15L" onClick={(e) => App.clearRequests()}>Clear requests</button>
+    </div>
+    
+    <div id="txModal" style={showTxDetails ? {display: 'block', top: txModalTop} : {display: 'none', top: txModalTop}} className="txModal">
+      <span className="font_size20 gradient-font m15T">Transaction Details</span>
+      <div className="txModalTableDiv">
+        <table className="txModalTable">
+          <tbody>
+          <tr>
+            <td className="txModalCol1">Tx ID:</td>
+            <td className="txModalCol2">{txDetail && txDetail[0].txHash}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">Amount:</td>
+            <td className="txModalCol2">{txDetail && txDetail[0].value}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">Type:</td>
+            <td className={txDetail ? (txDetail[0].status === "pending" ? "txModalCol2 tx-pending" : "txModalCol2") : "txModalCol2" }>{txDetail && txDetail[0].type}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">{txDetail ? (txDetail[0].to === '' ? "From" : "To") : "Unknown"} address:</td>
+            <td className="txModalCol2">{txDetail ? (txDetail[0].to === '' ? txDetail[0].from : txDetail[0].to) : ""}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">Created:</td>
+            <td className="txModalCol2">{txDetail && txDetail[0].date} {txDetail && txDetail[0].time}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">Mined in block:</td>
+            <td className="txModalCol2">{txDetail && txDetail[0].height}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">Confirmations:</td>
+            <td className="txModalCol2">{txDetail && txDetail[0].confirmations}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">Tx Type:</td>
+            <td className="txModalCol2">{txDetail && txDetail[0].txtype}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">Memo:</td>
+            <td className="txModalCol2">{txDetail && txDetail[0].memoLong}</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
     <div className="bg-modal w400px h200px" style={showPasswordModal ? {display: 'flex'} : {display: 'none'}}>
       <div className="modalContent w350px h180px">
         <div className="closeModal" onClick={(e) => closeModal()}>

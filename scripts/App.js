@@ -7,7 +7,6 @@ const mainConsoleLib = require('console');
 const BigNumber = require('bignumber.js');
 const crypto = require('crypto');
 const Parser = require('rss-parser');
-const developMode = false; // password complexity, fee amount for testing, onClick copy generated mnemonic
 
 /* Wallets */
 const fs = require('fs');
@@ -24,6 +23,7 @@ let usePassphraseFlag = false;
 let createScreen = 'create';
 
 /* Default variables */
+const defaultCurrency = "usd";
 const defaultNetworkIx = 0;
 const defaultNodeURL = '';
 const defaultWalletPath = path.join(userDataPath,"Wallets");
@@ -31,13 +31,16 @@ const defaultShowBalance = false;
 const defaultAdvancedFeatures = false;
 
 /* Config variables */
+let configCurrency = '';
 let configNetworkIx = 0;
 let configNodeURL = '';
 let configWalletPath = '';
 let configShowBalance = '';
 let configAdvancedFeatures = '';
+let developMode = false; // password complexity, fee amount for testing, onClick copy generated mnemonic => moved to config.ini
 
 /* Current variables */
+let currentCurrency = defaultCurrency;
 let currentNetworkIx = defaultNetworkIx;
 let currentNodeURL = '';
 let currentWalletPath = defaultWalletPath;
@@ -47,7 +50,7 @@ let currentAdvancedFeatures = defaultAdvancedFeatures;
 /* Config.ini */
 let configFile = "Config.ini";
 let configFilePath = path.join(userDataPath, configFile);
-let defaultConfigContent = "networkIx="+defaultNetworkIx+"\nnodeURL="+defaultNodeURL+"\nwalletPath=\nshowBalance="+defaultShowBalance+"\nadvancedFeatures="+defaultAdvancedFeatures;
+let defaultConfigContent = "currency="+defaultCurrency+"\nnetworkIx="+defaultNetworkIx+"\nnodeURL="+defaultNodeURL+"\nwalletPath=\nshowBalance="+defaultShowBalance+"\nadvancedFeatures="+defaultAdvancedFeatures;
 let configInitialized = false;
 
 /* modules */
@@ -64,6 +67,7 @@ const CoinGecko = require('./CoinGecko.js');
 
 /** global constants */
 const POLL_INTERVAL = 70000;
+let pollForDataTimerID;
 
 const JSON_TIMEOUT = 60000;
 
@@ -103,8 +107,6 @@ let pollDataTypeIx = 0;
 
 let balance = undefined;
 
-let sendHasFocus = false;
-
 let sendAmount = '';
 
 let feeAmountSats = '';
@@ -121,12 +123,7 @@ let useLedgerFlag = false;
 
 let usePasswordFlag = false;
 
-let passwordRegEx;
-if (!developMode) {
-  passwordRegEx = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[^\w\s]).{8,}$/;
-} else {
-  passwordRegEx = /^.{1,}$/; 
-}
+let passwordRegEx = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[^\w\s]).{8,}$/;
 
 let refreshCandiatesFlag = true;
 
@@ -176,6 +173,7 @@ let blockchainStatus = 'No Blockchain State Requested Yet';
 let blockchainState = {};
 
 let blockchainLastActionHeight = 0;
+let blockchainLastReceivedHeight = 0;
 
 let parsedRssFeedStatus = 'No Rss Feed Requested Yet';
 
@@ -184,6 +182,7 @@ const parsedRssFeed = [];
 let feeStatus = 'No Fee Requested Yet';
 
 let feeRequested = '';
+let initFees = '';
 
 let minerFee = 100;
 
@@ -214,19 +213,28 @@ let txRecordsCount = initTxRecordsCount;
 let cryptoNameELAAddress = '';
 
 let requests = [];
+let urls = [];
+
+let loadedfiatList = false;
+let parsedFiatList = [];
 
 /** functions */
 const init = (_GuiToggles) => {
   sendToAddressStatuses.push('No Send-To Transaction Requested Yet');
   GuiToggles = _GuiToggles;
   
-  //setRestService(0);
+  mainConsole.log('Console Logging Enabled.');
   if (developMode) {
     mainConsole.log('Develop mode ENABLED.');
+    passwordRegEx = /^.{1,}$/;
+    initFees = 1;
   }
-  mainConsole.log('Console Logging Enabled.');
   
   requestRssFeed();
+  if (feeAccount === '') {
+    requestFeeAccount();
+  }
+  requestFee();
 };
 
 const setAppClipboard = (clipboard) => {
@@ -240,10 +248,7 @@ const setAppDocument = (_document) => {
 const setRenderApp = (_renderApp) => {
   renderApp = () => {
     // mainConsole.log('renderApp', 'sendHasFocus', sendHasFocus);
-    if (!sendHasFocus) {
-      _renderApp();
-    //var currentDate = '[' + new Date().toUTCString() + '] ';
-    }
+    _renderApp();
   };
 };
 
@@ -299,13 +304,17 @@ const formatDate = (date, type) => {
   const year = date.getFullYear();
   let hour = date.getHours().toString();
   let minute = date.getMinutes().toString();
+  let second = date.getSeconds().toString();
 
   if (month.length < 2) month = '0' + month;
   if (day.length < 2) day = '0' + day;
   if (hour.length < 2) hour = '0' + hour;
   if (minute.length < 2) minute = '0' + minute;
+  if (second.length < 2) second = '0' + second;
   
-  if (type == "date") {
+  if (type === "full") {
+    return [year, month, day].join('-')+" "+[hour, minute, second].join(':');
+  } else if (type === "date") {
     return [year, month, day].join('-');
   } else {
     return [hour, minute].join(':');
@@ -323,8 +332,8 @@ const changeNodeURL = () => {
   renderApp();
 };
 
+/*
 const refreshBlockchainData = () => {
-  sendHasFocus = false;
   requestTransactionHistory();
   requestBalance();
   requestUnspentTransactionOutputs();
@@ -337,7 +346,7 @@ const refreshBlockchainData = () => {
   requestListOfProducers(true);
   requestListOfCandidateVotes();
   renderApp();
-};
+};*/
 
 const publicKeyCallback = (message) => {
   if (LOG_LEDGER_POLLING) {
@@ -369,9 +378,7 @@ const pollForDataCallback = (message) => {
 };
 
 const pollForData = () => {
-  // if (LOG_LEDGER_POLLING) {
-  // mainConsole.log('pollForData', pollDataTypeIx);
-  // }
+  //mainConsole.log(getCurrentDateTime(), 'pollForData', pollDataTypeIx);
   try {
     const resetPollIndex = false;
     switch (pollDataTypeIx) {
@@ -400,20 +407,31 @@ const pollForData = () => {
       setPollForAllInfoTimer();
       break;
     case 4:
-      if (refreshCandiatesFlag) {
-        requestListOfProducers(false);
-        requestListOfCandidateVotes();
+      if (address != undefined) {
+        //if (refreshCandiatesFlag) {
+          // mainConsole.log(getCurrentDateTime(), "refreshCandiatesFlag", refreshCandiatesFlag);
+          requestListOfProducers(false);
+          requestListOfCandidateVotes();
+        //}
       }
       //requestRssFeed();
-      requestFee();
-      requestFeeAccount();
+      //requestFee();
+      //requestFeeAccount();
+      if (!loadedfiatList) { // load once
+        CoinGecko.requestCurrencies();
+        CoinGecko.getCurrencies();
+      }
+      
       pollDataTypeIx++;
       setPollForAllInfoTimer();
       break;
     case MAX_POLL_DATA_TYPE_IX:
       // only check every 10 seconds for a change in device status.
       pollDataTypeIx = 0;
-      setTimeout(pollForData, POLL_INTERVAL);
+      clearRequests();
+      // mainConsole.log(getCurrentDateTime(), "POLL_INTERVAL", POLL_INTERVAL, "pollForDataTimerID", pollForDataTimerID);
+      if (pollForDataTimerID) clearTimeout(pollForDataTimerID);
+      pollForDataTimerID = setTimeout(pollForData, POLL_INTERVAL);
       break;
     default:
       throw Error('poll data index reset failed.');
@@ -471,7 +489,6 @@ const getRssFeed = async (url, readyCallback, errorCallback) => {
 
 const getJson = (url, readyCallback, errorCallback) => {
   const xhttp = new XMLHttpRequest();
-  //requests.push(xhttp);
   xhttp.onreadystatechange = function () {
     if (this.readyState == 4) {
       if (this.status == 200) {
@@ -490,16 +507,18 @@ const getJson = (url, readyCallback, errorCallback) => {
   }
   xhttp.responseType = 'text';
   xhttp.open('GET', url, true);
-  xhttp.send();
+  requests.push(xhttp);
+  urls.push(url);
+  xhttp.send();  
 };
 
 const requestUnspentTransactionOutputs = () => {
   unspentTransactionOutputsStatus = 'UTXOs Requested';
-  const unspentTransactionOutputsUrl = getUnspentTransactionOutputsUrl(address);
-
-  // mainConsole.log( 'unspentTransactionOutputsUrl ' + unspentTransactionOutputsUrl );
-
-  getJson(unspentTransactionOutputsUrl, getUnspentTransactionOutputsReadyCallback, getUnspentTransactionOutputsErrorCallback);
+  if (address) {
+    const unspentTransactionOutputsUrl = getUnspentTransactionOutputsUrl(address);
+    // mainConsole.log( 'unspentTransactionOutputsUrl ' + unspentTransactionOutputsUrl );
+    getJson(unspentTransactionOutputsUrl, getUnspentTransactionOutputsReadyCallback, getUnspentTransactionOutputsErrorCallback);
+  }
 };
 
 const getUnspentTransactionOutputsErrorCallback = (response) => {
@@ -529,9 +548,11 @@ const getPublicKeyFromLedger = () => {
   LedgerComm.getPublicKey(publicKeyCallback);
 };
 
-const requestBlockchainData = () => {
+const requestBlockchainData = (_userRequest) => {
+  if (!_userRequest) _userRequest = false;
+  
   if (publicKey === undefined) {
-    return;
+    return false;
   }
   address = AddressTranscoder.getAddressFromPublicKey(publicKey);
 
@@ -539,8 +560,19 @@ const requestBlockchainData = () => {
   requestBalance();
   requestUnspentTransactionOutputs();
   requestBlockchainState();
+  
+  /*
   if (refreshCandiatesFlag) {
-    requestListOfProducers(false);
+  }*/
+  
+  CoinGecko.requestPriceData();
+  
+  if (_userRequest) {
+    clearParsedProducerList();
+    clearParsedCandidateVoteList();
+    loadedProducerList = false;
+    loadedVotes = false;
+    requestListOfProducers(_userRequest);
     requestListOfCandidateVotes();
   }
 };
@@ -843,9 +875,9 @@ const sendAmountToAddressReadyCallback = (transactionJson) => {
     bannerStatus = message;
     sendToAddressLinks.push(elt);
     requestTransactionHistory();
-  GuiToggles.showAllBanners(true);
-  clearSendData();
-  setSendStep(1);
+    GuiToggles.showAllBanners(true);
+    clearSendData();
+    setSendStep(1);
   }
   renderApp();
   setBlockchainLastActionHeight();
@@ -854,7 +886,7 @@ const sendAmountToAddressReadyCallback = (transactionJson) => {
 
 const clearSendData = () => {
   // mainConsole.log('STARTED clearSendData');
-  feeRequested = '';
+  feeRequested = initFees;
   GuiUtils.setValue('sendAmount', '');
   GuiUtils.setValue('sendToAddress', '');
   cryptoNameELAAddress = '';
@@ -867,8 +899,8 @@ const clearSendData = () => {
   sendToAddressStatuses.length = 0;
   sendToAddressLinks.length = 0;
   sendToAddress = '';
-  setSendStep(1);  
-  requestFee();
+  setSendStep(1);
+  //requestFee();
   //mainConsole.log('SUCCESS clearSendData');
 };
 
@@ -906,6 +938,7 @@ const validateInputs = () => {
   sendToAddress = GuiUtils.getValue('sendToAddress');
   sendAmount = GuiUtils.getValue('sendAmount');  
   feeAmountSats = GuiUtils.getValue('feeAmount');
+  feeRequested = feeAmountSats;
   
   const isValidHistory = checkTransactionHistory();
   if (!isValidHistory) {
@@ -1000,7 +1033,7 @@ const consolidateUTXOs = () => {
     return false;
   }
   
-  feeAmountSats = GuiUtils.getValue('feeAmount');
+  feeAmountSats = feeRequested;
   const isValidFee = validateFee(feeAmountSats);
   if (!isValidFee) {
     return false;
@@ -1010,7 +1043,6 @@ const consolidateUTXOs = () => {
     const unspentTransactionOutputs = parsedUnspentTransactionOutputs;
     let maxAmountToSend;
     
-    if (!isValidDecimal(feeAmountSats) || (feeAmountSats == 0)) feeAmountSats = feeRequested;    
     if (!isValidDecimal(feeAmountSats) || (feeAmountSats == 0)) feeAmountSats = 1;
     
     const maxAmountToSpendSats = TxFactory.getMaxAmountToSpendSats(unspentTransactionOutputs, utxoMaxCount);
@@ -1199,22 +1231,22 @@ const clearParsedProducerList = () => {
   };
 }
 
-const requestListOfProducersReadyCallback = (response, force) => {
-  loadedProducerList = false;
-  if (refreshCandiatesFlag) {
-    producerListStatus = 'Producers Received';
+const requestListOfProducersReadyCallback = (response, _userRequest) => {
+  producerListStatus = 'Producers Received';
+  
+  if (_userRequest) {
+    producerListStatus = 'Producers Refreshed';
   } else {
-    if (force) {
-      producerListStatus = 'Producers Refreshed';
-    } else {
-      if (parsedProducerList.producers.length > 0) {
-        producerListStatus = 'Producers Refresh Paused';
-        return;
-      }
+    if (parsedProducerList.producers.length > 0) {
+      producerListStatus = 'Producers Refresh Paused';
+      renderApp();
+      return;
     }
   }
-
-  // mainConsole.log('STARTED Producers Callback', response);
+  
+  loadedProducerList = false;
+  //mainConsole.log('STARTED Producers Callback', response);
+  //mainConsole.log(getCurrentDateTime(), 'STARTED Producers Callback');
   clearParsedProducerList();
   if (response.status !== 200) {
     producerListStatus = `Producers Error: ${JSON.stringify(response)}`;
@@ -1246,20 +1278,23 @@ const requestListOfProducersReadyCallback = (response, force) => {
   renderApp();
 };
 
-const requestListOfProducers = (force) => {
-  if (force) {
-    producerListStatus = 'Refreshing Candidates, Please Wait';
+const requestListOfProducers = (_userRequest) => {
+  if (_userRequest) {
+    producerListStatus = 'Refreshing Producers, Please Wait';
   } else {
-    producerListStatus = 'Loading Candidates, Please Wait';
+    producerListStatus = 'Loading Producers, Please Wait';
   }
   const txUrl = `${getRestService()}/api/v1/dpos/rank/height/0?state=active`;
+  //mainConsole.log(getCurrentDateTime(), 'requestListOfProducers');
+  
+  if (address) {
+    const requestListOfProducersReadyCallbackWrap = (response) => {
+      requestListOfProducersReadyCallback(response, _userRequest);
+    };
 
-  const requestListOfProducersReadyCallbackWrap = (response) => {
-    requestListOfProducersReadyCallback(response, force);
-  };
-
-  renderApp();
-  getJson(txUrl, requestListOfProducersReadyCallbackWrap, requestListOfProducersErrorCallback);
+    renderApp();
+    getJson(txUrl, requestListOfProducersReadyCallbackWrap, requestListOfProducersErrorCallback);
+  }
 };
 
 const toggleProducerSelection = (item) => {
@@ -1549,6 +1584,7 @@ const sendVoteReadyCallback = (transactionJson) => {
     bannerClass = 'bg_green color_white banner-look';
     requestTransactionHistory();
     GuiToggles.showAllBanners(true);
+    clearSendData();
   }  
   renderApp();
 };
@@ -1565,7 +1601,7 @@ const formatTxValue = (value) => {
 }
 
 const getTransactionHistoryReadyCallback = (transactionHistory) => {
-  // mainConsole.log('getTransactionHistoryReadyCallback ' + JSON.stringify(transactionHistory));
+  //mainConsole.log('getTransactionHistoryReadyCallback ' + JSON.stringify(transactionHistory));
   transactionHistoryStatus = 'History Received';
   parsedTransactionHistory.length = 0;
   if (transactionHistory.result !== undefined) {
@@ -1587,9 +1623,13 @@ const getTransactionHistoryReadyCallback = (transactionHistory) => {
         parsedTransaction.type = tx.Type;
         if (tx.Type == 'income') {
           parsedTransaction.type = 'Received';
+          parsedTransaction.from = tx.Inputs[0];
+          parsedTransaction.to = '';
         }
         if (tx.Type == 'spend') {
           parsedTransaction.type = 'Sent';
+          parsedTransaction.from = '';
+          parsedTransaction.to = tx.Outputs[0];
         }
         if (tx.Type == 'spend' && tx.Status == 'pending') {
           parsedTransaction.type = 'Sending';
@@ -1621,8 +1661,25 @@ const getTransactionHistoryReadyCallback = (transactionHistory) => {
         if (parsedTransaction.memo.length > 14) {
           var n = 14;
           if (parsedTransaction.memo.indexOf("From ELABank,") >= 0) n = n + 13;
-          parsedTransaction.memo = parsedTransaction.memo.substring(n, n + 23) + '...'.trim();
-        }    
+          parsedTransaction.memo = parsedTransaction.memo.substring(n, n + 24) + '...'.trim();
+        }
+        if (tx.CreateTime != 0) {
+          let confirmedHeight = tx.Height;
+          let confirmations = blockchainLastReceivedHeight - confirmedHeight;
+          parsedTransaction.height = tx.Height;
+          parsedTransaction.confirmations = confirmations;
+        } else {
+          parsedTransaction.confirmations = "Not Confirmed";
+          parsedTransaction.height = "";
+        }
+        if (tx.TxType === "transferAsset") {
+          parsedTransaction.txtype = "Asset Transfer";
+        } else if (tx.TxType === "vote") {
+          parsedTransaction.txtype = "Vote";
+        } else {
+          parsedTransaction.txtype = "Unknown";
+        }
+        
         parsedTransactionHistory.push(parsedTransaction);
         // mainConsole.log(parsedTransaction);
       });
@@ -1638,9 +1695,11 @@ const getTransactionHistoryReadyCallback = (transactionHistory) => {
 
 const requestTransactionHistory = () => {
   transactionHistoryStatus = 'History Requested';
-  const transactionHistoryUrl = getTransactionHistoryUrl(address);
-  // mainConsole.log('requestTransactionHistory ' + transactionHistoryUrl);
-  getJson(transactionHistoryUrl, getTransactionHistoryReadyCallback, getTransactionHistoryErrorCallback);
+  if (address) {
+    const transactionHistoryUrl = getTransactionHistoryUrl(address);
+    // mainConsole.log('requestTransactionHistory ' + transactionHistoryUrl);
+    getJson(transactionHistoryUrl, getTransactionHistoryReadyCallback, getTransactionHistoryErrorCallback);
+  }
 };
 
 const getBalanceErrorCallback = (response) => {
@@ -1679,6 +1738,7 @@ const getBlockchainStateReadyCallback = (blockchainStateResponse) => {
   if (blockchainStateResponse.Error == 0) {
     blockchainStatus = `Blockchain State Received`;
     blockchainState = blockchainStateResponse.Result;
+    blockchainLastReceivedHeight = blockchainState.height;
   } else {
     balanceStatus = 'Blockchain State Error ' + blockchainStateResponse.Error;
     blockchainState = blockchainStateResponse.Result;
@@ -1711,7 +1771,6 @@ const setBlockchainLastActionHeight = () => {
 };
 
 const copyAddressToClipboard = () => {
-  sendHasFocus = false;
   if (address != undefined) {
     appClipboard.writeText(address);
     bannerStatus = `Copied to clipboard:\n${address}`;
@@ -1740,7 +1799,6 @@ const copyPrivateKeyToClipboard = () => {
 };
 
 const verifyLedgerBanner = () => {
-  sendHasFocus = false;
   if (address != undefined && useLedgerFlag) {
     bannerStatus = `Please verify address [${address}] on your Ledger Device by pressing the right button.`;
     bannerClass = 'landing-btnbg color_white banner-look';
@@ -1761,15 +1819,52 @@ const isLedgerConnected = () => {
   return useLedgerFlag;
 };
 
-const clearGlobalData = () => {
-  sendHasFocus = false;
-  // mainConsole.log('STARTED clearGlobalData');
+const getCurrentDateTime = () => {
+  return formatDate(new Date(), "full");
+}
 
-  /* Clear old getJson requests */
-  /*requests.forEach(function(request) {
-    request.abort();
+const listRequests = () => {
+  let i = 0;
+  let runningRequests = [];
+  let finishedRequests = [];
+  let abortedRequests = [];
+  let otherRequests = [];
+  requests.forEach(function(request) {
+    if (request.readyState === 0) {
+      abortedRequests.push(urls[i]);
+    } else if (request.readyState === 1) {
+      runningRequests.push(urls[i]);
+    } else if (request.readyState === 4) {
+      finishedRequests.push(urls[i]);
+    } else {
+      otherRequests.push(urls[i]);
+    }
+    mainConsole.log(getCurrentDateTime(), request.readyState, urls[i]);
+    i++;
   });
-  requests = [];*/
+  //mainConsole.log(getCurrentDateTime(), "Requests:", requests.length, "Urls:", urls.length);
+  mainConsole.log(getCurrentDateTime(), "Aborted Requests:", abortedRequests.length, "Running Requests:", runningRequests.length, "Finished Requests:", finishedRequests.length, "Other Requests:", otherRequests.length);
+}
+
+const clearRequests = () => {
+  let removedRequests = [];
+  for (let i = requests.length - 1; i >= 0; i--) {
+    if (requests[i].readyState === 4) {
+      requests[i].abort();
+      removedRequests.push(urls[i]);
+      //mainConsole.log(getCurrentDateTime(), "Removed", requests[i].readyState, urls[i]);
+      requests.splice(i, 1);
+      urls.splice(i, 1);
+    }
+  }
+  //mainConsole.log(getCurrentDateTime(), "Removed Requests:", removedRequests.length);
+}
+
+const clearGlobalData = () => {
+  // mainConsole.log('STARTED clearGlobalData');
+  
+  /* Clear old getJson requests */
+  clearRequests();
   
   /* Clear Cache */
   let win = remote.getCurrentWindow();
@@ -1820,16 +1915,6 @@ const clearGlobalData = () => {
   mnemonicExport = '';
   derivationPathExport = '';
   
-  /* Clear send data */
-  sendAmount = '';
-  feeAmountSats = '';
-  feeAmountEla = '';
-  feeStatus = 'No Fee Requested Yet';
-  feeRequested = '';
-  GuiUtils.setValue('feeAmount', feeRequested);
-  feeAccountStatus = 'No Fee Account Requested Yet';
-  feeAccount = '';
-  
   cryptoNameELAAddress = '';
 
   sendToAddressStatuses.length = 0;
@@ -1851,7 +1936,7 @@ const clearGlobalData = () => {
   bannerStatus = '';
   bannerClass = '';
   
-  /* Clear candidates */
+  /* Clear producers & candidates */
   clearParsedProducerList();
   clearParsedCandidateVoteList();
   loadedProducerList = false;
@@ -1884,21 +1969,47 @@ const getELABalance = () => {
   return '?';
 };
 
-const getUSDBalance = () => {
+const getFiatBalance = () => {
   const data = CoinGecko.getPriceData();
   if (data) {
     const elastos = data.elastos;
     if (elastos) {
-      const usd = elastos.usd;
-
-      // mainConsole.log('getUSDBalance', usd, balance, balanceStatus);
+      const fiat = elastos[currentCurrency];      
+      
+      // mainConsole.log('getFiatBalance', fiat, balance, balanceStatus);
       if (balance) {
-        return (parseFloat(usd) * parseFloat(balance)).toFixed(3);
+        return (parseFloat(fiat) * parseFloat(balance)).toFixed(3);
       }
     }
   }
   return '?';
 };
+
+const parseFiatList = () => {
+  const currenciesList = CoinGecko.getCurrencies();
+  if (currenciesList && !loadedfiatList) {
+    parsedFiatList = [];
+    let obj = JSON.parse(JSON.stringify(currenciesList.rates));
+    let keysArray = Object.keys(obj);
+    for (let i = 0; i < keysArray.length; i++) {
+      var key = keysArray[i];
+      var value = obj[key];
+      if (value.type === "fiat") {
+        parsedFiatList.push(key);        
+      }
+    }
+    loadedfiatList = true;
+    parsedFiatList = parsedFiatList.sort();
+    renderApp();
+    GuiUtils.setValue('userCurrency',currentCurrency);
+  } else {
+    parsedFiatList.push("usd");
+  }
+};
+
+const getParsedFiatList = () => {
+  return parsedFiatList;
+}
 
 const getAddress = () => {
   return address;
@@ -1955,19 +2066,18 @@ const getFeeAmountSats = () => {
   return feeAmountSats;
 };
 
-const getSendHasFocus = () => {
-  return sendHasFocus;
-};
+const writeSendData = () => {
+  sendToAddress = GuiUtils.getValue('sendToAddress');
+  sendAmount = GuiUtils.getValue('sendAmount');  
+  feeAmountSats = GuiUtils.getValue('feeAmount');
+  feeRequested = feeAmountSats;
+}
 
-const setSendHasFocus = (_sendHasFocus) => {
-  sendHasFocus = _sendHasFocus;
-  // mainConsole.log('setSendHasFocus', sendHasFocus);
-};
-
+/*
 const setRefreshCandiatesFlag = (_refreshCandiatesFlag) => {
   refreshCandiatesFlag = _refreshCandiatesFlag;
   // mainConsole.log('refreshCandiatesFlag', refreshCandiatesFlag);
-};
+};*/
 
 const getSendStep = () => {
   return sendStep;
@@ -2037,15 +2147,16 @@ const requestFee = async () => {
 const getFeeErrorCallback = (error) => {
   // mainConsole.log('getFeeErrorCallback ', error);
   feeStatus = `Rss Feed Error ${error.message}`;
-  feeRequested = '';
+  initFees = '';
+  feeRequested = initFees;
   renderApp();
 };
 
 const getFeeReadyCallback = (response) => {
   feeStatus = 'Fee Received';
-  if (feeRequested === '') { 
-    feeRequested = response.result.toString();
-    if (developMode) feeRequested = 1;
+  if (initFees === '') { 
+    initFees = response.result.toString();
+    feeRequested = initFees;
   }
   // mainConsole.log('getFeeReadyCallback ', response, fee);
   renderApp();
@@ -2316,8 +2427,17 @@ const getCurrentNodeURL = () => {
   return currentNodeURL;
 }
 
-const setCurrentNodeURL = (nodeURL) => {
-  currentNodeURL = nodeURL;
+const setCurrentNodeURL = (_nodeURL) => {
+  currentNodeURL = _nodeURL;
+}
+
+const getCurrentCurrency = () => {
+  return currentCurrency;
+}
+
+const setCurrentCurrency = (_currency) => {
+  currentCurrency = _currency;
+  CoinGecko.requestPriceData();
 }
 
 const createConfigFile = () => {    
@@ -2335,15 +2455,21 @@ const readConfigFile = () => {
       var dataArr = data.split("\n");  
       dataArr.forEach(element => {
         var [item, value] = element.split("=");
+        if (item.indexOf('currency') >= 0) configCurrency = value;
         if (item.indexOf('networkIx') >= 0) configNetworkIx = value;
         if (item.indexOf('nodeURL') >= 0) configNodeURL = value;
         if (item.indexOf('walletPath') >= 0) configWalletPath = value;
         if (item.indexOf('showBalance') >= 0) configShowBalance = value.toLowerCase() == "true" ? true : false;
         if (item.indexOf('advancedFeatures') >= 0) configAdvancedFeatures = value.toLowerCase() == "true" ? true : false;
+        if (item.indexOf('developMode') >= 0) developMode = value.toLowerCase() == "true" ? true : false;
       });
       
-      currentNodeURL = configNodeURL;
-      
+      if (configCurrency.length > 0) {
+        currentCurrency = configCurrency;
+      } else {
+        currentCurrency = defaultCurrency;
+      }
+      currentNodeURL = configNodeURL;      
       if (currentNodeURL.length > 0) {
         setRestService(99);
       } else {
@@ -2352,8 +2478,7 @@ const readConfigFile = () => {
         } else {
           setRestService(defaultNetworkIx);
         }        
-      }
-      
+      }      
       if (configWalletPath.length > 0) {
         currentWalletPath = configWalletPath;
       } else {
@@ -2364,6 +2489,7 @@ const readConfigFile = () => {
       currentAdvancedFeatures = configAdvancedFeatures;
       configInitialized = true;
       //mainConsole.log(`Configuration file initialized.`)
+      renderApp();
       return data;
     } else {
       createConfigFile();
@@ -2373,21 +2499,24 @@ const readConfigFile = () => {
   }
 }
 
-const updateConfigFile = (updateNetworkIx, updateNodeURL, updateWalletPath, updateShowBalance, updateAdvancedFeatures) => {
-  let updateConfigContent = "networkIx="+updateNetworkIx+"\nnodeURL="+updateNodeURL+"\nwalletPath="+updateWalletPath+"\nshowBalance="+updateShowBalance+"\nadvancedFeatures="+updateAdvancedFeatures;
+const updateConfigFile = (updateCurrency, updateNetworkIx, updateNodeURL, updateWalletPath, updateShowBalance, updateAdvancedFeatures) => {
+  let updateConfigContent = '';
+  updateConfigContent += "currency="+updateCurrency+"\nnetworkIx="+updateNetworkIx+"\nnodeURL="+updateNodeURL+"\nwalletPath="+updateWalletPath+"\nshowBalance="+updateShowBalance+"\nadvancedFeatures="+updateAdvancedFeatures;
+  if (developMode) updateConfigContent +="\ndevelopMode="+developMode;
   fs.writeFile(configFilePath, updateConfigContent, "utf8", (err) => {
   if (err) throw err;
     bannerStatus = `Configuration file was saved successfully.`;
     bannerClass = 'bg_green color_white banner-look';    
     GuiToggles.showAllBanners(true);
     
+    currentCurrency = updateCurrency;
     currentNetworkIx = updateNetworkIx;
     currentNodeURL = updateNodeURL;
     if (currentNodeURL.length > 0) {
       setRestService(99);
     } else {
       setRestService(0);
-    }
+    }    
     if (updateWalletPath.length > 0) {
       currentWalletPath = updateWalletPath;
     } else {
@@ -2405,8 +2534,6 @@ const updateConfigFile = (updateNetworkIx, updateNodeURL, updateWalletPath, upda
 }
 
 const retrieveCryptoName = async () => {
-  sendHasFocus = false;
-  sendToAddress = GuiUtils.getValue('sendToAddress');
   if (sendToAddress === "") {
     bannerStatus = `Please enter CryptoName into ELA Address field.`;
     bannerClass = `bg_red color_white banner-look`;
@@ -2494,6 +2621,10 @@ const getConfigNodeURL = () => {
   return configNodeURL;
 }
 
+const getConfigCurrency = () => {
+  return configCurrency;
+}
+
 const getConfigWalletPath = () => {
   return configWalletPath;
 }
@@ -2572,6 +2703,12 @@ const getPasswordRegEx = () => {
   return passwordRegEx;
 }
 
+const getTXDetails = (_txID) => {
+  let txDetail = parsedTransactionHistory.filter(tx => tx.txHash === _txID);
+  //console.log(JSON.stringify(txDetail));
+  return txDetail;
+}
+
 /* basic */
 exports.REST_SERVICES = REST_SERVICES;
 exports.init = init;
@@ -2583,7 +2720,7 @@ exports.setAppDocument = setAppDocument;
 exports.setRenderApp = setRenderApp;
 exports.getLedgerDeviceInfo = getLedgerDeviceInfo;
 exports.getMainConsole = getMainConsole;
-exports.refreshBlockchainData = refreshBlockchainData;
+exports.requestBlockchainData = requestBlockchainData;
 exports.clearSendData = clearSendData;
 exports.clearGlobalData = clearGlobalData;
 exports.setPollForAllInfoTimer = setPollForAllInfoTimer;
@@ -2591,7 +2728,7 @@ exports.getPublicKeyFromMnemonic = getPublicKeyFromMnemonic;
 exports.getPublicKeyFromPrivateKey = getPublicKeyFromPrivateKey;
 exports.getAddress = getAddress;
 exports.getELABalance = getELABalance;
-exports.getUSDBalance = getUSDBalance;
+exports.getFiatBalance = getFiatBalance;
 exports.getParsedProducerList = getParsedProducerList;
 exports.getProducerListStatus = getProducerListStatus;
 exports.getParsedTransactionHistory = getParsedTransactionHistory;
@@ -2606,8 +2743,6 @@ exports.getSendAmount = getSendAmount;
 exports.getFeeAmountEla = getFeeAmountEla;
 exports.getSendToAddress = getSendToAddress;
 exports.getFeeAmountSats = getFeeAmountSats;
-exports.getSendHasFocus = getSendHasFocus;
-exports.setSendHasFocus = setSendHasFocus;
 exports.getSendStep = getSendStep;
 exports.setSendStep = setSendStep;
 exports.sendAmountToAddress = sendAmountToAddress;
@@ -2631,8 +2766,8 @@ exports.generatePrivateKeyHex = generatePrivateKeyHex;
 exports.getGeneratedPrivateKeyHex = getGeneratedPrivateKeyHex;
 exports.copyPrivateKeyToClipboard = copyPrivateKeyToClipboard;
 exports.copyAddressToClipboard = copyAddressToClipboard;
-/* Candidates */
-exports.setRefreshCandiatesFlag = setRefreshCandiatesFlag;
+/* Producers & Candidates */
+//exports.setRefreshCandiatesFlag = setRefreshCandiatesFlag;
 exports.requestListOfProducers = requestListOfProducers;
 exports.requestListOfCandidateVotes = requestListOfCandidateVotes;
 exports.verifyLedgerBanner = verifyLedgerBanner;
@@ -2671,6 +2806,7 @@ exports.updateConfigFile = updateConfigFile;
 exports.resetConfigData = resetConfigData;
 exports.getConfigNetworkIx = getConfigNetworkIx;
 exports.getConfigNodeURL = getConfigNodeURL;
+exports.getConfigCurrency = getConfigCurrency;
 exports.getConfigWalletPath = getConfigWalletPath;
 exports.getConfigShowBalance = getConfigShowBalance;
 exports.getConfigAdvancedFeatures = getConfigAdvancedFeatures;
@@ -2678,6 +2814,8 @@ exports.getConfigAdvancedFeatures = getConfigAdvancedFeatures;
 exports.getCurrentNetworkIx = getCurrentNetworkIx;
 exports.getCurrentNodeURL = getCurrentNodeURL;
 exports.setCurrentNodeURL = setCurrentNodeURL;
+exports.getCurrentCurrency = getCurrentCurrency;
+exports.setCurrentCurrency = setCurrentCurrency;
 exports.getCurrentWalletPath = getCurrentWalletPath;
 exports.setCurrentWalletPath = setCurrentWalletPath;
 exports.getCurrentShowBalance = getCurrentShowBalance;
@@ -2705,3 +2843,10 @@ exports.exportMnemonic = exportMnemonic;
 exports.changePassword = changePassword;
 exports.getPasswordRegEx = getPasswordRegEx;
 exports.retrieveCryptoName = retrieveCryptoName;
+exports.getTXDetails = getTXDetails;
+exports.clearRequests = clearRequests;
+exports.listRequests = listRequests;
+exports.writeSendData = writeSendData;
+exports.getJson = getJson;
+exports.parseFiatList = parseFiatList;
+exports.getParsedFiatList = getParsedFiatList;

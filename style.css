@@ -893,9 +893,9 @@ button {
 }
 
 .txtable {
-  margin-left: 20px;
+  margin-left: 15px;
   margin-bottom: 10px;
-  width: 95%;
+  width: 99%;
   border-spacing: 0 7px;
 }
 
@@ -944,7 +944,6 @@ button {
 
 .tx-memo {
   font-size: 14px;
-  font-weight: 100;
 }
 
 .dark-font {
@@ -1197,6 +1196,14 @@ select, input {
 
 .w50px {
   width: 50px;
+}
+
+.w35px {
+  width: 35px;
+}
+
+.w30px {
+  width: 30px;
 }
 
 .w25px {
@@ -2276,7 +2283,7 @@ input:checked + .slider:before {
 }
 
 .m20L {
-  margin-left: 15px;
+  margin-left: 20px;
 }
 
 .m30L {
@@ -2488,4 +2495,75 @@ input:checked + .slider:before {
   content: "Verify";
   width: 20px;
   height: 20px;
+}
+
+.txModal {
+  background-image: linear-gradient(2deg, #33373D 0%, rgba(51, 55, 61, 1) 110%);
+  width: 410px;
+  height: 300px;
+  border: 0.7px solid #787981;
+  border-radius: 24px;
+  position: absolute;
+  right: 117px;
+  text-align: center;
+  padding: 20px;
+}
+
+
+.txModalTableDiv {
+  width: 100%;
+  height: 100%;
+  overflow: auto;  
+  -webkit-app-region: none;
+}
+
+.txModalTable {
+  overflow: auto;
+  width: 100%;
+  -webkit-app-region: none;
+  border-spacing: 10px;
+  border: 0;
+  font-size: 13px;
+  color: #B2B4C3;
+}
+
+.txModalCol1 {
+  font-family: "BioSans-Regular";
+  width: 90px;
+  text-align: right;
+  vertical-align: top;
+}
+
+.txModalCol2 {
+  font-family: "BioSans-Light";
+  max-width: 270px;
+  text-align: left;
+  word-wrap: break-word;
+  vertical-align: top;
+}
+
+.txDetail {  
+  width: 19px;
+  height: 19px;
+  content: url("artwork/menuclose.svg");
+}
+
+.txDetail:hover {
+  content: url("artwork/nav.svg");
+  transform: scale(1.0);
+  transition: 0.2s;
+}
+
+.statusRequests {
+  display: flex;
+  position: absolute;
+  top: 40px;
+  left: 770px;
+}
+
+.requestsButtons {
+  border: 0;
+  background: none;
+  color: #B2B4C3;
+  font-size: 14px;
 }

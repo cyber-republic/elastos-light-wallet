@@ -6,11 +6,9 @@ module.exports = (props) => {
   let showBalance = App.getCurrentShowBalance();
   
   const balanceVisibility = () => {
-  App.setSendHasFocus(false);
     if (showBalance) {      
       App.setCurrentShowBalance(false);
       GuiUtils.setChecked('userShowBalance', false);
-      //showBalance = false;
     } else {
       App.setCurrentShowBalance(true);
       GuiUtils.setChecked('userShowBalance', true);
@@ -22,8 +20,8 @@ module.exports = (props) => {
       <div id="balance" className="pricearea">
       <img title={!showBalance ? "Show balance" : "Hide balance"} className={!showBalance ? "balanceEye eyeOn" : "balanceEye eyeOff"} onClick={(e) => balanceVisibility()}/>
     <p className="balance">balance</p>
-        <p className="usd-head">USD</p>
-        <p className={showBalance ? "usd-balance" : "usd-balance-hidden"}>{showBalance ? App.getUSDBalance() : "*****"}</p>
+        <p className="usd-head">{App.getCurrentCurrency().toUpperCase()}</p>
+        <p className={showBalance ? "usd-balance" : "usd-balance-hidden"}>{showBalance ? App.getFiatBalance() : "*****"}</p>
         <p className="ela-balance gradient-font">{showBalance ? App.getELABalance() : <span className="ela-balance-hidden">*****</span>} ELA</p>
       </div>
 

@@ -75,12 +75,10 @@ module.exports = (props) => {
     <div id="voting" className="gridback-voting w780h520px">
      <Banner App={App} GuiToggles={GuiToggles} page="voting"/>
      <Menu App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} page="voting"/>
-      {/* <Menu App={App} openDevTools={openDevTools} GuiToggles={GuiToggles}/> */}
       <div className="logo-info">
       <Branding onClick={(e) => GuiToggles.showHome()}/>
       <header>
-        <img src="artwork/refreshicon.svg" className="refresh-icon" title="Refresh" onClick={(e) => App.refreshBlockchainData()} />
-        {/* Change to menu below */}
+        <img src="artwork/refreshicon.svg" className="refresh-icon" title="Refresh" onClick={(e) => App.requestBlockchainData(true)} />
         <nav id="votingMenuOpen" title="menu" onClick={(e) => showMenu()}>
           <img src="artwork/nav.svg" className="nav-icon dark-hover" onClick={(e) => showMenu()}/>
         </nav>
@@ -129,7 +127,6 @@ module.exports = (props) => {
                 return (<tr className={item.isCandidate ? 'txtable-row voting-selected ': 'txtable-row voting-hover'} key={index} onClick={(e) => App.toggleProducerSelection({index})}>
                   <td className="no_border no_padding">{item.n}</td>
                   <td className="no_border no_padding">{item.nickname}</td>
-                  {/* <td className="no_border no_padding">{item.active}</td> */}
                   <td className="no_border no_padding">
                   {Number(item.active) ? (<img src="artwork/greenstatus.svg" />) : (<img src="artwork/redstatus.svg" />)
                   } </td>
@@ -152,9 +149,6 @@ module.exports = (props) => {
 
       <div className="voting-row4">
         <p className="display_inline_block active-heading">Active Votes</p>
-        {/*
-        <p className="display_inline_block candidatevote-status status-font flex_center">Status: {App.getCandidateVoteListStatus()}</p>
-         */}
         <p className="display_inline_block status-font">Voted {App.getParsedCandidateVoteList().candidateVotes.length}/36</p>
       </div>
 
@@ -184,6 +178,12 @@ module.exports = (props) => {
       <div>
         <SocialMedia GuiToggles={GuiToggles}  onLinkClick={onLinkClick}/>
       </div>
+      
+      <div className="statusRequests" style={App.getDevelopMode() ? {display: 'flex'} : {display: 'none'}}>
+        <button className="requestsButtons padding_5px display_inline dark-hover br10 cursor_def" onClick={(e) => App.listRequests()}>List requests</button>
+        <button className="requestsButtons padding_5px display_inline dark-hover br10 cursor_def m15L" onClick={(e) => App.clearRequests()}>Clear requests</button>
+      </div>
+      
       <div className="bg-modal w400px h200px" style={showPasswordModal ? {display: 'flex'} : {display: 'none'}}>
         <div className="modalContent w350px h180px">
           <div className="closeModal" onClick={(e) => closeModal()}>
