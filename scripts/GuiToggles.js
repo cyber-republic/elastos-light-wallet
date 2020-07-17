@@ -64,6 +64,7 @@ const showHome = () => {
   //app.setRefreshCandiatesFlag(true);
   hideEverything();
   //app.clearSendData();
+  app.reloadProducersAndVotes(false);
   show('home');
   show('homeMenuOpen');
   show('version');

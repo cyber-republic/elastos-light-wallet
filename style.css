@@ -1,13 +1,23 @@
 /*****************/
 body {
   margin: 0;
-  height: 100%;
   width: 100%;
-  background-color: rgba (0, 0, 0);
+  height: 100%;
+  min-width: 1125px;
+  max-width: 1125px;
+}
+
+#main {
+  position: relative;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba (0, 0, 0, 0.0);
   background-image: url(artwork/BG7.svg);
   background-repeat: no-repeat;
   background-size: cover;
-  -webkit-app-region: drag;  
+  -webkit-app-region: drag;
+  border-radius: 48px;
 }
 
 button,  
@@ -240,8 +250,13 @@ button {
   position: absolute;
 }
 
+.pricearea {
+  top: 17px;
+  position: absolute;
+}
+
 .pricearea>* {
-  position: fixed;
+  position: absolute;
 }
 
 .balance {
@@ -250,57 +265,23 @@ button {
   font-size: 16px;
   color: #B2B4C3;
   letter-spacing: 0;
-  text-align: center;
-  top: 276.19px;
+  top: 242px;
   margin: 0;
 }
 
-.usd-head {
+.currency-head {
   font-size: 24px;
   color: #FFFFFF;
   letter-spacing: 0;
-  top: 245px;
+  top: 211px;
   left: 82px;
   margin: 0;
-}
-
-.usd-balance {
-  font-size: 51px;
-  color: #FFFFFF;
-  letter-spacing: 0;
-  top: 268px;
-  left: 82px;
-  margin: 0;
-  font-weight: 600;
-}
-
-.usd-balance-hidden {
-  font-size: 51px;
-  color: #FFFFFF;
-  letter-spacing: 6px;
-  top: 273px;
-  left: 82px;  
-  margin: 0;
-}
-
-.ela-balance {
-  font-size: 20px;
-  letter-spacing: 0;
-  text-shadow: 0 3px 6px rgba(79, 72, 141, 0.15);
-  top: 329px;
-  left: 82px;
-  white-space: nowrap;
-  margin-top: 0;
-}
-
-.ela-balance-hidden {
-  letter-spacing: 3px;
 }
 
 .balanceEye {
   width: 24px;
   height: 24px;
-  top: 248px;
+  top: 214px;
   left: 135px;
 }
 
@@ -320,59 +301,110 @@ button {
   transition: 0.4s;
 }
 
-.stakingarea {
+.currency-balance {
   position: absolute;
-  width: 332px;
-  top: 405px;
-  height: 87px;
-  border-radius: 15px;
+  font-size: 51px;
+  color: #FFFFFF;
+  letter-spacing: 0;
+  top: 234px;
+  left: 82px;
+  margin: 0;
+  font-weight: 600;
 }
 
-.stakingarea>* {
-  position: fixed;
+.currency-balance-hidden {
+  font-size: 51px;
+  color: #FFFFFF;
+  letter-spacing: 6px;
+  top: 239px;
+  left: 82px;  
   margin: 0;
 }
 
+.ela-balance {
+  font-size: 20px;
+  letter-spacing: 0;
+  text-shadow: 0 3px 6px rgba(79, 72, 141, 0.15);
+  top: 295px;
+  left: 82px;
+  white-space: nowrap;
+  margin-top: 0;
+}
+
+.ela-balance-hidden {
+  letter-spacing: 3px;
+}
+
+.stakingarea {
+  position: absolute;
+  width: 332px;
+  top: 400px;
+  height: 87px;
+  margin: 0;
+  border-radius: 15px;
+}
+
+#staking {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 15px;
+}
+
 .stakingtitle {
+  position: absolute;
+  top: 17px;
+  left: 0px;
   opacity: 0.8;
   transform: rotate(-90deg);
   font-size: 16px;
   color: #B2B4C3;
   letter-spacing: 0;
   text-align: center;
-  top: 435px;
+  heigth: 250px;
 }
 
 .candidate-total {
+  position: absolute;
+  top: -3px;
+  left: 82px;
   font-size: 16px;
   color: #B2B4C3;
   letter-spacing: 0;
-  left: 82px;
-  top: 420px;
   white-space: nowrap;
+  width: 250px;
+  text-align: left;
 }
 
 .candidate-voted {
+  position: absolute;
+  top: 13px;
+  left: 82px;
   font-size: 16px;
   color: #B2B4C3;
   letter-spacing: 0;
-  left: 82px;
-  top: 436px;
   white-space: nowrap;
+  width: 250px;
+  text-align: left;
 }
 
 .votenow {
+  position: absolute;
+  top: 22px;
+  left: 82px;
   font-size: 24px;
   letter-spacing: 0;
   text-shadow: 0 2px 4px rgba(79, 72, 141, 0.15);
-  left: 82px;
-  top: 453px;
   white-space: nowrap;
+  width: 250px;
+  text-align: left;
 }
 
 .arrow-right {
+  display: inline-block;
+  position: absolute;
+  top: 33px;
   left: 320px;
-  top: 435px;
 }
 
 
@@ -392,8 +424,8 @@ button {
   color: #B2B4C3;
   letter-spacing: 0;
   text-align: center;
-  top: 570px;
-  position: fixed;
+  top: 43;
+  position: absolute;
   margin: 0;
   left: 0;
   padding-left: 15px;
@@ -950,7 +982,7 @@ button {
   color: #B2B4C3;
 }
 
-.w780h520px {
+.w1125h750px {
   width: 1125px;
   height: 750px;
 }
@@ -1174,6 +1206,10 @@ select, input {
   width: 215px;
 }
 
+.w209_5px {
+  width: 209.5px;
+}
+
 .w200px {
   width: 200px;
 }
@@ -1192,6 +1228,10 @@ select, input {
 
 .w100px {
   width: 100px;
+}
+
+.w80px {
+  width: 80px;
 }
 
 .w50px {
@@ -2097,7 +2137,7 @@ select, input {
 }
 
 .settingsTableDiv {
-  height: 400px;
+  height: 430px;
   margin-top: 50px;
   overflow: auto;
   width: 560px;
@@ -2134,22 +2174,30 @@ select, input {
 }
 
 .settingCol3 {
-  width: 110px;
+  position: relative;
+  width: 100px;
   text-align: left;
 }
 
 .settingsOptions {
   color: #B2B4C3;
   border-radius: 5px;
-  margin-left: 10px;
   font-size: 14px;
   height: 40px;
   border-color: #787981;
+  background: inherit;
 }
 
-.settingsOptions option{
+.settingsOptions option,optgroup{
+  font-size: 14px;
   color: gray;
 }
+
+/*
+.settingsOptionsLight option{
+  font-family: "BioSans-Light";
+  font-size: 13px;
+}*/
 
 .settingsInput {
   margin-left: 10px;
@@ -2158,6 +2206,75 @@ select, input {
   background: inherit;
   border: 1px solid #787981;
   font-size: 14px;
+}
+
+.selector {
+  color: #B2B4C3;
+  padding-left: 8px;
+  margin-left: 0;  
+}
+
+.selectorUp::after {
+  content: '\25B2';
+  position: relative;
+  top: -1px;
+  left: -20px;
+  color: #B2B4C3;
+  font-size: 12px;  
+}
+
+.selectorDown::after {
+  content: '\25BC';
+  position: relative;
+  top: -1px;
+  left: -20px;
+  color: #B2B4C3;
+  font-size: 12px;
+}
+
+.selector::placeholder{
+  color: gray;
+}
+
+.selectorList {
+  position: absolute;
+  top: 40px;
+  left: 2px;
+  width: 78px;
+  max-height: 150px;
+  z-index: 1;
+  background: white;
+  border-radius: 5px 0 0 5px;
+  overflow: auto;
+  border: 0.7px solid #787981;
+}
+
+.listSeparator {
+  opacity: 0.8bt;
+  color: #B2B4C3;
+  max-width: 100%;
+  text-align: left;
+  font-size: 10px;
+  padding: 2px 0 2px 5.5px;
+  /*border-top: 0.2px solid #787981;*/
+}
+
+.selectorItem {
+  display: inherit;
+  max-width: 100%;
+  padding: 5.5px;  
+  color: gray;
+  cursor: default;
+  overflow: hidden;
+}
+
+.selectorItem:hover {
+  background-color: #ececec;
+  color: #161617;
+}
+
+.selectorItemSelected, .selectorItemSelected:hover {
+  color: #E5A776;
 }
 
 .flex-stretch {
@@ -2270,8 +2387,16 @@ input:checked + .slider:before {
   border-radius: 50%;
 }
 
+.m4L {
+  margin-left: 4px;
+}
+
 .m5L {
   margin-left: 5px;
+}
+
+.m7L {
+  margin-left: 7px;
 }
 
 .m10L {
@@ -2302,6 +2427,10 @@ input:checked + .slider:before {
   margin-left: 150px;
 }
 
+.m5R {
+  margin-right: 5px;
+}
+
 .m10R {
   margin-right: 10px;
 }
@@ -2316,6 +2445,10 @@ input:checked + .slider:before {
 
 .m10B {
   margin-bottom: 10px;
+}
+
+.p8L {
+  padding-left: 8px;
 }
 
 .p28R {
@@ -2336,9 +2469,9 @@ input:checked + .slider:before {
 }
 
 .modalContent {
-  /*background-image: linear-gradient(2deg, #33373D 0%, rgba(51, 55, 61, 1) 110%);*/
   background-image: url(artwork/BG7.svg);
-  /*box-shadow: 6px 30px 60px -13px rgba(0, 0, 0, 0.50);*/
+  background-repeat: no-repeat;
+  background-size: cover;
   border-radius: 24px;
   text-align: center;
   padding: 20px;
@@ -2346,6 +2479,7 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
+  border: 0.7px solid #555;
 }
 
 .modalContent::after {
@@ -2398,10 +2532,10 @@ input:checked + .slider:before {
 
 .modal-title {
   display: inline-block;
-  font-size: 22px;
+  font-size: 20px;
   position: relative;
   top: -10px;
-  max-width: 80%;
+  max-width: 75%;
   word-wrap: break-word;
 }
 

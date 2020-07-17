@@ -25,6 +25,8 @@ let isSent = false;
 let showTxDetails = false;
 let txDetail = '';
 let txModalTop = 0;
+let autoFocus = 0;
+let modalTitle = '';
 
 module.exports = (props) => {
   const App = props.App;
@@ -34,12 +36,22 @@ module.exports = (props) => {
   const onLinkClick = props.onLinkClick;
   const isLedgerConnected = App.isLedgerConnected();
   consolidesCount = Math.ceil(Number(App.getTotalUTXOs())/Number(App.getMaxUTXOsPerTX()));
-  let consolidateTitle = "Total number of UTXOs is "+App.getTotalUTXOs()+". You can consolidate UTXOs up to "+consolidesCount+" times.";
+  let consolidateTitle = "Total number of UTXOs is "+App.getTotalUTXOs()+".\nYou can consolidate UTXOs up to "+consolidesCount+" times (max "+App.getMaxUTXOsPerTX()+" per Tx).";
   
   const showMenu = () => {
     GuiToggles.showMenu('home');
   }
-
+  
+  const autoFocusOn = (e) => {
+    if (e.target.id === "sendToAddress") autoFocus = 1;
+    if (e.target.id === "sendAmount") autoFocus = 2;
+    if (e.target.id === "feeAmount") autoFocus = 3;
+  }
+  
+  const autoFocusOff = (e) => {
+    autoFocus = 0;    
+  }
+  
   const writeSendData = () => {
     App.writeSendData();
   }
@@ -92,6 +104,7 @@ module.exports = (props) => {
   }
   
   const showSendModal = () => {
+    modalTitle = "Send from wallet ("+App.getWalletNameLogin()+")";
     showPasswordModal = true;
     sendTxType = true;
     consolidateTxType = false;
@@ -99,6 +112,7 @@ module.exports = (props) => {
   }
   
   const showConsolidateModal = () => {
+    modalTitle = "Consolidate wallet ("+App.getWalletNameLogin()+")";
     showPasswordModal = true;
     sendTxType = false;
     consolidateTxType = true;
@@ -149,14 +163,20 @@ module.exports = (props) => {
     App.renderApp();
   }
   
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      retrieveCryptoName();
+    }
+  }
+  
   const SendScreenOne = (props) => {
     const visibility = props.visibility;
     return (<div id="sendOne" className={`send-area ${visibility}`}>
       <img src="artwork/sendicon.svg" className="send-icon"/>
       <p className="send-text">Send</p>
-      <input type="text" size="34" maxLength={34} id="sendToAddress" className="ela-address_input" placeholder="Enter ELA Address" defaultValue={App.getSendToAddress()} onChange={(e) => writeSendData()}/* onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}*//>
-      <img className="cryptoname" title="Retrieve ELA address from cryptoname.org" onClick={(e) => retrieveCryptoName()}/>
-      <input type="text" size="14" maxLength={14} id="sendAmount" className="ela-send_amount" placeholder="Amount" defaultValue={App.getSendAmount()}  onChange={(e) => writeSendData()}/* onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}*//>    
+      <input tabIndex="1" type="text" size="34" maxLength={34} id="sendToAddress" className="ela-address_input" placeholder="Enter ELA Address or CryptoName" defaultValue={App.getSendToAddress()} onChange={(e) => writeSendData()} onKeyDown={(e) => handleKeyDown(e)} onFocus={(e) => autoFocusOn(e)} onBlur={(e) => autoFocusOff(e)} autoFocus={autoFocus === 1 ? true : false}/>
+      <img className="cryptoname" title="Click to retrieve ELA address from cryptoname.org or press Enter" onClick={(e) => retrieveCryptoName()}/>
+      <input tabIndex="2" type="text" size="14" maxLength={14} id="sendAmount" className="ela-send_amount" placeholder="Amount" defaultValue={App.getSendAmount()} onChange={(e) => writeSendData()} onFocus={(e) => autoFocusOn(e)} onBlur={(e) => autoFocusOff(e)} autoFocus={autoFocus === 2 ? true : false}/>    
     <div className="quick-elaselector">
       <button className="quick-elaselector-icon quarter" onClick={() => App.insertELA('quarter')}>25%</button>
       <button className="quick-elaselector-icon half" onClick={() => App.insertELA('half')}>50%</button>
@@ -164,9 +184,9 @@ module.exports = (props) => {
     </div>
     <hr className="ela-send_amount_line" />
     <p className="elatext-send">ELA</p>
-    <input type="text" size="5" maxLength={5} id="feeAmount" placeholder="Fees" defaultValue={App.getFee()} onChange={(e) => writeSendData()}/* onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}*//>
+    <input tabIndex="3" type="text" size="5" maxLength={5} id="feeAmount" placeholder="Fees" defaultValue={App.getFee()} onChange={(e) => writeSendData()} onFocus={(e) => autoFocusOn(e)} onBlur={(e) => autoFocusOff(e)} autoFocus={autoFocus === 3 ? true : false}/>
     <div className="fees-text">Fees (in Satoshi ELA)</div>
-      <button className="next-button scale-hover" onClick={(e) => showConfirmAndSeeFees()}><p>Next</p></button>
+      <button tabIndex="4" className="next-button scale-hover" onClick={(e) => showConfirmAndSeeFees()}><p>Next</p></button>
       <button style={App.showConsolidateButton() ? {display: 'block'} : {display: 'none'}} className="consolidate-button dark-hover cursor_def" title={consolidateTitle} onClick={(App.getPasswordFlag()) ? (e) => showConsolidateModal() : (e) => consolidateUTXOs()}>Consolidate ({consolidesCount})<img src="artwork/arrow.svg" alt="" className="arrow-forward"/></button>
     </div>);
   }
@@ -187,7 +207,7 @@ module.exports = (props) => {
   }
 
   return (
-  <div id="home" className="gridback w780h520px">
+  <div id="home" className="gridback w1125h750px">
     <Banner App={App} GuiToggles={GuiToggles} page="home"/>
     <Menu App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} page="home"/> {/* <div id="homeMenuOpen" className="h25px bordered display_inline_block bgcolor_black_hover" title="menu" onClick={(e) => showHomeMenu()}>
        <img src="artwork/more-vertical.svg" />
@@ -363,7 +383,7 @@ module.exports = (props) => {
           <img className="scale-hover" src="artwork/voting-back.svg" height="38px" width="38px"/>
         </div>
         <div>
-          <span className="address-text modal-title font_size20 gradient-font">Send from wallet ({App.getWalletNameLogin()})</span>
+          <span className="address-text modal-title font_size20 gradient-font">{modalTitle}</span>
         </div>
         <div className="m15T">
           <input type="password" className="enterPassword" type={showPasswordToggle ? "text" : "password"} size="18" id="sendPassword" placeholder="Enter Password" name="sendPassword"/>

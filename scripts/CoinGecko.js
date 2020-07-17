@@ -10,7 +10,7 @@ const init = (_App) => {
 };
 
 const requestPriceData = () => {
-  const url = 'https://api.coingecko.com/api/v3/simple/price?ids=elastos&vs_currencies='+App.getCurrentCurrency();
+  const url = 'https://api.coingecko.com/api/v3/simple/price?ids=elastos&vs_currencies='+App.getCurrentCurrency().toLowerCase();
   //console.log(url);
   App.getJson(url, requestPriceDataReadyCallback, requestPriceDataErrorCallback);
 };
@@ -33,7 +33,7 @@ const requestCurrencies = () => {
 const requestCurrenciesReadyCallback = (response) => {
   //console.log("Loaded requestCurrenciesReadyCallback");
   currencies = response;
-  App.parseFiatList();  
+  App.parseCurrencyList();  
 }
 
 const requestCurrenciesErrorCallback = (response) => {

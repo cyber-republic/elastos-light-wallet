@@ -4,14 +4,14 @@ const GuiUtils = require('../scripts/GuiUtils.js');
 const {dialog} = require('electron').remote;
 const electron = require('electron');
 const remote = electron.remote;
-let userCurrency = '';
+let _userCurrency = '';
 let userDefinedWalletPath;
 let userDefinedNodeURL = false;
-let userNetworkIx;
-let userNodeURL = '';
-let userWalletPath = '';
-let userShowBalance = '';
-let userAdvancedFeatures = '';
+let _userNetworkIx;
+let _userNodeURL = '';
+let _userWalletPath = '';
+let _userShowBalance = '';
+let _userAdvancedFeatures = '';
 let walletPath = '';
 let initUserNodeURL = false;
 let initUserWalletPath = false;
@@ -25,22 +25,24 @@ let showNewPasswordWallet = false;
 let showConfirmPasswordWallet = false;
 let passwordsComplexity = true;
 let passwordsMatch = true;
+let editableCurrency = false;
+let search = '';
 
 module.exports = (props) => {
   const App = props.App;
   const GuiToggles = props.GuiToggles;
   const defaultWalletPath = App.getDefaultWalletPath();
-  userCurrency = App.getCurrentCurrency();
-  userNetworkIx = App.getCurrentNetworkIx();
-  userShowBalance = App.getCurrentShowBalance();
-  userAdvancedFeatures = App.getCurrentAdvancedFeatures();
+  _userCurrency = App.getCurrentCurrency();
+  _userNetworkIx = App.getCurrentNetworkIx();
+  _userShowBalance = App.getCurrentShowBalance();
+  _userAdvancedFeatures = App.getCurrentAdvancedFeatures();
   
   if (!initUserNodeURL) {
-    userNodeURL = App.getCurrentNodeURL();
+    _userNodeURL = App.getCurrentNodeURL();
     initUserNodeURL = true;
-    if (userNodeURL.length > 0) {
+    if (_userNodeURL.length > 0) {
       userDefinedNodeURL = true;
-      userNetworkIx = 99;
+      _userNetworkIx = 99;
     } else {
       userDefinedNodeURL = false;
     }
@@ -57,30 +59,32 @@ module.exports = (props) => {
   }
   
   const changeNetwork = (event) => {    
-    userNetworkIx = (event.target.value);
-    if (userNetworkIx < "99") {
-      userNodeURL = '';
+    _userNetworkIx = (event.target.value);
+    if (_userNetworkIx < "99") {
+      _userNodeURL = '';
       userDefinedNodeURL = false;
       GuiUtils.setValue('userNodeURL', '');
     } else {
-      userNodeURL = GuiUtils.getValue('userNodeURL');
-      userDefinedNodeURL = true;
-      userNetworkIx = "99";
-      App.setCurrentNodeURL(userNodeURL);
+      _userNodeURL = GuiUtils.getValue('userNodeURL');
+      if (_userNodeURL.length > 0) {
+        userDefinedNodeURL = true;
+        _userNetworkIx = "99";        
+        App.setCurrentNodeURL(_userNodeURL);
+      }
     }    
-    App.setRestService(userNetworkIx);
-    GuiUtils.setValue('userNetworkIx', userNetworkIx);
+    App.setRestService(_userNetworkIx);
+    GuiUtils.setValue('userNetworkIx', _userNetworkIx);
     App.requestBlockchainData(true);
     App.renderApp();
   }
   
   const changeUserNodeURL = () => {
-    userNodeURL = GuiUtils.getValue('userNodeURL');
-    if (userNodeURL.length > 0) {
+    _userNodeURL = GuiUtils.getValue('userNodeURL');
+    if (_userNodeURL.length > 0) {
       userDefinedNodeURL = true;
       GuiUtils.setValue('userNetworkIx', 99);
     } else {
-      GuiUtils.setValue('userNetworkIx', userNetworkIx);
+      GuiUtils.setValue('userNetworkIx', _userNetworkIx);
       userDefinedNodeURL = false;
     }
     App.renderApp();
@@ -91,13 +95,13 @@ module.exports = (props) => {
   }
   
   const changeWalletPath = () => {
-    userWalletPath = dialog.showOpenDialogSync({
+    _userWalletPath = dialog.showOpenDialogSync({
       properties: ['openDirectory']
     });
     
-    if (userWalletPath) {
-      GuiUtils.setValue('userWalletPath', userWalletPath.toString());
-      App.setCurrentWalletPath(userWalletPath.toString());
+    if (_userWalletPath) {
+      GuiUtils.setValue('userWalletPath', _userWalletPath.toString());
+      App.setCurrentWalletPath(_userWalletPath.toString());
       userDefinedWalletPath = true;
     }
     initUserWalletPath = false;
@@ -123,9 +127,49 @@ module.exports = (props) => {
     }
   }
   
-  let currencies = App.getParsedFiatList(), 
-  currencyItem = function(item, index) {
-    return <option key={index} value={item}>{item.toUpperCase()}</option>;
+  const selectCurrency = () => {
+    if (!editableCurrency) {
+      editableCurrency = true;
+      GuiUtils.setValue('userCurrency', '');
+      search = '';
+    } else {
+      resetCurrency();
+    }
+    App.renderApp();
+  }
+  
+  const resetCurrency = () => {
+    editableCurrency = false;
+    GuiUtils.setValue('userCurrency', _userCurrency.toUpperCase());
+    App.renderApp();
+  }
+  
+  const changeCurrency = (e) => {
+    _userCurrency = e.target.innerHTML.toLowerCase();
+    GuiUtils.setValue('userCurrency', _userCurrency.toUpperCase());
+    GuiUtils.setPlaceholder('userCurrency', _userCurrency.toUpperCase());
+    App.setCurrentCurrency(_userCurrency);
+    editableCurrency = false;
+    App.renderApp();
+  }
+    
+  let fiatCurrencies = App.getParsedFiatList(),
+  fiatItem = function(item, index) {
+    if (item.substring(0, search.length) === search) {
+      return <div key={index} className={(item === _userCurrency) ? "selectorItem selectorItemSelected" : "selectorItem"} onMouseDown={(e) => changeCurrency(e)}>{item.toUpperCase()}</div>;
+    }    
+  }
+  
+  let cryptoCurrencies = App.getParsedCryptoList(), 
+  cryptoItem = function(item, index) {
+    if (item.substring(0, search.length) === search) {
+      return <div key={index} className={(item === _userCurrency) ? "selectorItem selectorItemSelected" : "selectorItem"} onMouseDown={(e) => changeCurrency(e)}>{item.toUpperCase()}</div>;      
+    }
+  }
+  
+  const searchCurrency = () => {
+    search = GuiUtils.getValue('userCurrency').toLowerCase();
+    App.renderApp();
   }
   
   const enableShowBalance = () => {
@@ -140,6 +184,11 @@ module.exports = (props) => {
     let updateCurrency = GuiUtils.getValue('userCurrency');
     let updateNetworkIx = GuiUtils.getValue('userNetworkIx');
     let updateNodeURL = GuiUtils.getValue('userNodeURL');
+    if (updateNetworkIx == 99 && updateNodeURL.length === 0) {
+      updateNetworkIx = App.getDefaultNetworkIx();
+      updateNodeURL = "";
+      GuiUtils.setValue('userNetworkIx', updateNetworkIx);
+    }
     let updateWalletPath = GuiUtils.getValue('userWalletPath');
     let updateShowBalance;
     let updateAdvancedFeatures;
@@ -160,42 +209,50 @@ module.exports = (props) => {
     initUserNodeURL = false;
     initUserWalletPath = false;
     showRemovePassword = false;
-    App.resetConfigData();
-    userNetworkIx = App.getConfigNetworkIx();
-    userNodeURL = App.getConfigNodeURL();
-    userWalletPath = App.getConfigWalletPath();
-    userShowBalance = App.getConfigShowBalance();
-    userAdvancedFeatures = App.getConfigAdvancedFeatures();
     
+    _userCurrency = App.getConfigCurrency();
+    _userNetworkIx = App.getConfigNetworkIx();
+    _userNodeURL = App.getConfigNodeURL();
+    _userWalletPath = App.getConfigWalletPath();
+    _userShowBalance = App.getConfigShowBalance();
+    _userAdvancedFeatures = App.getConfigAdvancedFeatures();
     
-    if (userNodeURL.length > 0) {
+    resetCurrency();
+    App.setCurrentCurrency(_userCurrency);
+    
+    App.setRestService(_userNetworkIx);
+    if (_userNodeURL.length > 0) {
       userDefinedNodeURL = true;
       GuiUtils.setValue('userNetworkIx', 99);
-      GuiUtils.setValue('userNodeURL', userNodeURL);
+      GuiUtils.setValue('userNodeURL', _userNodeURL);
     } else {
-      GuiUtils.setValue('userNetworkIx', userNetworkIx);
+      GuiUtils.setValue('userNetworkIx', _userNetworkIx);
       GuiUtils.setValue('userNodeURL', '');
       userDefinedNodeURL = false;
     }
-    GuiUtils.setValue('userWalletPath', userWalletPath);
     
-    if (userShowBalance) {
+    GuiUtils.setValue('userWalletPath', _userWalletPath.toString());
+    if (_userWalletPath) {
+      App.setCurrentWalletPath(_userWalletPath.toString());
+      userDefinedWalletPath = true;
+    } else {
+      resetWalletFolderPath();
+    }    
+    
+    App.setCurrentShowBalance(_userShowBalance);
+    if (_userShowBalance) {
       GuiUtils.setChecked('userShowBalance', true);
     } else {
       GuiUtils.setChecked('userShowBalance', false);
     }
     
-    if (userAdvancedFeatures) {
+    App.setCurrentAdvancedFeatures(_userAdvancedFeatures);
+    if (_userAdvancedFeatures) {
       GuiUtils.setChecked('userAdvancedFeatures', true);
     } else {      
       GuiUtils.setChecked('userAdvancedFeatures', false);
     }
-    App.renderApp();
-  }
-  
-  const changeCurrency = () => {
-    userCurrency = GuiUtils.getValue('userCurrency');
-    App.setCurrentCurrency(userCurrency);
+    
     App.renderApp();
   }
   
@@ -256,7 +313,8 @@ module.exports = (props) => {
     
   const exitPage = () => {
     showRemovePassword = false;
-    clearPasswordFields();    
+    clearPasswordFields();
+    resetCurrency();    
     if (App.getLoggedIn()) {
       GuiToggles.showHome();
     } else {
@@ -336,32 +394,33 @@ module.exports = (props) => {
           <td className="settingCol1">Node:
           </td>
           <td className="settingCol2">
-            <select defaultValue={userNetworkIx} className="settingsOptions" id="userNetworkIx" name="userNetworkIx" style={{background: "inherit"}} onChange={(e)=> changeNetwork(e)}>
+            <select defaultValue={_userNetworkIx} className="settingsOptions m10L" id="userNetworkIx" name="userNetworkIx" onChange={(e)=> changeNetwork(e)}>
               <option value="0">{App.REST_SERVICES[0].name}</option>
               <option value="1">{App.REST_SERVICES[1].name}</option>
-              {userDefinedNodeURL ? <option value="99">custom</option> : undefined}
+              <option value="99">custom</option>
             </select>
-            <input className="settingsInput" type="text" size="22" id="userNodeURL" name="userNodeURL" style={{background: "inherit"}} placeholder={!userDefinedNodeURL ? App.getRestService() : undefined} defaultValue={userDefinedNodeURL ? App.getCurrentNodeURL() : undefined} onChange={(e) => changeUserNodeURL()} />        
+            <input className="settingsInput w209_5px" type="text" size="22" id="userNodeURL" name="userNodeURL" placeholder={App.getRestService()} defaultValue={userDefinedNodeURL ? App.getCurrentNodeURL() : undefined} onChange={(e) => changeUserNodeURL()} />        
           </td>
-            <td className="settingCol3"><button style={userDefinedNodeURL ? {display: 'block'} : {display: 'none'}} className="settingsButton dark-hover" onClick={(e) => changeNodeURL()}>Change</button>
-            </td>
+          <td className="settingCol3">
+            <button style={userDefinedNodeURL ? {display: 'inline-block'} : {display: 'none'}} className="settingsButton dark-hover" onClick={(e) => changeNodeURL()}>Change</button>
+          </td>
         </tr>
         <tr className="settingsTableRow">          
           <td className="settingCol1">Wallets path:
           </td>
           <td className="settingCol2">          
-            <input className="settingsInput" type="text" size="32" id="userWalletPath" name="userWalletPath" style={{background: "inherit"}} placeholder={defaultWalletPath} defaultValue={userDefinedWalletPath ? App.getCurrentWalletPath() : ""} title={App.getCurrentWalletPath()} readOnly={true} />    
+            <input className="settingsInput" type="text" size="32" id="userWalletPath" name="userWalletPath" placeholder={defaultWalletPath} defaultValue={userDefinedWalletPath ? App.getCurrentWalletPath() : ""} title={App.getCurrentWalletPath()} readOnly={true} />    
           </td>
           <td className="settingCol3">
-            <button style={!userDefinedWalletPath ? {display: 'block'} : {display: 'none'}} className="settingsButton dark-hover" onClick={(e) => changeWalletPath()}>Change</button>
-            <button style={userDefinedWalletPath ? {display: 'block'} : {display: 'none'}} className="settingsButton dark-hover" onClick={(e) => resetWalletFolderPath()}>Reset</button>
+            <button style={!userDefinedWalletPath ? {display: 'inline-block'} : {display: 'none'}} className="settingsButton dark-hover" onClick={(e) => changeWalletPath()}>Change</button>
+            <button style={userDefinedWalletPath ? {display: 'inline-block'} : {display: 'none'}} className="settingsButton dark-hover" onClick={(e) => resetWalletFolderPath()}>Reset</button>
           </td>
         </tr>
         <tr className="settingsTableRow">          
           <td className="settingCol1">Remove wallets:
           </td>
           <td className="settingCol2">          
-            <select className="settingsOptions" style={{background: "inherit"}} id="walletNameRemove" name="walletNameRemove">
+            <select className="settingsOptions m10L" id="walletNameRemove" name="walletNameRemove">
               <option value="">Select wallet</option>
               {walletFiles.map(walletItem)}
             </select>
@@ -381,24 +440,30 @@ module.exports = (props) => {
           <td style={App.getPassphraseFlag() ? {display: 'none'} : {display: 'table-cell'}} className="settingCol2">          
             &nbsp;
           </td>
-          <td className="settingCol3"><button className="settingsButton dark-hover" onClick={(e) => showExportModal()}>Export</button>
+          <td className="settingCol3">
+            <button className="settingsButton dark-hover" onClick={(e) => showExportModal()}>Export</button>
           </td>
         </tr>
         <tr className="settingsTableRow">          
           <td colSpan="2" className="settingCol1 p28R">Currency:
           </td>
-          <td className="settingCol3">          
-            <select defaultValue={userCurrency} className="settingsOptions" id="userCurrency" name="userCurrency" style={{background: "inherit"}} onChange={(e) => changeCurrency()}>
-              {currencies.map(currencyItem)}
-            </select>
+          <td className="settingCol3">
+            <input type="text" maxLength="6" readOnly={!editableCurrency ? true : false} placeholder={_userCurrency.toUpperCase()} className="settingsInput selector w80px cursor_def" id="userCurrency" name="userCurrency" onClick={(e) => selectCurrency()} onChange={(e) => searchCurrency()} onBlur={(e) => resetCurrency()}/>
+            <span className={!editableCurrency ? "selectorDown" : "selectorUp"}></span>
+            <div style={editableCurrency ? {display: 'inline-block'} : {display: 'none'}} className="selectorList">
+              <div className="listSeparator">Fiat</div>
+              {fiatCurrencies.map(fiatItem)}
+              <div className="listSeparator">Crypto</div>
+              {cryptoCurrencies.map(cryptoItem)}              
+            </div>
           </td>          
         </tr>
-        <tr className="settingsTableRow">          
+        <tr className="settingsTableRow">
           <td colSpan="2" className="settingCol1 p28R">Show balance:
           </td>          
           <td className="settingCol3">
             <label className="m10L switch">
-              <input id="userShowBalance" type="checkbox" defaultChecked={userShowBalance ? true : false} onChange={(e) => enableShowBalance()}/>
+              <input id="userShowBalance" type="checkbox" defaultChecked={_userShowBalance ? true : false} onChange={(e) => enableShowBalance()}/>
               <span className="slider round"></span>
             </label>
           </td>
@@ -408,7 +473,7 @@ module.exports = (props) => {
           </td>          
           <td className="settingCol3">
             <label className="m10L switch">
-              <input id="userAdvancedFeatures" type="checkbox" defaultChecked={userAdvancedFeatures ? true : false} onChange={(e) => enableAdvancedFeatures()}/>
+              <input id="userAdvancedFeatures" type="checkbox" defaultChecked={_userAdvancedFeatures ? true : false} onChange={(e) => enableAdvancedFeatures()}/>
               <span className="slider round"></span>
             </label>
           </td>

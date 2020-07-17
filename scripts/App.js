@@ -215,8 +215,9 @@ let cryptoNameELAAddress = '';
 let requests = [];
 let urls = [];
 
-let loadedfiatList = false;
+let loadedCurrenciesList = false;
 let parsedFiatList = [];
+let parsedCryptoList = [];
 
 /** functions */
 const init = (_GuiToggles) => {
@@ -257,11 +258,11 @@ const getRestService = () => {
 };
 
 const setRestService = (ix) => {
-  currentNetworkIx = ix;  
-  if (ix === 99) {
-    restService = currentNodeURL;
+  currentNetworkIx = ix;
+  if (ix == 99) {
+    restService = currentNodeURL;    
   } else {
-    restService = REST_SERVICES[ix].url;
+    restService = REST_SERVICES[ix].url;    
   }  
 };
 
@@ -417,7 +418,7 @@ const pollForData = () => {
       //requestRssFeed();
       //requestFee();
       //requestFeeAccount();
-      if (!loadedfiatList) { // load once
+      if (!loadedCurrenciesList) { // load once
         CoinGecko.requestCurrencies();
         CoinGecko.getCurrencies();
       }
@@ -508,7 +509,7 @@ const getJson = (url, readyCallback, errorCallback) => {
   xhttp.responseType = 'text';
   xhttp.open('GET', url, true);
   requests.push(xhttp);
-  urls.push(url);
+  urls.push("Start:"+getCurrentDateTime()+" URL:"+url);
   xhttp.send();  
 };
 
@@ -561,21 +562,21 @@ const requestBlockchainData = (_userRequest) => {
   requestUnspentTransactionOutputs();
   requestBlockchainState();
   
-  /*
-  if (refreshCandiatesFlag) {
-  }*/
-  
   CoinGecko.requestPriceData();
   
+  if (_userRequest) reloadProducersAndVotes(_userRequest);
+};
+
+const reloadProducersAndVotes = (_userRequest) => {
   if (_userRequest) {
     clearParsedProducerList();
     clearParsedCandidateVoteList();
     loadedProducerList = false;
     loadedVotes = false;
-    requestListOfProducers(_userRequest);
-    requestListOfCandidateVotes();
   }
-};
+  requestListOfProducers(_userRequest);
+  requestListOfCandidateVotes();
+}
 
 const getPublicKeyFromMnemonic = (_saveWallet) => {
   useLedgerFlag = false;
@@ -1280,9 +1281,9 @@ const requestListOfProducersReadyCallback = (response, _userRequest) => {
 
 const requestListOfProducers = (_userRequest) => {
   if (_userRequest) {
-    producerListStatus = 'Refreshing Producers, Please Wait';
+    producerListStatus = 'Refreshing Producers, please wait ...';
   } else {
-    producerListStatus = 'Loading Producers, Please Wait';
+    producerListStatus = 'Loading Producers, please wait ...';
   }
   const txUrl = `${getRestService()}/api/v1/dpos/rank/height/0?state=active`;
   //mainConsole.log(getCurrentDateTime(), 'requestListOfProducers');
@@ -1413,7 +1414,7 @@ const requestListOfCandidateVotesReadyCallback = (response) => {
 
 const requestListOfCandidateVotes = () => {
   if (address !== undefined) {
-    candidateVoteListStatus = 'Loading Votes, Please Wait';
+    candidateVoteListStatus = 'Loading Votes, please wait ...';
 
     const txUrl = `${getRestService()}/api/v1/dpos/address/${address}?pageSize=1&pageNum=1`;
     // mainConsole.log('requestListOfCandidateVotes', txUrl);
@@ -1434,7 +1435,15 @@ const sendVoteTx = () => {
     }
   
     if (parsedProducerList.producersCandidateCount === 0) {
-      bannerStatus = 'No Candidates Selected.';
+      bannerStatus = 'No candidates selected.';
+      bannerClass = 'bg_red color_white banner-look';
+      GuiToggles.showAllBanners(false);
+      renderApp();
+      return;
+    }
+    
+    if (parsedProducerList.producersCandidateCount > 36) {
+      bannerStatus = 'Too many candidates selected ['+parsedProducerList.producersCandidateCount+'].';
       bannerClass = 'bg_red color_white banner-look';
       GuiToggles.showAllBanners(false);
       renderApp();
@@ -1493,7 +1502,7 @@ const sendVoteTx = () => {
         candidateVoteListStatus += ' please confirm tx on ledger.';
         LedgerComm.sign(encodedUnsignedTx, sendVoteLedgerCallback);
       } else {
-        bannerStatus = `UTXOs have not been retrieved yet, please wait.`;
+        bannerStatus = `UTXOs have not been retrieved yet, please wait ...`;
         bannerClass = 'landing-btnbg color_white banner-look';
         GuiToggles.showAllBanners(false);
         renderApp();        
@@ -1580,7 +1589,7 @@ const sendVoteReadyCallback = (transactionJson) => {
   } else {
     candidateVoteListStatus = `Voting transaction successful.`;
     GuiToggles.showHome();
-    bannerStatus = candidateVoteListStatus;
+    bannerStatus = `Voting transaction successful.`;
     bannerClass = 'bg_green color_white banner-look';
     requestTransactionHistory();
     GuiToggles.showAllBanners(true);
@@ -1839,11 +1848,11 @@ const listRequests = () => {
     } else {
       otherRequests.push(urls[i]);
     }
-    mainConsole.log(getCurrentDateTime(), request.readyState, urls[i]);
+    console.log(getCurrentDateTime(), "State:"+request.readyState, urls[i]);
     i++;
   });
   //mainConsole.log(getCurrentDateTime(), "Requests:", requests.length, "Urls:", urls.length);
-  mainConsole.log(getCurrentDateTime(), "Aborted Requests:", abortedRequests.length, "Running Requests:", runningRequests.length, "Finished Requests:", finishedRequests.length, "Other Requests:", otherRequests.length);
+  console.log(getCurrentDateTime(), "Aborted Requests:", abortedRequests.length, "Running Requests:", runningRequests.length, "Finished Requests:", finishedRequests.length, "Other Requests:", otherRequests.length);
 }
 
 const clearRequests = () => {
@@ -1949,10 +1958,6 @@ const clearGlobalData = () => {
   //mainConsole.log('SUCCESS clearGlobalData');
 };
 
-const resetConfigData = () => {
-  resetConfigInitialized();
-};
-
 const getLedgerDeviceInfo = () => {
   return ledgerDeviceInfo;
 };
@@ -1969,7 +1974,7 @@ const getELABalance = () => {
   return '?';
 };
 
-const getFiatBalance = () => {
+const getCurrencyBalance = () => {
   const data = CoinGecko.getPriceData();
   if (data) {
     const elastos = data.elastos;
@@ -1985,10 +1990,11 @@ const getFiatBalance = () => {
   return '?';
 };
 
-const parseFiatList = () => {
+const parseCurrencyList = () => {
   const currenciesList = CoinGecko.getCurrencies();
-  if (currenciesList && !loadedfiatList) {
+  if (currenciesList && !loadedCurrenciesList) {
     parsedFiatList = [];
+    parsedCryptoList = [];
     let obj = JSON.parse(JSON.stringify(currenciesList.rates));
     let keysArray = Object.keys(obj);
     for (let i = 0; i < keysArray.length; i++) {
@@ -1996,12 +2002,15 @@ const parseFiatList = () => {
       var value = obj[key];
       if (value.type === "fiat") {
         parsedFiatList.push(key);        
+      } else if (value.type === "crypto") {
+        parsedCryptoList.push(key);        
       }
     }
-    loadedfiatList = true;
+    loadedCurrenciesList = true;
     parsedFiatList = parsedFiatList.sort();
+    parsedCryptoList = parsedCryptoList.sort();
     renderApp();
-    GuiUtils.setValue('userCurrency',currentCurrency);
+    GuiUtils.setValue('userCurrency', currentCurrency.toUpperCase());
   } else {
     parsedFiatList.push("usd");
   }
@@ -2009,6 +2018,10 @@ const parseFiatList = () => {
 
 const getParsedFiatList = () => {
   return parsedFiatList;
+}
+
+const getParsedCryptoList = () => {
+  return parsedCryptoList;
 }
 
 const getAddress = () => {
@@ -2423,6 +2436,10 @@ const getDefaultWalletPath = () => {
   return defaultWalletPath;
 }
 
+const getDefaultNetworkIx = () => {
+  return defaultNetworkIx;
+}
+
 const getCurrentNodeURL = () => {
   return currentNodeURL;
 }
@@ -2436,7 +2453,7 @@ const getCurrentCurrency = () => {
 }
 
 const setCurrentCurrency = (_currency) => {
-  currentCurrency = _currency;
+  currentCurrency = _currency.toLowerCase();
   CoinGecko.requestPriceData();
 }
 
@@ -2465,9 +2482,9 @@ const readConfigFile = () => {
       });
       
       if (configCurrency.length > 0) {
-        currentCurrency = configCurrency;
+        currentCurrency = configCurrency.toLowerCase();
       } else {
-        currentCurrency = defaultCurrency;
+        currentCurrency = defaultCurrency.toLowerCase();
       }
       currentNodeURL = configNodeURL;      
       if (currentNodeURL.length > 0) {
@@ -2501,7 +2518,7 @@ const readConfigFile = () => {
 
 const updateConfigFile = (updateCurrency, updateNetworkIx, updateNodeURL, updateWalletPath, updateShowBalance, updateAdvancedFeatures) => {
   let updateConfigContent = '';
-  updateConfigContent += "currency="+updateCurrency+"\nnetworkIx="+updateNetworkIx+"\nnodeURL="+updateNodeURL+"\nwalletPath="+updateWalletPath+"\nshowBalance="+updateShowBalance+"\nadvancedFeatures="+updateAdvancedFeatures;
+  updateConfigContent += "currency="+updateCurrency.toLowerCase()+"\nnetworkIx="+updateNetworkIx+"\nnodeURL="+updateNodeURL+"\nwalletPath="+updateWalletPath+"\nshowBalance="+updateShowBalance+"\nadvancedFeatures="+updateAdvancedFeatures;
   if (developMode) updateConfigContent +="\ndevelopMode="+developMode;
   fs.writeFile(configFilePath, updateConfigContent, "utf8", (err) => {
   if (err) throw err;
@@ -2642,7 +2659,7 @@ const getTotalUTXOs = () => {
 }
 
 const getMaxUTXOsPerTX = () => {
-  if (isLedgerConnected) {
+  if (useLedgerFlag) {
     return LEDGER_UTXO_CONSOLIDATE_COUNT;
   } else {
     return MAX_UTXO_CONSOLIDATE_COUNT;
@@ -2728,7 +2745,7 @@ exports.getPublicKeyFromMnemonic = getPublicKeyFromMnemonic;
 exports.getPublicKeyFromPrivateKey = getPublicKeyFromPrivateKey;
 exports.getAddress = getAddress;
 exports.getELABalance = getELABalance;
-exports.getFiatBalance = getFiatBalance;
+exports.getCurrencyBalance = getCurrencyBalance;
 exports.getParsedProducerList = getParsedProducerList;
 exports.getProducerListStatus = getProducerListStatus;
 exports.getParsedTransactionHistory = getParsedTransactionHistory;
@@ -2768,6 +2785,7 @@ exports.copyPrivateKeyToClipboard = copyPrivateKeyToClipboard;
 exports.copyAddressToClipboard = copyAddressToClipboard;
 /* Producers & Candidates */
 //exports.setRefreshCandiatesFlag = setRefreshCandiatesFlag;
+exports.reloadProducersAndVotes = reloadProducersAndVotes;
 exports.requestListOfProducers = requestListOfProducers;
 exports.requestListOfCandidateVotes = requestListOfCandidateVotes;
 exports.verifyLedgerBanner = verifyLedgerBanner;
@@ -2799,11 +2817,10 @@ exports.getLoggedIn = getLoggedIn;
 exports.getWalletNameLogin = getWalletNameLogin;
 exports.getWalletNameCreate = getWalletNameCreate;
 /* config */
-exports.resetConfigInitialized = resetConfigInitialized;
+//exports.resetConfigInitialized = resetConfigInitialized;
 exports.createConfigFile = createConfigFile;
 exports.readConfigFile = readConfigFile;
 exports.updateConfigFile = updateConfigFile;
-exports.resetConfigData = resetConfigData;
 exports.getConfigNetworkIx = getConfigNetworkIx;
 exports.getConfigNodeURL = getConfigNodeURL;
 exports.getConfigCurrency = getConfigCurrency;
@@ -2824,6 +2841,7 @@ exports.getCurrentAdvancedFeatures = getCurrentAdvancedFeatures;
 exports.setCurrentAdvancedFeatures = setCurrentAdvancedFeatures;
 /* default */
 exports.getDefaultWalletPath = getDefaultWalletPath;
+exports.getDefaultNetworkIx = getDefaultNetworkIx;
 /* consolidate */
 exports.consolidateUTXOs = consolidateUTXOs;
 exports.showConsolidateButton = showConsolidateButton;
@@ -2848,5 +2866,6 @@ exports.clearRequests = clearRequests;
 exports.listRequests = listRequests;
 exports.writeSendData = writeSendData;
 exports.getJson = getJson;
-exports.parseFiatList = parseFiatList;
+exports.parseCurrencyList = parseCurrencyList;
 exports.getParsedFiatList = getParsedFiatList;
+exports.getParsedCryptoList = getParsedCryptoList;

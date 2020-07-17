@@ -18,7 +18,7 @@ module.exports = (props) => {
       </div>
       <p className="address-text margin_none color_white font_size20">QR Code</p>
       <QRCode value={App.getAddressOrBlank()} size={280} includeMargin={true} className="br30"/>
-      <div className="qraddress-div">
+      <div className="qraddress-div cursor_def">
         <p className="address-ex display_inline_block font_size20">{App.getAddress()}</p>
       </div>
       <div className="flex_center">

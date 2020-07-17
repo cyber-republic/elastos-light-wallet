@@ -10,7 +10,7 @@ module.exports = (props) => {
   
   return (
 
-  <div id="staking" className="stakingarea dark-hover2" onClick={(e) => showVoting()}>
+  <div id="staking" className="dark-hover2" onMouseDown={(e) => showVoting()}>
     <p className="stakingtitle cursor_def">staking</p>
     <p className="candidate-total cursor_def">{App.getParsedProducerList().producers.length} candidates total</p>
     <p className="candidate-voted cursor_def">{App.getParsedCandidateVoteList().candidateVotes.length}/36 Active Votes</p>

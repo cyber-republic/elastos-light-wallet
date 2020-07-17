@@ -72,7 +72,7 @@ module.exports = (props) => {
   }
 
   return (
-    <div id="voting" className="gridback-voting w780h520px">
+    <div id="voting" className="gridback-voting w1125h750px">
      <Banner App={App} GuiToggles={GuiToggles} page="voting"/>
      <Menu App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} page="voting"/>
       <div className="logo-info">

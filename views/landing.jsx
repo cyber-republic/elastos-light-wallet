@@ -197,7 +197,7 @@ module.exports = (props) => {
         </select>
       </div>
       <div className="m15T">
-        <input tabIndex="2" className="enterPassword" type={showLoginPassword ? "text" : "password"} size="18" id="loginPassword" placeholder="Enter Password" name="loginPassword" onKeyDown={handleKeyDown}/>
+        <input tabIndex="2" className="enterPassword" type={showLoginPassword ? "text" : "password"} size="18" id="loginPassword" placeholder="Enter Password" name="loginPassword" onKeyDown={(e) => handleKeyDown(e)}/>
         <img className={showLoginPassword ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword()} />
       </div>
       <div className="m15T">

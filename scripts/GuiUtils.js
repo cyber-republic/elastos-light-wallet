@@ -24,6 +24,14 @@ const getChecked = (id) => {
   return get(id).checked;
 };
 
+const setPlaceholder = (id, value) => {
+  get(id).placeholder = value;
+};
+
+const getPlaceholder = (id) => {
+  return get(id).placeholder;
+};
+
 const hide = (id) => {
   get(id).style = 'display:none;';
 };
@@ -37,5 +45,7 @@ exports.setValue = setValue;
 exports.getValue = getValue;
 exports.setChecked = setChecked;
 exports.getChecked = getChecked;
+exports.setPlaceholder = setPlaceholder;
+exports.getPlaceholder = getPlaceholder;
 exports.hide = hide;
 exports.show = show;
