@@ -22,6 +22,7 @@ module.exports = (props) => {
   const openDevTools = props.openDevTools;
   const Version = props.Version;
   const GuiToggles = props.GuiToggles;
+  const GuiUtils = props.GuiUtils;
   const onLinkClick = props.onLinkClick;
   const isLedgerConnected = App.isLedgerConnected();
 
@@ -45,21 +46,27 @@ module.exports = (props) => {
   const sendVote = () => {
     let isSent = App.sendVoteTx();
     if (isSent) {
-      showPasswordModal = false;
+      clearPasswordFields();
+      closeModal();
     } else {
-      showPasswordModal = false;
+      App.renderApp();
     }
-    App.renderApp();
   }
   
   const showVoteModal = () => {
-    showPasswordModal = true;
-    App.renderApp();
+    let isValid = App.checkTransactionHistory();
+    if (isValid) {
+      showPasswordModal = true;
+      GuiUtils.setFocus('votePassword');
+      App.renderApp();
+    }
   }
   
   const closeModal = () => {
-    showPasswordModal = false;
-    App.renderApp();    
+    if (showPasswordModal) {
+      showPasswordModal = false;
+      App.renderApp();
+    }
   }
   
   const showPassword = () => {
@@ -70,6 +77,20 @@ module.exports = (props) => {
     }
     App.renderApp();    
   }
+  
+  const exitPage = () => {
+    clearPasswordFields();
+    GuiToggles.showHome();
+  }
+  
+  const clearPasswordFields = () => {
+    showPasswordToggle = false;
+    GuiUtils.setValue('votePassword', '');    
+  }
+  
+  module.exports.showPasswordModal = showPasswordModal;
+  module.exports.closeModal = closeModal;
+  module.exports.exitPage = exitPage;
 
   return (
     <div id="voting" className="gridback-voting w1125h750px">
@@ -104,7 +125,7 @@ module.exports = (props) => {
 
       <div className="voting-row1">
         <div>
-          <img src="artwork/voting-back.svg" className="scale-hover" width="33px" height="33px" onClick={(e) => GuiToggles.showHome()}/>
+          <img src="artwork/voting-back.svg" className="scale-hover" width="33px" height="33px" onClick={(e) => exitPage()}/>
           <p className="display_inline_block votes-header">Votes</p>
           <p className="display_inline_block candidate-status status-font">Status: {App.getProducerListStatus()} </p>
           <p className="display_inline_block status-font">Candidates: {App.getParsedProducerList().producers.length} </p>
@@ -149,6 +170,8 @@ module.exports = (props) => {
 
       <div className="voting-row4">
         <p className="display_inline_block active-heading">Active Votes</p>
+        <p className="display_inline_block vote-status status-font">Status: {App.getCandidateVoteListStatus()} </p>
+        <p className="display_inline_block status-font">Power: {App.getVoteValue()} </p>
         <p className="display_inline_block status-font">Voted {App.getParsedCandidateVoteList().candidateVotes.length}/36</p>
       </div>
 
@@ -158,7 +181,7 @@ module.exports = (props) => {
             <tr className="txtable-headrow">
               <td className="no_border no_padding">#</td>
               <td className="no_border no_padding">Nickname</td>
-              <td className="no_border no_padding">Votes</td>
+              <td className="no_border no_padding">Voting power</td>
               <td className="no_border no_padding">State</td>
             </tr>
             {
@@ -185,6 +208,7 @@ module.exports = (props) => {
       </div>
       
       <div className="bg-modal w400px h200px" style={showPasswordModal ? {display: 'flex'} : {display: 'none'}}>
+        <a onClick={(e) => closeModal()}></a>
         <div className="modalContent w350px h180px">
           <div className="closeModal" onClick={(e) => closeModal()}>
             <img className="scale-hover" src="artwork/voting-back.svg" height="38px" width="38px"/>
@@ -203,5 +227,5 @@ module.exports = (props) => {
       </div>
       
     </div>
-    );
-    }
+  );
+}

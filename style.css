@@ -18,6 +18,7 @@ body {
   background-size: cover;
   -webkit-app-region: drag;
   border-radius: 48px;
+  overflow: hidden;
 }
 
 button,  
@@ -195,7 +196,6 @@ button {
 
 .ledgeranimation {
   animation: Flash 1.5s 1 linear;
-
 }
 
 @-webkit-keyframes Flash {
@@ -212,7 +212,6 @@ button {
     background-color: inherit;
     opacity: 1;
   }
-}
 }
 
 .dark-hover2 {
@@ -457,14 +456,6 @@ button {
   -webkit-app-region: no-drag;  
   width: 100%;
   height: 100%;
-}
-
-.send-bg {
-  position: fixed;
-  width: 375px;
-  height: 446px;
-  top: 0;
-  left: 375px;
 }
 
 #sendOne,
@@ -1519,16 +1510,8 @@ select, input {
   font-weight: 600;
 }
 
-.candidate-status {
+.candidate-status, .vote-status {
   flex-grow: 0.5;
-
-}
-.candidatevote-status {
-  flex-grow: 0.5;
-  width: 60%;
-  word-break: break-all;
-  height: 90%;
-  overflow: hidden;
 }
 
 .status-font {
@@ -1642,14 +1625,19 @@ select, input {
 }
 
 .qrmain-div {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  right: 0;
   margin: auto;
-  display: flex;
-  flex-flow: column;
   width: 560px;
   height: 650px;
-  background-image: linear-gradient(2deg, #36373B 0%, #65666E 100%);
+  /*background-image: linear-gradient(2deg, #36373B 0%, #65666E 100%);*/
+  background-image: linear-gradient(2deg, #33373D 0%, rgba(51, 55, 61, 1) 100%);
   box-shadow: 6px 30px 60px -13px rgba(0, 0, 0, 0.50);
   border-radius: 38px;
+  display: flex;
+  flex-flow: column;
   justify-content: space-evenly;
   align-items: center;
 }
@@ -1762,10 +1750,9 @@ select, input {
   letter-spacing: 0;
 }
 
-
 .ledgercon {
   border-radius: 15px;
-  position: fixed;
+  position: absolute;
   top: 534px;
   left: 839px;
   padding: 14px;
@@ -1773,7 +1760,7 @@ select, input {
 
 .ledgernotcon {
   border-radius: 14px;
-  position: fixed;
+  position: absolute;
   top: 682px;
   left: 940px;
   padding: 10px;
@@ -2107,11 +2094,18 @@ select, input {
 }
 
 /* Settings page */
+#settings {
+  width: 100%;
+  height: 100%;
+}
+
 .settings-main-div {
   width: 560px;
   height: 650px;
   top: 50px;
-  left: 280px;
+  left: 0;
+  right: 0;
+  margin: auto;
   /*background-image: linear-gradient(2deg, #36373B 0%, #65666E 100%);*/
   background-image: linear-gradient(2deg, #33373D 0%, rgba(51, 55, 61, 1) 100%);
   box-shadow: 6px 30px 60px -13px rgba(0, 0, 0, 0.50);
@@ -2466,6 +2460,16 @@ input:checked + .slider:before {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.bg-modal a, #settings a, #qrcode a{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+  cursor: default;
 }
 
 .modalContent {

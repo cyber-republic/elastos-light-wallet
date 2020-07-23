@@ -1,7 +1,6 @@
 const React = require('react');
 const Menu = require('./partial/menu.jsx');
 const Banner = require('./partial/banner.jsx');
-const GuiUtils = require('../scripts/GuiUtils.js');
 
 let editablePath = false;
 let derivationPathLedger = '';
@@ -9,7 +8,7 @@ let indexPathLedger = 0;
 let ledgerConnected = false;
 let walletNameLogin = '';
 let showLoginPassword = false;
-let showWalletLogin = false;
+let showWalletLoginModal = false;
 
 const LedgerMessage = (props) => {
   const App = props.App;
@@ -38,23 +37,25 @@ const UseLedgerButton = (props) => {
     if (!App.getLedgerDeviceInfo().error) {
       //editablePath = false; // keep Ledger path on login
       GuiToggles.showHome();
+      App.reloadProducersAndVotes(false);
     }
   }
   if (App.getLedgerDeviceInfo() ? App.getLedgerDeviceInfo().enabled : false) {
-    return (<img src="artwork/ledgerconnected.svg" title="Connect with Ledger device" width="235px" height="198px" className="ledgercon ledgeranimation dark-hover" onClick={(e) => useLedger()} />);
+    return (<div className="ledgercon dark-hover ledgeranimation"><img src="artwork/ledgerconnected.svg" title="Connect with Ledger device" width="235px" height="198px" onClick={(e) => useLedger()}/></div>);
   } else {
-    return (<img src="artwork/ledgernotconnected.svg" title="No Ledger device connected" width="140px" height="36px" title="Not Connected" className="ledgernotcon dark-hover" />);
+    return (<div className="ledgernotcon dark-hover"><img src="artwork/ledgernotconnected.svg" title="No Ledger device connected" width="140px" height="36px"/></div>);
   }
 }
 
 module.exports = (props) => {
   const App = props.App;
   const GuiToggles = props.GuiToggles;
+  const GuiUtils = props.GuiUtils;
   const openDevTools = props.openDevTools;
   const Version = props.Version;
   let configFile = App.readConfigFile();
   let folderStatus = App.createWalletFolder();
-  
+
   const showMenu = () => {
     GuiToggles.showMenu('landing');
   }
@@ -96,17 +97,13 @@ module.exports = (props) => {
     ledgerConnected = false;
   };
   
-  const changeWallet = (props) => {
-    walletNameLogin = GuiUtils.getValue('walletNameLogin');
-    App.renderApp();
-  }
-  
   const useWalletLogin = () => {  
     const success = App.loginWithWallet();
     if(success) {
-      showWalletLogin = false;
+      closeModal();
       //editablePath = false; // keep Ledger path on login
       GuiToggles.showHome();
+      App.reloadProducersAndVotes(false);
     }
   }
   
@@ -122,24 +119,29 @@ module.exports = (props) => {
   }
   
   const showPassword = () => {
-    //var elementID = event.target.id;
     if (showLoginPassword) {
       showLoginPassword = false;
     } else {
       showLoginPassword = true;
     }
-    App.renderApp();    
+    App.renderApp();
   }
   
   const closeModal = () => {
-    showWalletLogin = false;
+    if (showWalletLoginModal) {      
+      showWalletLoginModal = false;      
+      App.renderApp();
+    }
+  }
+  
+  const showWalletLogin = () => {
+    showWalletLoginModal = true;
+    GuiUtils.setFocus('loginPassword');
     App.renderApp();    
   }
   
-  const showWalletLoginModal = () => {
-    showWalletLogin = true;
-    App.renderApp();    
-  }
+  module.exports.showWalletLoginModal = showWalletLoginModal;
+  module.exports.closeModal = closeModal;
   
   return (<div id="landing">
   <Banner App={App} GuiToggles={GuiToggles} page="landing"/>
@@ -165,7 +167,7 @@ module.exports = (props) => {
       </button>
     </div>
     <p className="address-text font_size24 margin_none display_inline_block gradient-font">Login</p>    
-    <button className="home-btn scale-hover landing-btnbg" onClick={(e) => showWalletLoginModal()}>Login with Password</button>
+    <button className="home-btn scale-hover landing-btnbg" onClick={(e) => showWalletLogin()}>Login with Password</button>
     <p className={(ledgerConnected) ? "address-text font_size16 w80pct word-breakword clearElement" : "address-text font_size16 w80pct word-breakword"}>Ledger Status:&nbsp;
       <LedgerMessage App={App}/></p>
     <div style={App.getCurrentAdvancedFeatures() ? {display: 'block'} : {display: 'none'}}>
@@ -182,7 +184,8 @@ module.exports = (props) => {
       <button className="requestsButtons padding_5px display_inline dark-hover br10 cursor_def m15L" onClick={(e) => App.clearRequests()}>Clear requests</button>
     </div>
     
-  <div className="bg-modal" style={showWalletLogin ? {display: 'flex'} : {display: 'none'}}>
+  <div className="bg-modal" style={showWalletLoginModal ? {display: 'flex'} : {display: 'none'}}>
+    <a onClick={(e) => closeModal()}></a>
     <div className="modalContent w450px h250px">
       <div className="closeModal" onClick={(e) => closeModal()}>
         <img className="scale-hover" src="artwork/voting-back.svg" height="38px" width="38px"/>
@@ -191,7 +194,7 @@ module.exports = (props) => {
         <span className="address-text modal-title gradient-font">Login to wallet</span>
       </div>
       <div className="m15T">
-        <select tabIndex="1" className="walletPicker" id="walletNameLogin" name="walletNameLogin" /*onChange={(e) => changeWallet()}*/>
+        <select tabIndex="1" className="walletPicker" id="walletNameLogin" name="walletNameLogin" defaultValue={App.getLastWallet()}>
           <option value="">Select wallet</option>
           {walletFiles.map(MakeItem)}
         </select>

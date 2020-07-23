@@ -1,7 +1,6 @@
 const React = require('react');
 const Menu = require('./partial/menu.jsx');
 const Banner = require('./partial/banner.jsx');
-const GuiUtils = require('../scripts/GuiUtils.js');
 
 let editablePath = false;
 let derivationPathMnemonic = '';
@@ -10,7 +9,7 @@ let success = '';
 let showPassphrase = false;
 let showNewPassword = false;
 let showConfirmPassword = false;
-let showCreateWallet = false;
+let showCreateWalletModal = false;
 let passwordsComplexity = true;
 let passwordsMatch = true;
 
@@ -18,6 +17,7 @@ module.exports = (props) => {
   const App = props.App;
   const openDevTools = props.openDevTools;
   const GuiToggles = props.GuiToggles;
+  const GuiUtils = props.GuiUtils;
   
   const useProceedButton = (_saveWallet) => {
     if (importType === "mnemonic") {
@@ -26,12 +26,10 @@ module.exports = (props) => {
       success = App.getPublicKeyFromPrivateKey(_saveWallet);      
     }  
     if(success) {
-      showPassphrase = false;
-      showNewPassword = false;
-      showConfirmPassword = false;
-      showCreateWallet = false;
+      clearPasswordFields();
+      closeModal();
       editablePath = false;
-      GuiToggles.showHome();        
+      GuiToggles.showHome();
     }
   }
   
@@ -102,12 +100,14 @@ module.exports = (props) => {
   }
   
   const closeModal = () => {
-    showCreateWallet = false;
-    App.renderApp();    
+    if (showCreateWalletModal) {
+      showCreateWalletModal = false;
+      App.renderApp();
+    }
   }
   
-  const showCreateWalletModal = () => {
-    showCreateWallet = true;
+  const showCreateWallet = () => {
+    showCreateWalletModal = true;
     App.renderApp();
   }
   
@@ -126,6 +126,24 @@ module.exports = (props) => {
     App.renderApp();
   }
   
+  const exitPage = () => {
+    clearPasswordFields();
+    editablePath = false;
+    GuiToggles.showLanding();    
+  }
+  
+  const clearPasswordFields = () => {
+    showPassphrase = false;
+    showNewPassword = false;
+    showConfirmPassword = false;
+    passwordsComplexity = true;
+    passwordsMatch = true;  
+  }
+  
+  module.exports.showCreateWalletModal = showCreateWalletModal;
+  module.exports.closeModal = closeModal;
+  module.exports.exitPage = exitPage;
+  
   return (
 <div id="import">
   <div className="import-div">
@@ -137,7 +155,7 @@ module.exports = (props) => {
       </nav>
     </header>
     <div className="flex_center w100pct">
-      <img className="flex1 scale-hover" src="artwork/voting-back.svg" height="38px" width="38px" onClick={(e)=> GuiToggles.showLanding()}/>
+      <img className="flex1 scale-hover" src="artwork/voting-back.svg" height="38px" width="38px" onClick={(e)=> exitPage()}/>
       <img src="artwork/logonew.svg" height="80px" width="240px" />
       <div className="flex1"></div>
     </div>
@@ -146,7 +164,7 @@ module.exports = (props) => {
     <textarea tabIndex="1" style={(importType === "mnemonic") ? {display: 'block'} : {display: 'none'}} className="qraddress-div color_white textarea-placeholder padding_5px" type="text" rows="2" cols="50" id="mnemonic" placeholder="Enter 12 word mnemonic/seed phrase"></textarea>
     <textarea tabIndex="1" style={(importType === "mnemonic") ? {display: 'none'} : {display: 'block'}} className="qraddress-div color_white textarea-placeholder padding_5px" type="text" rows="2" cols="50" id="privateKeyElt" placeholder="Enter Private Key"></textarea>
     
-    <div className="flex-middle">{/* flex vertical*/}
+    <div className="flex-middle">
       <input tabIndex="3" className="radioImport" type="radio" id="radioMnemonic" name="importType" value="mnemonic" onChange={(e)=> setInputType()} defaultChecked/>
       <label className="radioLabelImport gradient-font">Mnemonic</label>
       <input tabIndex="4" className="radioImport m50L" type="radio" id="radioPrivateKey" name="importType" value="privateKey" onChange={(e)=> setInputType()}/>
@@ -154,7 +172,7 @@ module.exports = (props) => {
     </div>      
     <div style={(importType === "mnemonic") ? {display: 'flex'} : {display: 'none'}}>
       <input tabIndex="2" type={showPassphrase ? "text" : "password"} className="enterPassword passphrase" size="18" id="passphrase" placeholder="Passphrase (optional)" name="passphrase"/>
-      <img id="passphraseEye" style={showCreateWallet ? {display: 'none'} : {display: 'block'}} className={showPassphrase ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />
+      <img id="passphraseEye" style={showCreateWalletModal ? {display: 'none'} : {display: 'block'}} className={showPassphrase ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword(e)} />
     </div>
   
     <div className="flex-middle w200px" style={(App.getCurrentAdvancedFeatures() && importType === "mnemonic") ? {display: 'flex'} : {display: 'none'}}>
@@ -162,7 +180,7 @@ module.exports = (props) => {
       <input type="text" size="4" maxLength={4} className="derivationPathPicker mnemonicPicker w175px" id="derivationPathMnemonic" name="derivationPathMnemonic" readOnly={!editablePath ? true : false} placeholder="Derivation path (default)" onChange={(e) => validatePath()}/><img title="For Advanced users only" className={!editablePath ? "editPath dark-hover padding_5px br5 editOn" : "editPath dark-hover padding_5px br5 editOff"} onClick={(e) => editPath()}/>
     </div>
     <div className="flex_center">
-      <button tabIndex="9" className="proceed-btn scale-hover" onClick={(e)=> showCreateWalletModal()}>
+      <button tabIndex="9" className="proceed-btn scale-hover" onClick={(e)=> showCreateWallet()}>
         <p>Proceed</p>
       </button>  
     </div>
@@ -181,7 +199,8 @@ module.exports = (props) => {
         <li>Please take precautions when entering your Private Key, make sure nobody is watching you physically or virtually.</li>
       </ul>
     </div>
-    <div className="bg-modal" style={showCreateWallet ? {display: 'flex'} : {display: 'none'}}>
+    <div className="bg-modal" style={showCreateWalletModal ? {display: 'flex'} : {display: 'none'}}>
+      <a onClick={(e) => closeModal()}></a>
       <div className="modalContent w450px h300px">
         <div className="closeModal" onClick={(e) => closeModal()}>
           <img className="scale-hover" src="artwork/voting-back.svg" height="38px" width="38px"/>
@@ -190,7 +209,7 @@ module.exports = (props) => {
           <span className="address-text modal-title gradient-font">Save wallet</span>
         </div>
         <div className="m15T">
-          <input tabIndex="5" type="text" className="walletNameCreate" size="18" id="walletNameCreate" placeholder="Enter wallet name" name="walletNameCreate" /*onChange={(e) => toggleWalletName()}*//>
+          <input tabIndex="5" type="text" className="walletNameCreate" size="18" id="walletNameCreate" placeholder="Enter wallet name" name="walletNameCreate"/>
         </div>
         <div className="m15T">
           <input tabIndex="6" type={showNewPassword ? "text" : "password"} className="enterPassword w215px" size="18" id="newPassword" placeholder="Enter Password" name="newPassword" onChange={(e) => comparePasswords()}/>

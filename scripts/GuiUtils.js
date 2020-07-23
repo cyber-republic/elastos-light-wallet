@@ -32,6 +32,12 @@ const getPlaceholder = (id) => {
   return get(id).placeholder;
 };
 
+const setFocus = (id) => {
+  window.setTimeout(function() {
+    get(id).focus();
+  },0);
+};
+
 const hide = (id) => {
   get(id).style = 'display:none;';
 };
@@ -47,5 +53,6 @@ exports.setChecked = setChecked;
 exports.getChecked = getChecked;
 exports.setPlaceholder = setPlaceholder;
 exports.getPlaceholder = getPlaceholder;
+exports.setFocus = setFocus;
 exports.hide = hide;
 exports.show = show;

@@ -21,6 +21,7 @@ const Settings = require('./settings.jsx');
 /** modules */
 const App = require('../scripts/App.js');
 const GuiToggles = require('../scripts/GuiToggles.js');
+const GuiUtils = require('../scripts/GuiUtils.js');
 const CoinGecko = require('../scripts/CoinGecko.js');
 
 /** constants */
@@ -66,48 +67,100 @@ const openDevTools = () => {
   }
 }
 
-
 class AppView extends React.Component {
 
   constructor(props) {
     super(props);
     this.state = { visible: false };
     // this.splash = this.splash.bind(this);
-    this.unsplash = this.unsplash.bind(this)
-    
+    this.unsplash = this.unsplash.bind(this) 
   }
 
   componentDidMount(){
-    this.unsplash()
+    this.unsplash();
+    document.addEventListener("keydown", this.keyFunction, false);
+  }
+  
+  componentWillUnmount(){
+    document.removeEventListener("keydown", this.keyFunction, false);
   }
 
   unsplash() {
-    setTimeout(() => this.setState({visible: true}), 4000) 
+    setTimeout(() => this.setState({visible: true}), 4000);
   }
   
+  keyFunction(event) {
+    if (event.keyCode === 27) {      
+      switch (GuiToggles.getPage()) {
+        case "create":
+          Create.exitPage();
+          break;
+        case "home":
+          if (Home.showPasswordModal) {
+            Home.closeModal();
+          } else {
+            if (App.getSendStep() === 2) {
+              Home.cancelSend();
+            } else {
+              Home.resetPage();
+            }
+          }
+          break;
+        case "import":
+          if (Import.showCreateWalletModal) {
+            Import.closeModal();
+          } else {
+            Import.exitPage();
+          }
+          break;
+        case "landing":
+          if (Landing.showWalletLoginModal) {
+            Landing.closeModal();
+          }
+          break;
+        case "qrcode":
+          QRCode.exitPage();
+          break;
+        case "settings":
+          if (Settings.showExportPasswordModal || Settings.showNewPasswordModal) {
+            Settings.closeModal();
+          } else {
+            Settings.exitPage();
+          }
+          break;
+        case "voting":
+          if (Voting.showPasswordModal) {
+            Voting.closeModal();
+          } else {
+            Voting.exitPage();
+          }
+          break;
+        default:
+          break;
+      }
+    }
+  }
 
   render() {
+    return (
+    <div id="app">
 
-    // return (<div id="app" className="display_inline_block ta_center va_top font_sans_10">
-    return (<div id="app"  >
-
-      
       {!this.state.visible && 
       <div className='splash-div h100pct w100pct'>
-      <img src="artwork/logonew.svg" height="80px" width="240px" />
-      <img src='artwork/iconlw.svg' height="100px" width="100px" className="rotate" /> 
-      <div></div>
+        <img src="artwork/logonew.svg" height="80px" width="240px" />
+        <img src='artwork/iconlw.svg' height="100px" width="100px" className="rotate" /> 
+        <div></div>
       </div>}
 
-    <div style={this.state.visible ? {display: 'block'} : {display: 'none'}}>
-      <Home App={App} openDevTools={openDevTools} onLinkClick={onLinkClick} GuiToggles={GuiToggles} Version={Version}/>
-      <Landing App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
-      <Import App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
-      <Create App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
-      <Voting App={App} openDevTools={openDevTools} onLinkClick={onLinkClick} GuiToggles={GuiToggles} Version={Version}/>
-      <QRCode App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
-    <Settings App={App} openDevTools={openDevTools} onLinkClick={onLinkClick} GuiToggles={GuiToggles} Version={Version}/>
-    </div>
+      <div style={this.state.visible ? {display: 'block'} : {display: 'none'}}>
+        <Home App={App} openDevTools={openDevTools} onLinkClick={onLinkClick} GuiToggles={GuiToggles} GuiUtils={GuiUtils} Version={Version}/>
+        <Landing App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} GuiUtils={GuiUtils} Version={Version}/>
+        <Import App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} GuiUtils={GuiUtils} Version={Version}/>
+        <Create App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
+        <Voting App={App} openDevTools={openDevTools} onLinkClick={onLinkClick} GuiToggles={GuiToggles} GuiUtils={GuiUtils} Version={Version}/>
+        <QRCode App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} Version={Version}/>
+        <Settings App={App} openDevTools={openDevTools} onLinkClick={onLinkClick} GuiToggles={GuiToggles} GuiUtils={GuiUtils} Version={Version}/>
+      </div>
 
     </div>)
   }
