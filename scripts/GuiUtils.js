@@ -16,6 +16,27 @@ const getValue = (id) => {
   return get(id).value;
 };
 
+const setChecked = (id, status) => {
+  get(id).checked = status;
+};
+
+const getChecked = (id) => {
+  return get(id).checked;
+};
+
+const setPlaceholder = (id, value) => {
+  get(id).placeholder = value;
+};
+
+const getPlaceholder = (id) => {
+  return get(id).placeholder;
+};
+
+const setFocus = (id) => {
+  window.setTimeout(function() {
+    get(id).focus();
+  },0);
+};
 
 const hide = (id) => {
   get(id).style = 'display:none;';
@@ -28,5 +49,10 @@ const show = (id) => {
 exports.get = get;
 exports.setValue = setValue;
 exports.getValue = getValue;
+exports.setChecked = setChecked;
+exports.getChecked = getChecked;
+exports.setPlaceholder = setPlaceholder;
+exports.getPlaceholder = getPlaceholder;
+exports.setFocus = setFocus;
 exports.hide = hide;
 exports.show = show;

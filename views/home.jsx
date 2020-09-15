@@ -16,35 +16,49 @@ const Staking = require('./partial/staking.jsx');
 
 const SocialMedia = require('./partial/social-media.jsx');
 
+let consolidesCount = 0;
+let showPasswordModal = false;
+let showPasswordToggle = false;
+let sendTxType = false;
+let consolidateTxType = false;
+let isSent = false;
+let showTxDetails = false;
+let txDetail = '';
+let txModalTop = 0;
+let autoFocus = 0;
+let modalTitle = '';
+
 module.exports = (props) => {
   const App = props.App;
   const openDevTools = props.openDevTools;
   const Version = props.Version;
   const GuiToggles = props.GuiToggles;
+  const GuiUtils = props.GuiUtils;
   const onLinkClick = props.onLinkClick;
-
+  const isLedgerConnected = App.isLedgerConnected();
+  consolidesCount = Math.ceil(Number(App.getTotalUTXOs())/Number(App.getMaxUTXOsPerTX()));
+  let consolidateTitle = "Total number of UTXOs is "+App.getTotalUTXOs()+".\nYou can consolidate UTXOs up to "+consolidesCount+" times (max "+App.getMaxUTXOsPerTX()+" per Tx).";
+  
   const showMenu = () => {
     GuiToggles.showMenu('home');
   }
-
-  const sendIsFocus = () => {
-    App.setSendHasFocus(true);
+  
+  const autoFocusOn = (e) => {
+    if (e.target.id === "sendToAddress") autoFocus = 1;
+    if (e.target.id === "sendAmount") autoFocus = 2;
+    if (e.target.id === "feeAmount") autoFocus = 3;
   }
-
-  const sendIsNotFocus = () => {
-    App.setSendHasFocus(false);
-    // App.updateAmountAndFees();
+  
+  const autoFocusOff = (e) => {
+    autoFocus = 0;    
   }
-
-  const updateAmountAndFeesAndRenderApp = (e) => {
-    App.updateAmountAndFees();
-    App.renderApp();
+  
+  const writeSendData = () => {
+    App.writeSendData();
   }
 
   const showConfirmAndSeeFees = () => {
-    // App.log('STARTED showConfirmAndSeeFees')
-    App.setSendHasFocus(false);
-    const isValid = App.validateInputs();
+    let isValid = App.validateInputs();
     if (isValid) {
       App.setSendStep(2);
     }
@@ -53,18 +67,25 @@ module.exports = (props) => {
 
   const cancelSend = () => {
     App.setSendStep(1);
-    App.clearSendData();
-    App.setSendHasFocus(false);
     App.renderApp();
   }
 
   const sendAmountToAddress = () => {
-    const isValid = App.updateAmountAndFees();
-    if (isValid) {
-      App.setSendStep(1);
-      App.sendAmountToAddress();
+    let isSent = App.sendAmountToAddress();
+    if (isSent) {
+      closeModal();
+    } else {
+      App.renderApp();
     }
-    App.renderApp();
+  }
+  
+  const consolidateUTXOs = () => {
+    isSent = App.consolidateUTXOs();
+    if (isSent) {
+      closeModal();
+    } else {
+      App.renderApp();
+    }
   }
 
   const SendScreen = (props) => {
@@ -82,60 +103,112 @@ module.exports = (props) => {
       </div>)
     }
   }
-
+  
+  const showSendModal = () => {
+    modalTitle = "Send from wallet ("+App.getWalletNameLogin()+")";
+    showPasswordModal = true;
+    sendTxType = true;
+    consolidateTxType = false;
+    GuiUtils.setFocus('sendPassword');
+    App.renderApp();
+  }
+  
+  const showConsolidateModal = () => {
+    let isValid = App.checkTransactionHistory();
+    if (isValid) {
+      modalTitle = "Consolidate wallet ("+App.getWalletNameLogin()+")";
+      showPasswordModal = true;
+      sendTxType = false;
+      consolidateTxType = true;
+      GuiUtils.setFocus('sendPassword');
+      App.renderApp();
+    }
+  }
+  
+  const closeModal = () => {
+    if (showPasswordModal) {
+      showPasswordModal = false;
+      App.renderApp();
+    }
+  }
+  
+  const showPassword = () => {
+    if (showPasswordToggle) {
+      showPasswordToggle = false;
+    } else {
+      showPasswordToggle = true;
+    }
+    App.renderApp();    
+  }
+  
+  const loadMoreTx = () => {
+    var txRecordCount = App.getTxRecordsCount()+App.getInitTxRecordsCount();
+    App.setTxRecordsCount(txRecordCount);
+    App.renderApp();
+  }
+  
+  const retrieveCryptoName = () => {
+    App.retrieveCryptoName();    
+  }
+  
+  const offset = (el) => {
+    var rect = el.getBoundingClientRect(),
+    scrollLeft = window.pageXOffset || document.documentElement.scrollLeft,
+    scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    return { top: rect.top + scrollTop, left: rect.left + scrollLeft }
+  }
+  
+  const showTXDetail = (_txID, event) => {
+    txDetail = App.getTXDetails(_txID);
+    showTxDetails = true;
+    
+    txModalTop = offset(event.target).top-347;
+    App.renderApp();
+  }
+  
+  const hideTXDetail = () => {
+    showTxDetails = false;
+    App.renderApp();
+  }
+  
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      retrieveCryptoName();
+    }
+  }
+  
+  const resetPage = () => {
+    if (GuiUtils.getValue('sendToAddress') !== "" || GuiUtils.getValue('sendAmount') !== "") {
+        showPasswordToggle = false;
+        App.clearSendData();
+        App.renderApp();
+    }
+  }
+  
+  module.exports.showPasswordModal = showPasswordModal;
+  module.exports.closeModal = closeModal;
+  module.exports.resetPage = resetPage;
+  module.exports.cancelSend = cancelSend;
+  
   const SendScreenOne = (props) => {
     const visibility = props.visibility;
     return (<div id="sendOne" className={`send-area ${visibility}`}>
       <img src="artwork/sendicon.svg" className="send-icon"/>
       <p className="send-text">Send</p>
-      <input type="text" size="34" id="sendToAddress" className="ela-address__input" placeholder="Enter ELA Address" defaultValue={App.getSendToAddress()} onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}/>
-      <input type="text" size="14" id="sendAmount" className="ela-send__amount" placeholder="Amount" defaultValue={App.getSendAmount()} onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}/> {/* <div className="quick-elaselector">
-          <button className="quick-elaselector__icon quarter">1/4</button>
-          <button className="quick-elaselector__icon half">Half</button>
-          <button className="quick-elaselector__icon all">All</button>
-        </div> */
-      }
-      <p className="elatext-send">ELA</p>
-      <button className="next-button" onClick={(e) => showConfirmAndSeeFees()}>
-        <p>Next</p>
-      </button>
-
-      {/* <div className="h100px w100pct overflow_auto">
-      <div id="sendOne" className={`bordered w250px h200px bgcolor_black_hover ${visibility}`}>
-        Send
-        <div>Send Amount</div>
-        <br/>
-        <input className="monospace" type="text" size="14" id="sendAmount" placeholder="Send Amount" defaultValue={App.getSendAmount()} onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}></input>
-        <div className="gray_on_white">To Address</div>
-        <br/>
-        <input className="monospace" type="text" size="34" id="sendToAddress" placeholder="Send To Address"  defaultValue={App.getSendToAddress()} onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}></input>
-        <br/>
-        <div>Send Status</div>
-        <br/>
-        <div className="h90px w100pct overflow_auto">
-        <table>
-          <tbody>
-            {
-              App.getSendToAddressStatuses().map((sendToAddressStatus, index) => {
-                return (<tr key={index}>
-                <td>{sendToAddressStatus}</td>
-                </tr>)
-              })
-            }
-            {
-              App.getSendToAddressLinks().map((item, index) => {
-                return (<tr key={index}>
-                  <td>
-                    <a href={item.txDetailsUrl} onClick={(e) => onLinkClick(e)}>{item.txHash}</a>
-                  </td>
-                </tr>)
-              })
-            }
-          </tbody>
-        </table>
-        </div> */
-      }
-
+      <input tabIndex="1" type="text" size="34" maxLength={34} id="sendToAddress" className="ela-address_input" placeholder="Enter ELA Address or CryptoName" defaultValue={App.getSendToAddress()} onChange={(e) => writeSendData()} onKeyDown={(e) => handleKeyDown(e)} onFocus={(e) => autoFocusOn(e)} onBlur={(e) => autoFocusOff(e)} autoFocus={autoFocus === 1 ? true : false}/>
+      <img className="cryptoname" title="Click to retrieve ELA address from cryptoname.org or press Enter" onClick={(e) => retrieveCryptoName()}/>
+      <input tabIndex="2" type="text" size="14" maxLength={14} id="sendAmount" className="ela-send_amount" placeholder="Amount" defaultValue={App.getSendAmount()} onChange={(e) => writeSendData()} onFocus={(e) => autoFocusOn(e)} onBlur={(e) => autoFocusOff(e)} autoFocus={autoFocus === 2 ? true : false}/>    
+    <div className="quick-elaselector">
+      <button className="quick-elaselector-icon quarter" onClick={() => App.insertELA('quarter')}>25%</button>
+      <button className="quick-elaselector-icon half" onClick={() => App.insertELA('half')}>50%</button>
+      <button className="quick-elaselector-icon max" onClick={() => App.insertELA('max')}>Max</button>
+    </div>
+    <hr className="ela-send_amount_line" />
+    <p className="elatext-send">ELA</p>
+    <input tabIndex="3" type="text" size="5" maxLength={5} id="feeAmount" placeholder="Fees" defaultValue={App.getFee()} onChange={(e) => writeSendData()} onFocus={(e) => autoFocusOn(e)} onBlur={(e) => autoFocusOff(e)} autoFocus={autoFocus === 3 ? true : false}/>
+    <div className="fees-text">Fees (in Satoshi ELA)</div>
+      <button tabIndex="4" className="next-button scale-hover" onClick={(e) => showConfirmAndSeeFees()}><p>Next</p></button>
+      <button style={App.showConsolidateButton() ? {display: 'block'} : {display: 'none'}} className="consolidate-button dark-hover cursor_def" title={consolidateTitle} onClick={(App.getPasswordFlag()) ? (e) => showConsolidateModal() : (e) => consolidateUTXOs()}>Consolidate ({consolidesCount})<img src="artwork/arrow.svg" alt="" className="arrow-forward"/></button>
     </div>);
   }
 
@@ -143,21 +216,19 @@ module.exports = (props) => {
     const visibility = props.visibility;
     return (
       <div id="sendTwo" className={`send-area ${visibility}`}>
-        <img src="artwork/sendicon.svg" className="send-icon" title="Refresh Blockchain Data"  onClick={(e) => App.refreshBlockchainData()}/>
+        <img src="artwork/sendicon.svg" className="send-icon" title="Refresh Blockchain Data"  onClick={(e) => App.requestBlockchainData(true)}/>
         <p className="send-text">Send</p>
-        <div className="fees-text">Fees (in Satoshi ELA)</div>
-        <input type="text" size="14" id="feeAmount" placeholder="Fees" defaultValue={App.getFee()} onFocus={(e) => sendIsFocus(e)} onBlur={(e) => sendIsNotFocus(e)}></input>
-        <div className="estimate-new dark-hover cursor_def br5" onClick={(e) => showConfirmAndSeeFees()}>Recalculate</div>
-        <p className="fees-balance">Your are sending <span> {App.getSendAmount()} ELA</span> + <span>{App.getFeeAmountEla()} ELA</span> in fees.</p>
-          <span className="send-back dark-hover cursor_def" onClick={(e) => cancelSend()}><img src="artwork/arrow.svg" alt="" className="rotate_180 arrow-back" />Back </span>
-          <button className="sendela-button" onClick={(e) => sendAmountToAddress()}>
-          <p>Send ELA</p>
-          </button>
+        <p className="confirm-send-address-label">Receiving Address</p>
+        <p className="confirm-send address"><span>{App.getSendToAddress()}</span></p>        
+        <p className="confirm-send total">Total spending amount with fees is <span>{App.getTotalSpendingELA()} ELA</span></p>
+        <button className="send-back dark-hover cursor_def" onClick={(e) => cancelSend()}><img src="artwork/arrow.svg" alt="" className="rotate_180 arrow-back" /><span className="send-back-text">Back</span></button>        
+        <button className="sendela-button scale-hover" onClick={(App.getPasswordFlag()) ? (e) => showSendModal() : (e) => sendAmountToAddress()}><p>Send ELA</p></button>        
       </div>
     )
   }
 
-  return (<div id="home" className="gridback w780h520px">
+  return (
+  <div id="home" className="gridback w1125h750px">
     <Banner App={App} GuiToggles={GuiToggles} page="home"/>
     <Menu App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} page="home"/> {/* <div id="homeMenuOpen" className="h25px bordered display_inline_block bgcolor_black_hover" title="menu" onClick={(e) => showHomeMenu()}>
        <img src="artwork/more-vertical.svg" />
@@ -169,7 +240,7 @@ module.exports = (props) => {
     <div className="logo-info">
       <Branding/>
       <header>
-        <img src="artwork/refreshicon.svg" className="refresh-icon" title="Refresh" onClick={(e) => App.refreshBlockchainData()} />
+        <img src="artwork/refreshicon.svg" className="refresh-icon" title="Refresh Blockchain Data1" onClick={(e) => App.requestBlockchainData(true)} />
         <nav id="homeMenuOpen" title="Menu" onClick={(e) => showMenu()}>
           <img src="artwork/nav.svg" className="nav-icon dark-hover" onClick={(e) => showMenu()}/>
         </nav>
@@ -198,7 +269,7 @@ module.exports = (props) => {
     <div className="receive-area">
       <img src="artwork/sendicon.svg" className="rec-icon"/>
       <p className="rec-text">Receive</p>
-      <p className="address-text">Address</p>
+      <p className="address-text address-position">Address</p>
       <button className="copy-button scale-hover" onClick={(e) => App.copyAddressToClipboard()}>
         <img src="artwork/copycut.svg" className="copy-icon" height="20px" width="20px"/>
       </button>
@@ -214,20 +285,20 @@ module.exports = (props) => {
       <p className="howqr-text gradient-font">Click QR code to Enlarge</p>
       <img src="artwork/separator.svg" className="rec-separator"/>
       <p className="ledger-heading">Ledger</p>
-      <img src="artwork/ledgericon.svg" alt="" className="ledger-icon scale-hover" height="36px" width="57px" title="Please verify above address on Ledger" onClick={(e) => App.verifyLedgerBanner()}/>
-      <p className="verifyledger-text">Please verify above address<br/>
-        <strong>on Ledger Device</strong>
-      </p>
+      {isLedgerConnected && <img src="artwork/ledgericon.svg" alt="" className="ledger-icon scale-hover" height="36px" width="57px" title="Please verify above address on Ledger" onClick={(e) => App.verifyLedgerBanner()}/>}
+      {isLedgerConnected && <p className="verifyledger-text">Please verify above address<br/><strong>on Ledger Device</strong></p>}
+      {!isLedgerConnected && <img src="artwork/ledgericon.svg" alt="" className="ledger-icon scale-hover" height="36px" width="57px" title="No Ledger device connected"/>}
+      {!isLedgerConnected && <p className="verifyledger-text">No Ledger device<br/><strong>connected</strong></p>}
     </div>
 
     <div className="transaction-area">
       <p className="transactions-heading">Transactions</p>
       <p className="blockcount transactionstatus">
-        <span>Status:</span>
+        <span>Status: </span>
         <span>{App.getTransactionHistoryStatus()}</span>
       </p>
       <p className="blockcount">
-        <span>Blocks:</span>
+        <span>Blocks: </span>
         <span>{App.getBlockchainState().height}</span>
       </p>
 
@@ -240,17 +311,25 @@ module.exports = (props) => {
               <td>DATE</td>
               <td>TYPE</td>
               <td>TX</td>
+              <td>MEMO</td>
             </tr>
 
             {
-              App.getParsedTransactionHistory().map((item, index) => {
+              App.getParsedTransactionHistory().slice(0, App.getTxRecordsCount()).map((item, index) => {
                 return (<tr className="txtable-row" key={index}>
-                  <td>{item.value}&nbsp;<span className="dark-font">ELA</span>
+                  <td>{item.valueShort}&nbsp;<span className="dark-font">ELA</span>
                   </td>
-                  <td>{item.time}</td>
-                  <td>{item.type}</td>
+                  <td>{item.date}&nbsp;&nbsp;<span className="dark-font">{item.time}</span>
+                  </td>
+                  <td className={(item.status === "pending") ? "tx-pending" : "" }>{item.type}</td>
                   <td>
                     <a className="exit_link" href={item.txDetailsUrl} onClick={(e) => onLinkClick(e)}>{item.txHashWithEllipsis}</a>
+                  </td>
+                  <td>
+                    <span className="tx-memo">{item.memo}</span>
+                  </td>
+                  <td className="w35px">
+                    <img id={"txDetailIcon_"+index}className="txDetail dark-hover padding_5px br5" onMouseEnter={(e) => showTXDetail(item.txHash, e)} onMouseOut={(e) => hideTXDetail()}/>
                   </td>
                 </tr>)
               })
@@ -258,16 +337,84 @@ module.exports = (props) => {
 
           </tbody>
         </table>
-
+        <div className="flex-middle" style={(App.getParsedTransactionHistory().length > App.getInitTxRecordsCount()) ? {display: 'flex'} : {display: 'none'}}>
+          <button className="history-button dark-hover m10B" onClick={(e) => loadMoreTx()}><img src="artwork/arrow.svg" alt="" className="rotate_90 arrow-history"/></button>
+        </div>
       </div>
 
       <div>
-
         <SocialMedia GuiToggles={GuiToggles} onLinkClick={onLinkClick}/>
-
-      </div>
-
+      </div>    
     </div>
-
+    
+    <div className="statusRequests" style={App.getDevelopMode() ? {display: 'flex'} : {display: 'none'}}>
+      <button className="requestsButtons padding_5px display_inline dark-hover br10 cursor_def" onClick={(e) => App.listRequests()}>List requests</button>
+      <button className="requestsButtons padding_5px display_inline dark-hover br10 cursor_def m15L" onClick={(e) => App.clearRequests()}>Clear requests</button>
+    </div>
+    
+    <div id="txModal" style={showTxDetails ? {display: 'block', top: txModalTop} : {display: 'none', top: txModalTop}} className="txModal">
+      <span className="font_size20 gradient-font m15T">Transaction Details</span>
+      <div className="txModalTableDiv">
+        <table className="txModalTable">
+          <tbody>
+          <tr>
+            <td className="txModalCol1">Tx ID:</td>
+            <td className="txModalCol2">{txDetail && txDetail[0].txHash}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">Amount:</td>
+            <td className="txModalCol2">{txDetail && txDetail[0].value}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">Type:</td>
+            <td className={txDetail ? (txDetail[0].status === "pending" ? "txModalCol2 tx-pending" : "txModalCol2") : "txModalCol2" }>{txDetail && txDetail[0].type}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">{txDetail ? (txDetail[0].to === '' ? "From" : "To") : "Unknown"} address:</td>
+            <td className="txModalCol2">{txDetail ? (txDetail[0].to === '' ? txDetail[0].from : txDetail[0].to) : ""}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">Created:</td>
+            <td className="txModalCol2">{txDetail && txDetail[0].date} {txDetail && txDetail[0].time}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">Mined in block:</td>
+            <td className="txModalCol2">{txDetail && txDetail[0].height}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">Confirmations:</td>
+            <td className="txModalCol2">{txDetail && txDetail[0].confirmations}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">Tx Type:</td>
+            <td className="txModalCol2">{txDetail && txDetail[0].txtype}</td>
+          </tr>
+          <tr>
+            <td className="txModalCol1">Memo:</td>
+            <td className="txModalCol2">{txDetail && txDetail[0].memoLong}</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div className="bg-modal w400px h200px" style={showPasswordModal ? {display: 'flex'} : {display: 'none'}}>
+      <a onClick={(e) => closeModal()}></a>
+      <div className="modalContent w350px h180px">
+        <div className="closeModal" onClick={(e) => closeModal()}>
+          <img className="scale-hover" src="artwork/voting-back.svg" height="38px" width="38px"/>
+        </div>
+        <div>
+          <span className="address-text modal-title font_size20 gradient-font">{modalTitle}</span>
+        </div>
+        <div className="m15T">
+          <input type="password" className="enterPassword" type={showPasswordToggle ? "text" : "password"} size="18" id="sendPassword" placeholder="Enter Password" name="sendPassword"/>
+          <img className={showPasswordToggle ? "passwordIcon passwordHide" : "passwordIcon passwordShow"} onClick={(e) => showPassword()} />
+        </div>
+        <div className="m15T">
+          <button className="submitModal scale-hover" onClick={sendTxType ? (e) => sendAmountToAddress() : (e) => consolidateUTXOs()}>Confirm</button>
+        </div>
+      </div>
+    </div>
   </div>)
 };

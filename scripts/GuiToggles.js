@@ -4,7 +4,9 @@
 const GuiUtils = require('./GuiUtils.js');
 
 let app;
-
+let bannerID;
+let bannerTimeout = 10000;
+let page = '';
 
 const init = (_app) => {
   app = _app;
@@ -21,21 +23,20 @@ const show = (id) => {
 const hideEverything = () => {
   hide('home');
   hide('landing');
-  hide('loginMnemonic');
-  hide('loginPrivateKey');
+  hide('import');
   hide('version');
   hide('voting');
   hide('qrcode');
-  hide('generateMnemonic');
-  hide('generatePrivateKey');
+  hide('create');
+  hide('settings');
   hideAllBanners();
   hideAllMenus();
 };
 
 const hideAllMenus = () => {
-  GuiUtils.hide('loginPrivateKeyBanner');
-  GuiUtils.hide('loginMnemonicBanner');
-  const menus = ['home', 'voting', 'loginPrivateKey', 'loginMnemonic'];
+  GuiUtils.hide('importBanner');
+  GuiUtils.hide('createBanner');
+  const menus = ['home', 'landing', 'voting', 'import', 'create'];
   menus.forEach((menu) => {
     hide(menu+'Menu');
     // hide(menu+'MenuOpen');
@@ -44,31 +45,30 @@ const hideAllMenus = () => {
 };
 
 const showLanding = () => {
+  page = 'landing';
   hideEverything();
   app.clearSendData();
   app.clearGlobalData();
-  app.refreshBlockchainData();
-  show('landing');
+  app.requestBlockchainData(false);
+  show(page);
+  show(page+'MenuOpen');
 };
 
-const showLoginMnemonic = () => {
+const showImport = () => {
+  page = 'import';
   hideEverything();
-  app.clearSendData();
-  show('loginMnemonic');
-};
-
-const showLoginPrivateKey = () => {
-  hideEverything();
-  app.clearSendData();
-  show('loginPrivateKey');
+  //app.clearSendData();
+  show(page);
+  show(page+'MenuOpen');
 };
 
 const showHome = () => {
-  app.setRefreshCandiatesFlag(true);
+  page = 'home';
   hideEverything();
-  app.clearSendData();
-  show('home');
-  show('homeMenuOpen');
+  //app.clearSendData();
+  //app.reloadProducersAndVotes(false);
+  show(page);
+  show(page+'MenuOpen');
   show('version');
 };
 
@@ -87,69 +87,96 @@ const hideMenu = (name) => {
 };
 
 const showVoting = () => {
-  app.setRefreshCandiatesFlag(false);
+  page = 'voting';
   hideEverything();
-  app.clearSendData();
-  show('voting');
-  show('votingMenuOpen');
+  //app.clearSendData();
+  show(page);
+  show(page+'MenuOpen');
 };
 
 const showQRCode = () => {
+  page = 'qrcode';
   hideEverything();
-  app.clearSendData();
-  show('qrcode');
+  //app.clearSendData();
+  show(page);
+};
+
+const showSettings = () => {
+  page = 'settings';
+  hideEverything();
+  //app.clearSendData();
+  show(page);
 };
 
 const showBanner = (name) => {
+  clearTimeout(bannerID);
+  bannerID = setTimeout(() => hide(name+'Banner'), bannerTimeout);
   show(name+'Banner');
 };
 
 const hideBanner = (name) => {
+  clearTimeout(bannerID);
   hide(name+'Banner');
 };
 
-const showGenerateNewPrivateKey = () => {
-  hideEverything();
-  app.clearGlobalData();
-  app.generatePrivateKeyHex();
-  show('generatePrivateKey');
-};
-
-const showGenerateNewMnemonic = () => {
+const showCreate = () => {
+  page = 'create';
   hideEverything();
   app.clearGlobalData();
   app.generateMnemonic();
-  show('generateMnemonic');
+  show(page);
+  show(page+'MenuOpen');
 };
 
-const showAllBanners = () => {
+const showExportMnemonic = () => {
+  page = 'create';
+  hideEverything();
+  show(page);
+  show(page+'MenuOpen');
+};
+
+const showAllBanners = (timeout) => {
+  clearTimeout(bannerID);
+  if (timeout === true) {
+    bannerID = setTimeout(() => hideAllBanners(), bannerTimeout);
+  }
+  GuiUtils.show('landingBanner');
   GuiUtils.show('homeBanner');
   GuiUtils.show('votingBanner');
-  GuiUtils.show('loginPrivateKeyBanner');
-  GuiUtils.show('loginMnemonicBanner');
+  GuiUtils.show('importBanner');
+  GuiUtils.show('createBanner');
   GuiUtils.show('qrcodeBanner');
+  GuiUtils.show('settingsBanner');
 };
 
 const hideAllBanners = () => {
+  GuiUtils.hide('landingBanner');
   GuiUtils.hide('homeBanner');
   GuiUtils.hide('votingBanner');
-  GuiUtils.hide('loginPrivateKeyBanner');
-  GuiUtils.hide('loginMnemonicBanner');
+  GuiUtils.hide('importBanner');
+  GuiUtils.hide('createBanner');
   GuiUtils.hide('qrcodeBanner');
+  GuiUtils.hide('settingsBanner');
 };
+
+const getPage = () => {
+  return page;
+}
 
 exports.init = init;
 exports.showLanding = showLanding;
-exports.showLoginMnemonic = showLoginMnemonic;
-exports.showLoginPrivateKey = showLoginPrivateKey;
+exports.showImport = showImport;
 exports.showHome = showHome;
 exports.showMenu = showMenu;
 exports.hideMenu = hideMenu;
 exports.showVoting = showVoting;
 exports.showQRCode = showQRCode;
+exports.showSettings = showSettings;
 exports.showBanner = showBanner;
 exports.hideBanner = hideBanner;
-exports.showGenerateNewPrivateKey = showGenerateNewPrivateKey;
-exports.showGenerateNewMnemonic = showGenerateNewMnemonic;
+exports.showCreate = showCreate;
+exports.showExportMnemonic = showExportMnemonic;
 exports.showAllBanners = showAllBanners;
 exports.hideAllBanners = hideAllBanners;
+exports.bannerID = bannerID;
+exports.getPage = getPage;
