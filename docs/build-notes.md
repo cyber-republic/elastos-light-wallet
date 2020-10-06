@@ -42,34 +42,34 @@ npm run dist-linux;
 ```
 
 
-## new release template:
-  1.0.0-RC00
+## Checksum:
+  1.0.1-RC1
 
   windows:
 
-  certUtil -hashfile dist/elastos-light-wallet\ Setup\ 1.0.0-RC.exe sha256
+  openssl dgst -sha512 -binary Elastos-Light-Wallet-Setup-1.0.1-RC1.exe | openssl base64 -A
 
   xxxx
 
   Ubuntu 18:
 
-  openssl sha -sha256 dist/elastos-light-wallet-1.0.0-RC.AppImage
+  openssl sha -sha512 Elastos-Light-Wallet-1.0.1-RC1.AppImage
 
   xxxx
 
   Mac:
 
-  openssl dgst -sha256 dist/elastos-light-wallet-1.0.0-RC.dmg
+  openssl dgst -sha512 Elastos-Light-Wallet-1.0.1-RC1.dmg
 
   xxxx
 
 
 ### helpful hash tools:
 Hash of a hex message:
-echo -n "<hex>" | shasum -a 256
+echo -n "<hex>" | shasum -a 512
 
 Hash of the binary code inside a hex message:
-perl -e 'print pack("H*","<hex>")' | shasum -a 256
+perl -e 'print pack("H*","<hex>")' | shasum -a 512
 
 ### helpful to find stray packages
 
@@ -77,13 +77,13 @@ npm ls node-gyp
 
 
 # to auto build a releases
-  git commit -am v1.0.0;
-  git tag v1.0.0;
+  git commit -am v1.0.1-RC1;
+  git tag v1.0.1-RC1;
   git push;
   git push --tags;
 
 ## to delete release tags
-  git push --delete origin v1.0.0;
-  git tag -d v1.0.0;
+  git push --delete origin v1.0.1-RC1;
+  git tag -d v1.0.1-RC1;
   git pull;
   git push;

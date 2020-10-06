@@ -13,6 +13,7 @@ let _userNodeURL = '';
 let _userWalletPath = '';
 let _userShowBalance = '';
 let _userAdvancedFeatures = '';
+let _userContextMenu = '';
 let walletPath = '';
 let initUserNodeURL = false;
 let initUserWalletPath = false;
@@ -38,6 +39,7 @@ module.exports = (props) => {
   _userNetworkIx = App.getCurrentNetworkIx();
   _userShowBalance = App.getCurrentShowBalance();
   _userAdvancedFeatures = App.getCurrentAdvancedFeatures();
+  _userContextMenu = App.getCurrentContextMenu();
   
   if (!initUserNodeURL) {
     _userNodeURL = App.getCurrentNodeURL();
@@ -182,6 +184,15 @@ module.exports = (props) => {
     App.setCurrentAdvancedFeatures(GuiUtils.getChecked('userAdvancedFeatures'));
   }
   
+  const enableContextMenu = () => {
+    if (GuiUtils.getChecked('userContextMenu')) {
+      App.enableContextMenu();
+    } else {
+      App.disableContextMenu();
+    }
+    App.setCurrentContextMenu(GuiUtils.getChecked('userContextMenu'));
+  }
+  
   const useSaveConfig = () => {
     let updateCurrency = GuiUtils.getValue('userCurrency');
     let updateNetworkIx = GuiUtils.getValue('userNetworkIx');
@@ -194,6 +205,7 @@ module.exports = (props) => {
     let updateWalletPath = GuiUtils.getValue('userWalletPath');
     let updateShowBalance;
     let updateAdvancedFeatures;
+    let updateContextMenu;
     if (GuiUtils.getChecked('userShowBalance')) {
       updateShowBalance = true;
     } else {
@@ -204,7 +216,12 @@ module.exports = (props) => {
     } else {
       updateAdvancedFeatures = false;
     }
-    App.updateConfigFile(updateCurrency, updateNetworkIx, updateNodeURL, updateWalletPath, updateShowBalance, updateAdvancedFeatures);    
+    if (GuiUtils.getChecked('userContextMenu')) {
+      updateContextMenu = true;
+    } else {
+      updateContextMenu = false;
+    }
+    App.updateConfigFile(updateCurrency, updateNetworkIx, updateNodeURL, updateWalletPath, updateShowBalance, updateAdvancedFeatures, updateContextMenu);    
   }
   
   const reloadConfig = () => {
@@ -218,6 +235,7 @@ module.exports = (props) => {
     _userWalletPath = App.getConfigWalletPath();
     _userShowBalance = App.getConfigShowBalance();
     _userAdvancedFeatures = App.getConfigAdvancedFeatures();
+    _userContextMenu = App.getConfigContextMenu();
     
     resetCurrency();
     App.setCurrentCurrency(_userCurrency);
@@ -253,6 +271,13 @@ module.exports = (props) => {
       GuiUtils.setChecked('userAdvancedFeatures', true);
     } else {      
       GuiUtils.setChecked('userAdvancedFeatures', false);
+    }
+    
+    App.setCurrentContextMenu(_userContextMenu);
+    if (_userContextMenu) {
+      GuiUtils.setChecked('userContextMenu', true);
+    } else {      
+      GuiUtils.setChecked('userContextMenu', false);
     }
     
     App.showBanner(`Configuration file reloaded`, 'bg_green color_white banner-look', true);
@@ -483,6 +508,16 @@ module.exports = (props) => {
           <td className="settingCol3">
             <label className="m10L switch">
               <input id="userAdvancedFeatures" type="checkbox" defaultChecked={_userAdvancedFeatures ? true : false} onChange={(e) => enableAdvancedFeatures()}/>
+              <span className="slider round"></span>
+            </label>
+          </td>
+        </tr>
+        <tr className="settingsTableRow">          
+          <td colSpan="2" className="settingCol1 p28R" title="Enable/Disable right mouse click context menu for Copy/Paste/… Require application restart.">Context Menu:
+          </td>          
+          <td className="settingCol3">
+            <label className="m10L switch">
+              <input id="userContextMenu" type="checkbox" defaultChecked={_userContextMenu ? true : false} onChange={(e) => enableContextMenu()}/>
               <span className="slider round"></span>
             </label>
           </td>

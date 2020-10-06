@@ -129,7 +129,7 @@ module.exports = (props) => {
           <p className="display_inline_block votes-header">Votes</p>
           <p className="display_inline_block candidate-status status-font">Status: {App.getProducerListStatus()} </p>
           <p className="display_inline_block status-font">Candidates: {App.getParsedProducerList().producers.length} </p>
-          <p className="display_inline_block status-font">Selected: {App.getParsedProducerList().producersCandidateCount}/36 </p>
+          <p className="display_inline_block status-font">Selected: {App.getParsedProducerList().producersCandidateCount}/{App.getMaxCandidates()} </p>
           </div>
       </div>
 
@@ -172,7 +172,7 @@ module.exports = (props) => {
         <p className="display_inline_block active-heading">Active Votes</p>
         <p className="display_inline_block vote-status status-font">Status: {App.getCandidateVoteListStatus()} </p>
         <p className="display_inline_block status-font">Power: {App.getVoteValue()} </p>
-        <p className="display_inline_block status-font">Voted {App.getParsedCandidateVoteList().candidateVotes.length}/36</p>
+        <p className="display_inline_block status-font">Voted {App.getParsedCandidateVoteList().candidateVotes.length}/{App.getMaxCandidates()}</p>
       </div>
 
       <div className="voting-row5 overflow_auto scrollbar">

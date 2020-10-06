@@ -2143,7 +2143,7 @@ select, input {
   overflow: auto;
   width: 100%;
   -webkit-app-region: none;
-  border-spacing: 0 15px;
+  border-spacing: 0 12px;
   border: 0;
 }
 

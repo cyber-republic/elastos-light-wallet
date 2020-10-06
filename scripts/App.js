@@ -30,6 +30,7 @@ const defaultNodeURL = '';
 const defaultWalletPath = path.join(userDataPath,"Wallets");
 const defaultShowBalance = false;
 const defaultAdvancedFeatures = false;
+const defaultContextMenu = false;
 
 /* Config variables */
 let configCurrency = '';
@@ -38,6 +39,7 @@ let configNodeURL = '';
 let configWalletPath = '';
 let configShowBalance = '';
 let configAdvancedFeatures = '';
+let configContextMenu = '';
 let developMode = false; // password complexity, fee amount for testing, onClick copy generated mnemonic => moved to config.ini
 
 /* Current variables */
@@ -47,11 +49,12 @@ let currentNodeURL = '';
 let currentWalletPath = defaultWalletPath;
 let currentShowBalance = defaultShowBalance;
 let currentAdvancedFeatures = defaultAdvancedFeatures;
+let currentContextMenu = defaultContextMenu;
 
 /* Config.ini */
 let configFile = "Config.ini";
 let configFilePath = path.join(userDataPath, configFile);
-let defaultConfigContent = "currency="+defaultCurrency+"\nnetworkIx="+defaultNetworkIx+"\nnodeURL="+defaultNodeURL+"\nwalletPath=\nshowBalance="+defaultShowBalance+"\nadvancedFeatures="+defaultAdvancedFeatures+"\nlastWallet="+lastWallet;
+let defaultConfigContent = "currency="+defaultCurrency+"\nnetworkIx="+defaultNetworkIx+"\nnodeURL="+defaultNodeURL+"\nwalletPath=\nshowBalance="+defaultShowBalance+"\nadvancedFeatures="+defaultAdvancedFeatures+"\ncontextMenu="+defaultContextMenu+"\nlastWallet="+lastWallet;
 let configInitialized = false;
 
 /* modules */
@@ -163,6 +166,7 @@ let parsedCandidateVoteList = {
 };
 let loadedProducerList = false;
 let loadedVotes = false;
+let maxCandidates = 36;
 
 let unspentTransactionOutputsStatus = 'No UTXOs Requested Yet';
 
@@ -220,6 +224,33 @@ let loadedCurrenciesList = false;
 let parsedFiatList = [];
 let parsedCryptoList = [];
 
+/** context menu */
+const Menu = remote.Menu;
+const InputMenu = Menu.buildFromTemplate([{
+        label: 'Undo',
+        role: 'undo',
+    }, {
+        label: 'Redo',
+        role: 'redo',
+    }, {
+        type: 'separator',
+    }, {
+        label: 'Cut',
+        role: 'cut',
+    }, {
+        label: 'Copy',
+        role: 'copy',
+    }, {
+        label: 'Paste',
+        role: 'paste',
+    }, {
+        type: 'separator',
+    }, {
+        label: 'Select all',
+        role: 'selectall',
+    },
+]);
+
 /** functions */
 const init = (_GuiToggles) => {
   sendToAddressStatuses.push('No Send-To Transaction Requested Yet');
@@ -238,7 +269,33 @@ const init = (_GuiToggles) => {
     requestFeeAccount();
   }
   requestFee();
+  
+  // context menu
+  if (currentContextMenu) {
+    enableContextMenu();
+  }
 };
+
+const contextMenu = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  let node = e.target;
+  while (node) {
+    if (node.nodeName.match(/^(input|textarea)$/i) || node.isContentEditable) {
+      InputMenu.popup(remote.getCurrentWindow());
+      break;
+    }
+    node = node.parentNode;
+  }
+}
+
+const enableContextMenu = () => {
+  document.body.addEventListener('contextmenu', contextMenu);
+}
+
+const disableContextMenu = () => {
+  document.body.removeEventListener('contextmenu', contextMenu);
+}
 
 const setAppClipboard = (clipboard) => {
   appClipboard = clipboard;
@@ -530,6 +587,7 @@ const getUnspentTransactionOutputsReadyCallback = (response) => {
 const getPublicKeyFromLedger = () => {
   useLedgerFlag = true;
   isLoggedIn = true;
+  maxCandidates = 22;
   LedgerComm.getPublicKey(publicKeyCallback);
 };
 
@@ -569,7 +627,8 @@ const reloadProducersAndVotes = (_userRequest) => {
 
 const getPublicKeyFromMnemonic = (_saveWallet) => {
   useLedgerFlag = false;
-  isLoggedIn = true;  
+  isLoggedIn = true;
+  maxCandidates = 36;
     
   derivationPathMnemonic = GuiUtils.getValue('derivationPathMnemonic');
   const passphrase = GuiUtils.getValue('passphrase');
@@ -755,6 +814,7 @@ const loginWithWallet = () => {
     privateKeyWallet = '';
     requestBlockchainData();
     isLoggedIn = true;
+    maxCandidates = 36;
     lastWallet = walletNameLogin;
     updateLastWallet(lastWallet);
     return true;
@@ -813,6 +873,7 @@ const exportMnemonic = () => {
 const getPublicKeyFromPrivateKey = (_saveWallet) => {
   useLedgerFlag = false;
   isLoggedIn = true;
+  maxCandidates = 36;
   usePasswordFlag = false;
   
   privateKey = GuiUtils.getValue('privateKeyElt');
@@ -930,7 +991,7 @@ const validateFee = (_validateFee) => {
 
 const validateInputs = () => {
   sendToAddress = GuiUtils.getValue('sendToAddress');
-  sendAmount = GuiUtils.getValue('sendAmount');  
+  sendAmount = GuiUtils.getValue('sendAmount').replace(/,/g, '.');  
   feeAmountSats = GuiUtils.getValue('feeAmount');
   feeRequested = feeAmountSats;
   
@@ -1448,7 +1509,7 @@ const sendVoteTx = () => {
       return;
     }
     
-    if (parsedProducerList.producersCandidateCount > 36) {
+    if (parsedProducerList.producersCandidateCount > maxCandidates) {
       bannerStatus = 'Too many candidates selected ['+parsedProducerList.producersCandidateCount+'].';
       bannerClass = 'bg_red color_white banner-look';
       GuiToggles.showAllBanners(false);
@@ -2089,7 +2150,7 @@ const getFeeAmountSats = () => {
 
 const writeSendData = () => {
   sendToAddress = GuiUtils.getValue('sendToAddress');
-  sendAmount = GuiUtils.getValue('sendAmount');  
+  sendAmount = GuiUtils.getValue('sendAmount').replace(/,/g, '.');  
   feeAmountSats = GuiUtils.getValue('feeAmount');
   feeRequested = feeAmountSats;
 }
@@ -2499,6 +2560,7 @@ const readConfigFile = () => {
         if (item.indexOf('walletPath') >= 0) configWalletPath = value;
         if (item.indexOf('showBalance') >= 0) configShowBalance = value.toLowerCase() == "true" ? true : false;
         if (item.indexOf('advancedFeatures') >= 0) configAdvancedFeatures = value.toLowerCase() == "true" ? true : false;
+        if (item.indexOf('contextMenu') >= 0) configContextMenu = value.toLowerCase() == "true" ? true : false;
         if (item.indexOf('lastWallet') >= 0) lastWallet = value;
         if (item.indexOf('developMode') >= 0) developMode = value.toLowerCase() == "true" ? true : false;
       });
@@ -2526,6 +2588,7 @@ const readConfigFile = () => {
       
       currentShowBalance = configShowBalance;
       currentAdvancedFeatures = configAdvancedFeatures;
+      currentContextMenu = configContextMenu;
       configInitialized = true;
       //mainConsole.log(`Configuration file initialized.`);
     } else {
@@ -2535,7 +2598,7 @@ const readConfigFile = () => {
 }
 
 const updateLastWallet = (_walletName) => {
-  let updateConfigContent = "currency="+configCurrency+"\nnetworkIx="+configNetworkIx+"\nnodeURL="+configNodeURL+"\nwalletPath=\nshowBalance="+configShowBalance+"\nadvancedFeatures="+configAdvancedFeatures+"\nlastWallet="+_walletName;
+  let updateConfigContent = "currency="+configCurrency+"\nnetworkIx="+configNetworkIx+"\nnodeURL="+configNodeURL+"\nwalletPath=\nshowBalance="+configShowBalance+"\nadvancedFeatures="+configAdvancedFeatures+"\ncontextMenu="+configContextMenu+"\nlastWallet="+_walletName;
   if (developMode) updateConfigContent +="\ndevelopMode="+developMode;
   fs.writeFile(configFilePath, updateConfigContent, "utf8", (err) => {
     if (err) throw err;
@@ -2543,7 +2606,7 @@ const updateLastWallet = (_walletName) => {
   });
 }
 
-const updateConfigFile = (updateCurrency, updateNetworkIx, updateNodeURL, updateWalletPath, updateShowBalance, updateAdvancedFeatures) => {
+const updateConfigFile = (updateCurrency, updateNetworkIx, updateNodeURL, updateWalletPath, updateShowBalance, updateAdvancedFeatures, updateContextMenu) => {
   let updateConfigContent = '';
   updateConfigContent += "currency="+updateCurrency.toLowerCase()
   updateConfigContent += "\nnetworkIx="+updateNetworkIx
@@ -2551,6 +2614,7 @@ const updateConfigFile = (updateCurrency, updateNetworkIx, updateNodeURL, update
   updateConfigContent += "\nwalletPath="+updateWalletPath
   updateConfigContent += "\nshowBalance="+updateShowBalance
   updateConfigContent += "\nadvancedFeatures="+updateAdvancedFeatures;  
+  updateConfigContent += "\ncontextMenu="+updateContextMenu;  
   updateConfigContent += "\nlastWallet="+lastWallet;
   if (developMode) updateConfigContent +="\ndevelopMode="+developMode;
   
@@ -2575,6 +2639,7 @@ const updateConfigFile = (updateCurrency, updateNetworkIx, updateNodeURL, update
     }
     currentShowBalance = updateShowBalance;
     currentAdvancedFeatures = updateAdvancedFeatures;
+    currentContextMenu = updateContextMenu;
     
     configInitialized = false;
     readConfigFile();
@@ -2652,6 +2717,22 @@ const setCurrentAdvancedFeatures = (_currentAdvancedFeatures) => {
   currentAdvancedFeatures = _currentAdvancedFeatures;
 }
 
+const getCurrentContextMenu = () => {
+  return currentContextMenu;
+}
+
+const setContextMenu = (_setContextMenu) => {
+  setContextMenu = _setContextMenu;
+}
+
+const getDefaultContextMenu = () => {
+  return defaultContextMenu;
+}
+
+const setCurrentContextMenu = (_currentContextMenu) => {
+  currentContextMenu = _currentContextMenu;
+}
+
 const resetConfigInitialized = () => {
   configInitialized = false;
 }
@@ -2686,6 +2767,10 @@ const getConfigShowBalance = () => {
 
 const getConfigAdvancedFeatures = () => {
   return configAdvancedFeatures;
+}
+
+const getConfigContextMenu = () => {
+  return configContextMenu;
 }
 
 const getTotalUTXOs = () => {
@@ -2762,6 +2847,10 @@ const getTXDetails = (_txID) => {
 
 const getLastWallet = () => {
   return lastWallet;
+}
+
+const getMaxCandidates = () => {
+  return maxCandidates;
 }
 
 /* basic */
@@ -2864,6 +2953,7 @@ exports.getConfigCurrency = getConfigCurrency;
 exports.getConfigWalletPath = getConfigWalletPath;
 exports.getConfigShowBalance = getConfigShowBalance;
 exports.getConfigAdvancedFeatures = getConfigAdvancedFeatures;
+exports.getConfigContextMenu = getConfigContextMenu;
 /* current */
 exports.getCurrentNetworkIx = getCurrentNetworkIx;
 exports.getCurrentNodeURL = getCurrentNodeURL;
@@ -2876,6 +2966,8 @@ exports.getCurrentShowBalance = getCurrentShowBalance;
 exports.setCurrentShowBalance = setCurrentShowBalance;
 exports.getCurrentAdvancedFeatures = getCurrentAdvancedFeatures;
 exports.setCurrentAdvancedFeatures = setCurrentAdvancedFeatures;
+exports.getCurrentContextMenu = getCurrentContextMenu;
+exports.setCurrentContextMenu = setCurrentContextMenu;
 /* default */
 exports.getDefaultWalletPath = getDefaultWalletPath;
 exports.getDefaultNetworkIx = getDefaultNetworkIx;
@@ -2908,3 +3000,6 @@ exports.getParsedFiatList = getParsedFiatList;
 exports.getParsedCryptoList = getParsedCryptoList;
 exports.getLastWallet = getLastWallet;
 exports.getVoteValue = getVoteValue;
+exports.getMaxCandidates = getMaxCandidates;
+exports.enableContextMenu = enableContextMenu;
+exports.disableContextMenu = disableContextMenu;
