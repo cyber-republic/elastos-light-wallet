@@ -96,7 +96,7 @@ class AppView extends React.Component {
           Create.exitPage();
           break;
         case "home":
-          if (Home.showPasswordModal) {
+          if (Home.showPasswordModal || Home.showUTXOs) {
             Home.closeModal();
           } else {
             if (App.getSendStep() === 2) {
@@ -129,7 +129,7 @@ class AppView extends React.Component {
           }
           break;
         case "voting":
-          if (Voting.showPasswordModal) {
+          if (Voting.showPasswordModal || Voting.showUTXOs) {
             Voting.closeModal();
           } else {
             Voting.exitPage();
@@ -138,6 +138,27 @@ class AppView extends React.Component {
         default:
           break;
       }
+    }
+    if ((event.ctrlKey || event.metaKey) && event.keyCode == 85) {
+      switch (GuiToggles.getPage()) {
+        case "home":
+          if (Home.showUTXOs) {
+            Home.closeModal();
+          } else {
+            Home.UTXOSelection();
+          }
+          break;
+         case "voting":
+          if (Voting.showUTXOs) {
+            Voting.closeModal();
+          } else {
+            Voting.UTXOSelection();
+          }
+          break;
+        default:
+          break;
+        
+      }      
     }
   }
 

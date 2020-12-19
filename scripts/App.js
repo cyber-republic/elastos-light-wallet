@@ -95,7 +95,7 @@ const REST_SERVICES = [{
   },
 ];
 
-const LEDGER_UTXO_CONSOLIDATE_COUNT = 23; // Ledger: Starting UTXOs count to get TX size from
+const LEDGER_UTXO_CONSOLIDATE_COUNT = 20; // Ledger: Starting UTXOs count to get TX size from
 const MAX_UTXO_CONSOLIDATE_COUNT = 500; // Non-Ledger: Limit to 500 UTXOs by Elastos blockchain
 
 /** global variables */
@@ -171,6 +171,8 @@ let maxCandidates = 36;
 let unspentTransactionOutputsStatus = 'No UTXOs Requested Yet';
 
 const parsedUnspentTransactionOutputs = [];
+let selectedUTXOs = [];
+let customUTXOs = false;
 
 let blockchainStatus = 'No Blockchain State Requested Yet';
 
@@ -603,6 +605,7 @@ const requestBlockchainData = (_userRequest) => {
   requestBalance();
   requestUnspentTransactionOutputs();
   requestBlockchainState();
+  clearUTXOsSelection();
   
   CoinGecko.requestPriceData();
   
@@ -1095,13 +1098,29 @@ const consolidateUTXOs = () => {
   }
   
   const getCorrectSizedTX = (utxoMaxCount) => {
-    const unspentTransactionOutputs = parsedUnspentTransactionOutputs;
+    let unspentTransactionOutputs = [];
+    if (customUTXOs) {
+      unspentTransactionOutputs = selectedUTXOs;
+    } else {
+      unspentTransactionOutputs = parsedUnspentTransactionOutputs;
+    }
     let maxAmountToSend;
-    
     if (!isValidDecimal(feeAmountSats) || (feeAmountSats == 0)) feeAmountSats = 1;
     
     const maxAmountToSpendSats = TxFactory.getMaxAmountToSpendSats(unspentTransactionOutputs, utxoMaxCount);
     maxAmountToSend = BigNumber(maxAmountToSpendSats, 10).minus(minerFee).minus(feeAmountSats).dividedBy(Asset.satoshis).toString();
+    
+    if (maxAmountToSend < 0) {
+      if (customUTXOs) {
+        bannerStatus = 'You have selected UTXOs with insufficient ELA amount to consolidate.';
+      } else {
+        bannerStatus = 'You have insufficient ELA balance to consolidate.';
+      }
+      bannerClass = 'landing-btnbg color_white banner-look';
+      GuiToggles.showAllBanners(false);
+      renderApp();
+      return false;
+    }
     
     let encodedTx;
     const tx = TxFactory.createUnsignedSendToTx(unspentTransactionOutputs, getAddress() , maxAmountToSend, publicKey, feeAmountSats, feeAccount, false);
@@ -1186,7 +1205,12 @@ const sendAmountToAddress = () => {
   if (!isValid) {
     return false;
   }
-  const unspentTransactionOutputs = parsedUnspentTransactionOutputs;
+  let unspentTransactionOutputs = [];
+  if (customUTXOs) {
+    unspentTransactionOutputs = selectedUTXOs;
+  } else {
+    unspentTransactionOutputs = parsedUnspentTransactionOutputs;
+  }
   //mainConsole.log('sendAmountToAddress.unspentTransactionOutputs ' + JSON.stringify(unspentTransactionOutputs));
   let encodedTx;
 
@@ -1411,6 +1435,21 @@ const clearSelection = () => {
   renderApp();
 };
 
+const clearUTXOsSelection = () => {
+  //mainConsole.log('Before clearUTXOsSelection', selectedUTXOs);
+  selectedUTXOs.map(e => {
+    if (e.isSelected) {
+      e.isSelected = false;
+    }
+  });
+  selectedUTXOs.length = 0;
+  selectedUTXOs = [];
+  customUTXOs = false;
+  
+  //mainConsole.log('After clearUTXOsSelection', selectedUTXOs);
+  renderApp();
+};
+
 const requestListOfCandidateVotesErrorCallback = (response) => {
   mainConsole.log('ERRORED Candidate Votes Callback', response);
   const displayRawError = true;
@@ -1493,7 +1532,12 @@ const requestListOfCandidateVotes = () => {
 const sendVoteTx = () => {
   TX_TYPE = "Vote";
   try {
-    const unspentTransactionOutputs = parsedUnspentTransactionOutputs;
+    let unspentTransactionOutputs = [];
+    if (customUTXOs) {
+      unspentTransactionOutputs = selectedUTXOs;
+    } else {
+      unspentTransactionOutputs = parsedUnspentTransactionOutputs;
+    }
     // mainConsole.log('sendVoteTx.unspentTransactionOutputs ' + JSON.stringify(unspentTransactionOutputs));
 
     const isValid = checkTransactionHistory();
@@ -1521,7 +1565,7 @@ const sendVoteTx = () => {
     // should be more than fee + minerFee
     if (balance <= subtractFee) {
       bannerStatus = 'You have insufficient ELA balance to vote.';
-      bannerClass = 'bg_red color_white banner-look';
+      bannerClass = 'landing-btnbg color_white banner-look';
       GuiToggles.showAllBanners(false);
       renderApp();
       return;
@@ -2006,6 +2050,8 @@ const clearGlobalData = () => {
   unspentTransactionOutputsStatus = 'No UTXOs Requested Yet';
   parsedUnspentTransactionOutputs.length = 0;
   
+  clearUTXOsSelection();
+  
   /* Clear feed - moved to init */
   //parsedRssFeed.length = 0;
   //parsedRssFeedStatus = 'No Rss Feed Requested Yet';
@@ -2039,8 +2085,18 @@ const getELABalance = () => {
   if (balance) {
     return balance;
   }
-  // mainConsole.log('getELABalance', balanceStatus);
   return '?';
+};
+
+const getELACustomBalance = () => {
+  if (customUTXOs) {
+    let customBalance = selectedUTXOs.reduce((total, currentValue) => total = total + Number(currentValue.Value),0);
+    return customBalance;
+  } else {
+    if (balance) {
+      return balance;
+    }
+  }
 };
 
 const getCurrencyBalance = () => {
@@ -2304,29 +2360,29 @@ const insertELA = (type) => {
   var subtractFee = BigNumber(Number(feeAmountSats) + minerFee, 10).dividedBy(Asset.satoshis).toFixed(roundDecimalELA);
   
   if (type == "quarter") {
-    var newAmount = BigNumber(Number(getELABalance())/4).decimalPlaces(roundDecimalELA).toFixed(roundDecimalELA);    
+    var newAmount = BigNumber(Number(getELACustomBalance())/4).decimalPlaces(roundDecimalELA).toFixed(roundDecimalELA);    
   }
   
   if (type == "half") {
-    var newAmount = BigNumber(Number(getELABalance())/2).decimalPlaces(roundDecimalELA).toFixed(roundDecimalELA);
+    var newAmount = BigNumber(Number(getELACustomBalance())/2).decimalPlaces(roundDecimalELA).toFixed(roundDecimalELA);
   }
   
   if (type == "max") {
-    var newAmount = BigNumber(Number(getELABalance())-Number(subtractFee)).decimalPlaces(roundDecimalELA).toFixed(roundDecimalELA);
+    var newAmount = BigNumber(Number(getELACustomBalance())-Number(subtractFee)).decimalPlaces(roundDecimalELA).toFixed(roundDecimalELA);
   }
   
   if (newAmount < 0) newAmount = 0;
-  //mainConsole.log("getELABalance()", getELABalance(), "newAmount", newAmount, "subtractFee", subtractFee);
+  //mainConsole.log("getELACustomBalance()", getELACustomBalance(), "newAmount", newAmount, "subtractFee", subtractFee);
     
-  if (Number(getELABalance()) < (Number(newAmount) + Number(subtractFee)).toFixed(roundDecimalELA)) {
+  if (Number(getELACustomBalance()).toFixed(roundDecimalELA) < (Number(newAmount) + Number(subtractFee)).toFixed(roundDecimalELA)) {
     newAmount = 0;
-    bannerStatus = `You have insufficient ELA balance to spend.`;
+    bannerStatus = 'You have insufficient ELA balance to spend.';
     bannerClass = 'landing-btnbg color_white banner-look';
     GuiToggles.showAllBanners(false);
     renderApp();
     return false;
   } else {
-    if (getELABalance() == "?") {
+    if (getELACustomBalance() == "?") {
       getPublicKeyFromLedger();
     } else {
       GuiUtils.setValue('sendAmount',newAmount);
@@ -2853,6 +2909,74 @@ const getMaxCandidates = () => {
   return maxCandidates;
 }
 
+const toggleUTXOSelection = (_item) => {
+  const selectUTXO = parsedUnspentTransactionOutputs[_item.index];
+  if (!checkUTXO(selectUTXO.utxoIx)) {
+    //console.log(JSON.stringify(selectUTXO));
+    selectedUTXOs.push(selectUTXO);
+  } else {
+    for(var i = 0; i < selectedUTXOs.length; i++) {
+      if (selectedUTXOs[i] === selectUTXO) {
+        selectedUTXOs.splice(i, 1);
+      }
+    }
+  }
+  // mainConsole.log('toggleUTXOSelection selectedUTXOs, count', selectedUTXOs, selectedUTXOs.length);
+  renderApp();
+};
+
+const getAllUTXOs = () => {
+  return parsedUnspentTransactionOutputs;
+}
+
+const validateUTXOsSelection = () => {
+  if (selectedUTXOs.length > getMaxUTXOsPerTX()) {
+    bannerStatus = 'You have selected more than ['+getMaxUTXOsPerTX()+'] UTXOs, please select less.';
+    bannerClass = 'bg_red color_white banner-look';
+    GuiToggles.showAllBanners(false);
+    renderApp();
+    return false;
+  }
+  
+   if (selectedUTXOs.length === 0) {
+    bannerStatus = 'You have not selected any UTXOs, please select at least 1.';
+    bannerClass = 'bg_red color_white banner-look';
+    GuiToggles.showAllBanners(false);
+    renderApp();
+    return false;
+  }
+  return true;
+}
+  
+const checkUTXO = (_index) => {
+  let matchUTXO = false;
+  if (selectedUTXOs.length > 0) {
+    selectedUTXOs.forEach((_utxo) => {
+      if (_utxo.utxoIx === _index) {
+        matchUTXO = true;
+      }
+    });
+  }
+  return matchUTXO;
+}
+
+const selectMaxUTXOs = () => {
+  clearUTXOsSelection();
+  selectedUTXOs = parsedUnspentTransactionOutputs.slice(0, getMaxUTXOsPerTX());
+}
+
+const getSelectedUTXOs = () => {
+  return selectedUTXOs;
+}
+
+const getCustomUTXOs = () => {
+  return customUTXOs;
+}
+
+const setCustomUTXOs = (_customUTXOs) => {
+  customUTXOs = _customUTXOs;
+}
+
 /* basic */
 exports.REST_SERVICES = REST_SERVICES;
 exports.init = init;
@@ -2919,6 +3043,7 @@ exports.getLoadedProducerList = getLoadedProducerList;
 //exports.formatTxValue = formatTxValue;
 exports.selectActiveVotes = selectActiveVotes;
 exports.clearSelection = clearSelection;
+exports.clearUTXOsSelection = clearUTXOsSelection;
 exports.validateInputs = validateInputs;
 exports.validateFee = validateFee;
 exports.insertELA = insertELA;
@@ -3003,3 +3128,12 @@ exports.getVoteValue = getVoteValue;
 exports.getMaxCandidates = getMaxCandidates;
 exports.enableContextMenu = enableContextMenu;
 exports.disableContextMenu = disableContextMenu;
+exports.toggleUTXOSelection = toggleUTXOSelection;
+exports.getAllUTXOs = getAllUTXOs;
+exports.getSelectedUTXOs = getSelectedUTXOs;
+exports.checkUTXO = checkUTXO;
+exports.getTransactionHistoryLink = getTransactionHistoryLink;
+exports.getCustomUTXOs = getCustomUTXOs;
+exports.setCustomUTXOs = setCustomUTXOs;
+exports.validateUTXOsSelection = validateUTXOsSelection;
+exports.selectMaxUTXOs = selectMaxUTXOs;
