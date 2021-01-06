@@ -182,7 +182,7 @@ module.exports = (props) => {
       <div className="voting-row3">
         <button className='votingselect-button scale-hover' title="Select previous voting list" onClick={() => App.selectActiveVotes()} >Select Previous</button>
         <button className='votingselect-button marginright_auto scale-hover' title='Clear Selection' onClick={() => App.clearSelection()}>Clear Selection</button>
-        <div style={App.getCustomUTXOs() ? {display: 'block'} : {display: 'none'}} className="utxo-custom-text-voting utxo-custom-text" title="Update selected UTXOs by CTRL+u or CMD+u">Selected ({App.getSelectedUTXOs().length}/{App.getTotalUTXOs()})</div>
+        <div style={App.getCustomUTXOs() ? {display: 'block'} : {display: 'none'}} className="utxo-custom-text-voting utxo-custom-text" title="Update selected UTXOs by CTRL+u or CMD+u">Selected UTXOs ({App.getSelectedUTXOs().length}/{App.getTotalUTXOs()})</div>
         <button onClick={App.getPasswordFlag() ? (e) => showVoteModal() : (e) => sendVote()} className="scale-hover voting-button">Vote</button>
       </div>
 

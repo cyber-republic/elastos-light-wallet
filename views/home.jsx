@@ -227,7 +227,7 @@ module.exports = (props) => {
     <div className="fees-text">Fees (in Satoshi ELA)</div>
     <button tabIndex="4" className="next-button scale-hover" onClick={(e) => showConfirmAndSeeFees()}><p>Next</p></button>
     <button style={App.showConsolidateButton() ? {display: 'block'} : {display: 'none'}} className="consolidate-button dark-hover cursor_def" title={consolidateTitle} onClick={(App.getPasswordFlag()) ? (e) => showConsolidateModal() : (e) => consolidateUTXOs()}>Consolidate ({consolidesCount})<img src="artwork/arrow.svg" alt="" className="arrow-forward"/></button>
-    <div style={App.getCustomUTXOs() ? {display: 'block'} : {display: 'none'}} className="utxo-custom-text-home utxo-custom-text" title="Update selected UTXOs by CTRL+u or CMD+u">Selected ({App.getSelectedUTXOs().length}/{App.getTotalUTXOs()})</div>
+    <div style={App.getCustomUTXOs() ? {display: 'block'} : {display: 'none'}} className="utxo-custom-text-home utxo-custom-text" title="Update selected UTXOs by CTRL+u or CMD+u">Selected UTXOs ({App.getSelectedUTXOs().length}/{App.getTotalUTXOs()})</div>
     </div>);
   }
 
@@ -259,7 +259,7 @@ module.exports = (props) => {
     <div className="logo-info">
       <Branding/>
       <header>
-        <img src="artwork/refreshicon.svg" className="refresh-icon" title="Refresh Blockchain Data1" onClick={(e) => App.requestBlockchainData(true)} />
+        <img src="artwork/refreshicon.svg" className="refresh-icon" title="Refresh" onClick={(e) => App.requestBlockchainData(true)} />
         <nav id="homeMenuOpen" title="Menu" onClick={(e) => showMenu()}>
           <img src="artwork/nav.svg" className="nav-icon dark-hover" onClick={(e) => showMenu()}/>
         </nav>
