@@ -1,20 +1,14 @@
 const React = require('react');
 
 const QRCode = require('qrcode.react');
-
 const Menu = require('./partial/menu.jsx');
-
 const Banner = require('./partial/banner.jsx');
-
 const Branding = require('./partial/branding.jsx');
-
 const Balance = require('./partial/balance.jsx');
-
 const News = require('./partial/news.jsx');
-
 const Staking = require('./partial/staking.jsx');
-
 const SocialMedia = require('./partial/social-media.jsx');
+const UTXOsSelection = require('./partial/utxos.jsx');
 
 let consolidesCount = 0;
 let showPasswordModal = false;
@@ -23,6 +17,7 @@ let sendTxType = false;
 let consolidateTxType = false;
 let isSent = false;
 let showTxDetails = false;
+let showUTXOs = false;
 let txDetail = '';
 let txModalTop = 0;
 let autoFocus = 0;
@@ -73,19 +68,19 @@ module.exports = (props) => {
   const sendAmountToAddress = () => {
     let isSent = App.sendAmountToAddress();
     if (isSent) {
-      closeModal();
-    } else {
-      App.renderApp();
+      closeModal();      
     }
+    App.clearUTXOsSelection();
+    App.renderApp();
   }
   
   const consolidateUTXOs = () => {
     isSent = App.consolidateUTXOs();
     if (isSent) {
-      closeModal();
-    } else {
-      App.renderApp();
+      closeModal();      
     }
+    App.clearUTXOsSelection();
+    App.renderApp();
   }
 
   const SendScreen = (props) => {
@@ -126,8 +121,9 @@ module.exports = (props) => {
   }
   
   const closeModal = () => {
-    if (showPasswordModal) {
+    if (showPasswordModal || showUTXOs) {
       showPasswordModal = false;
+      showUTXOs = false;
       App.renderApp();
     }
   }
@@ -171,6 +167,26 @@ module.exports = (props) => {
     App.renderApp();
   }
   
+  const UTXOSelection = () => {
+    showUTXOs = true;
+    App.renderApp();
+  }
+  
+  const UTXOSelectionNext = () => {
+    let isValid = App.validateUTXOsSelection();
+    if (isValid) {
+      closeModal();
+      App.setCustomUTXOs(true);
+      /*if (consolidateTxType) {
+        if (App.getPasswordFlag()) {
+          showConsolidateModal();
+        } else {
+          consolidateUTXOs();
+        }
+      }*/
+    }    
+  }
+  
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
       retrieveCryptoName();
@@ -186,9 +202,11 @@ module.exports = (props) => {
   }
   
   module.exports.showPasswordModal = showPasswordModal;
+  module.exports.showUTXOs = showUTXOs;
   module.exports.closeModal = closeModal;
   module.exports.resetPage = resetPage;
   module.exports.cancelSend = cancelSend;
+  module.exports.UTXOSelection = UTXOSelection;
   
   const SendScreenOne = (props) => {
     const visibility = props.visibility;
@@ -207,8 +225,9 @@ module.exports = (props) => {
     <p className="elatext-send">ELA</p>
     <input tabIndex="3" type="text" size="5" maxLength={5} id="feeAmount" placeholder="Fees" defaultValue={App.getFee()} onChange={(e) => writeSendData()} onFocus={(e) => autoFocusOn(e)} onBlur={(e) => autoFocusOff(e)} autoFocus={autoFocus === 3 ? true : false}/>
     <div className="fees-text">Fees (in Satoshi ELA)</div>
-      <button tabIndex="4" className="next-button scale-hover" onClick={(e) => showConfirmAndSeeFees()}><p>Next</p></button>
-      <button style={App.showConsolidateButton() ? {display: 'block'} : {display: 'none'}} className="consolidate-button dark-hover cursor_def" title={consolidateTitle} onClick={(App.getPasswordFlag()) ? (e) => showConsolidateModal() : (e) => consolidateUTXOs()}>Consolidate ({consolidesCount})<img src="artwork/arrow.svg" alt="" className="arrow-forward"/></button>
+    <button tabIndex="4" className="next-button scale-hover" onClick={(e) => showConfirmAndSeeFees()}><p>Next</p></button>
+    <button style={App.showConsolidateButton() ? {display: 'block'} : {display: 'none'}} className="consolidate-button dark-hover cursor_def" title={consolidateTitle} onClick={(App.getPasswordFlag()) ? (e) => showConsolidateModal() : (e) => consolidateUTXOs()}>Consolidate ({consolidesCount})<img src="artwork/arrow.svg" alt="" className="arrow-forward"/></button>
+    <div style={App.getCustomUTXOs() ? {display: 'block'} : {display: 'none'}} className="utxo-custom-text-home utxo-custom-text" title="Update selected UTXOs by CTRL+u or CMD+u">Selected UTXOs ({App.getSelectedUTXOs().length}/{App.getTotalUTXOs()})</div>
     </div>);
   }
 
@@ -216,7 +235,7 @@ module.exports = (props) => {
     const visibility = props.visibility;
     return (
       <div id="sendTwo" className={`send-area ${visibility}`}>
-        <img src="artwork/sendicon.svg" className="send-icon" title="Refresh Blockchain Data"  onClick={(e) => App.requestBlockchainData(true)}/>
+        <img src="artwork/sendicon.svg" className="send-icon" title="Refresh Blockchain Data" onClick={(e) => App.requestBlockchainData(true)}/>
         <p className="send-text">Send</p>
         <p className="confirm-send-address-label">Receiving Address</p>
         <p className="confirm-send address"><span>{App.getSendToAddress()}</span></p>        
@@ -240,7 +259,7 @@ module.exports = (props) => {
     <div className="logo-info">
       <Branding/>
       <header>
-        <img src="artwork/refreshicon.svg" className="refresh-icon" title="Refresh Blockchain Data1" onClick={(e) => App.requestBlockchainData(true)} />
+        <img src="artwork/refreshicon.svg" className="refresh-icon" title="Refresh" onClick={(e) => App.requestBlockchainData(true)} />
         <nav id="homeMenuOpen" title="Menu" onClick={(e) => showMenu()}>
           <img src="artwork/nav.svg" className="nav-icon dark-hover" onClick={(e) => showMenu()}/>
         </nav>
@@ -316,7 +335,7 @@ module.exports = (props) => {
 
             {
               App.getParsedTransactionHistory().slice(0, App.getTxRecordsCount()).map((item, index) => {
-                return (<tr className="txtable-row" key={index}>
+                return (<tr className="txtable-row w684px" key={index}>
                   <td>{item.valueShort}&nbsp;<span className="dark-font">ELA</span>
                   </td>
                   <td>{item.date}&nbsp;&nbsp;<span className="dark-font">{item.time}</span>
@@ -397,6 +416,8 @@ module.exports = (props) => {
         </table>
       </div>
     </div>
+    
+    <UTXOsSelection App={App} showUTXOs={showUTXOs} closeModal={closeModal} UTXOSelection={UTXOSelection} UTXOSelectionNext={UTXOSelectionNext}/>
     
     <div className="bg-modal w400px h200px" style={showPasswordModal ? {display: 'flex'} : {display: 'none'}}>
       <a onClick={(e) => closeModal()}></a>

@@ -940,7 +940,7 @@ button {
   color: #FFFFFF;
   letter-spacing: 0.3px;
   line-height: 17px;
-  width: 684px;
+  /*width: 684px;*/
   height: 38;
 }
 
@@ -967,6 +967,93 @@ button {
 
 .tx-memo {
   font-size: 14px;
+}
+
+.utxo-title {
+  position: absolute;
+  top: 27px;
+  width: 93%;
+}
+
+.utxo-selection {
+  position: absolute;
+  top: 31px;
+  left: 478px;
+}
+
+.utxo-tablediv {
+  position: absolute;
+  top: 75px;
+  width: 520px;
+  height: 250px;
+  overflow: auto;  
+}
+
+.utxo-table {
+  width: 510px;
+  border-spacing: 0 7px;
+}
+
+.utxo-footer {
+  position: absolute;
+  top: 335px;  
+}
+
+.utxo-confirm {
+  position: absolute;
+  left: 400px;  
+}
+
+.utxo-grey-button {
+  background: rgba(151, 153, 166, 0.16);
+  border-radius: 8px;
+  width: 145px;
+  height:41;
+  justify-content: center;
+  align-items: center;
+  border: none;  
+  font-size: 16px;
+  color: #FFFFFF;
+  letter-spacing: 0;
+  padding: 10px;
+}
+
+.utxo-clear {
+  position: absolute;
+  left: 15px;
+}
+
+.utxo-max-select {
+  position: absolute;
+  left: 207px;  
+}
+
+.utxo-custom-text {
+  font-family: 'Open Sans', sans-serif;
+  opacity: 0.9;
+  font-size: 12px;
+  font-weight: 100;
+  letter-spacing: 0;
+  color: #E5A776;
+}
+
+.utxo-custom-text:after {
+  content: ' \25CF';
+  font-size: 15px;
+  top: -5px;
+  position: relative;
+}
+
+.utxo-custom-text-home {
+  position: absolute;
+  top: 419px;
+  left: 510px;
+}
+
+.utxo-custom-text-voting {
+  position: absolute;
+  top: 461px;
+  left: 755px;
 }
 
 .dark-font {
@@ -1171,6 +1258,26 @@ select, input {
 
 .w750px {
   width: 750px;
+}
+
+.w700px {
+  width: 700px;
+}
+
+.w684px {
+  width: 684px;
+}
+
+.w650px {
+  width: 650px;
+}
+
+.w600px {
+  width: 600px;
+}
+
+.w550px {
+  width: 550px;
 }
 
 .w500px {
@@ -2143,7 +2250,7 @@ select, input {
   overflow: auto;
   width: 100%;
   -webkit-app-region: none;
-  border-spacing: 0 15px;
+  border-spacing: 0 12px;
   border: 0;
 }
 
@@ -2476,7 +2583,7 @@ input:checked + .slider:before {
   background-image: url(artwork/BG7.svg);
   background-repeat: no-repeat;
   background-size: cover;
-  border-radius: 24px;
+  border-radius: 26px;
   text-align: center;
   padding: 20px;
   position: relative;

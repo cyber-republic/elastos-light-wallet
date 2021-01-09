@@ -1,21 +1,17 @@
 const React = require('react');
 
 const Menu = require('./partial/menu.jsx');
-
 const Banner = require('./partial/banner.jsx');
-
 const Branding = require('./partial/branding.jsx');
-
 const Balance = require('./partial/balance.jsx');
-
 const News = require('./partial/news.jsx');
-
 const Staking = require('./partial/staking.jsx');
-
 const SocialMedia = require('./partial/social-media.jsx');
+const UTXOsSelection = require('./partial/utxos.jsx');
 
 let showPasswordModal = false;
 let showPasswordToggle = false;
+let showUTXOs = false;
 
 module.exports = (props) => {
   const App = props.App;
@@ -47,10 +43,10 @@ module.exports = (props) => {
     let isSent = App.sendVoteTx();
     if (isSent) {
       clearPasswordFields();
-      closeModal();
-    } else {
-      App.renderApp();
+      closeModal();      
     }
+    App.clearUTXOsSelection();
+    App.renderApp();
   }
   
   const showVoteModal = () => {
@@ -63,8 +59,9 @@ module.exports = (props) => {
   }
   
   const closeModal = () => {
-    if (showPasswordModal) {
+    if (showPasswordModal || showUTXOs) {
       showPasswordModal = false;
+      showUTXOs = false;
       App.renderApp();
     }
   }
@@ -88,9 +85,29 @@ module.exports = (props) => {
     GuiUtils.setValue('votePassword', '');    
   }
   
+  const UTXOSelection = (_txType) => {
+    showUTXOs = true;
+    App.renderApp();
+  }
+  
+  const UTXOSelectionNext = () => {
+    let isValid = App.validateUTXOsSelection();
+    if (isValid) {
+      closeModal();
+      App.setCustomUTXOs(true);
+      /*if (App.getPasswordFlag()) {
+        showVoteModal();
+      } else {
+        sendVote();
+      }*/
+    }    
+  }
+  
   module.exports.showPasswordModal = showPasswordModal;
+  module.exports.showUTXOs = showUTXOs;
   module.exports.closeModal = closeModal;
   module.exports.exitPage = exitPage;
+  module.exports.UTXOSelection = UTXOSelection;
 
   return (
     <div id="voting" className="gridback-voting w1125h750px">
@@ -129,7 +146,7 @@ module.exports = (props) => {
           <p className="display_inline_block votes-header">Votes</p>
           <p className="display_inline_block candidate-status status-font">Status: {App.getProducerListStatus()} </p>
           <p className="display_inline_block status-font">Candidates: {App.getParsedProducerList().producers.length} </p>
-          <p className="display_inline_block status-font">Selected: {App.getParsedProducerList().producersCandidateCount}/36 </p>
+          <p className="display_inline_block status-font">Selected: {App.getParsedProducerList().producersCandidateCount}/{App.getMaxCandidates()} </p>
           </div>
       </div>
 
@@ -165,6 +182,7 @@ module.exports = (props) => {
       <div className="voting-row3">
         <button className='votingselect-button scale-hover' title="Select previous voting list" onClick={() => App.selectActiveVotes()} >Select Previous</button>
         <button className='votingselect-button marginright_auto scale-hover' title='Clear Selection' onClick={() => App.clearSelection()}>Clear Selection</button>
+        <div style={App.getCustomUTXOs() ? {display: 'block'} : {display: 'none'}} className="utxo-custom-text-voting utxo-custom-text" title="Update selected UTXOs by CTRL+u or CMD+u">Selected UTXOs ({App.getSelectedUTXOs().length}/{App.getTotalUTXOs()})</div>
         <button onClick={App.getPasswordFlag() ? (e) => showVoteModal() : (e) => sendVote()} className="scale-hover voting-button">Vote</button>
       </div>
 
@@ -172,7 +190,7 @@ module.exports = (props) => {
         <p className="display_inline_block active-heading">Active Votes</p>
         <p className="display_inline_block vote-status status-font">Status: {App.getCandidateVoteListStatus()} </p>
         <p className="display_inline_block status-font">Power: {App.getVoteValue()} </p>
-        <p className="display_inline_block status-font">Voted {App.getParsedCandidateVoteList().candidateVotes.length}/36</p>
+        <p className="display_inline_block status-font">Voted {App.getParsedCandidateVoteList().candidateVotes.length}/{App.getMaxCandidates()}</p>
       </div>
 
       <div className="voting-row5 overflow_auto scrollbar">
@@ -206,6 +224,8 @@ module.exports = (props) => {
         <button className="requestsButtons padding_5px display_inline dark-hover br10 cursor_def" onClick={(e) => App.listRequests()}>List requests</button>
         <button className="requestsButtons padding_5px display_inline dark-hover br10 cursor_def m15L" onClick={(e) => App.clearRequests()}>Clear requests</button>
       </div>
+      
+      <UTXOsSelection App={App} showUTXOs={showUTXOs} closeModal={closeModal} UTXOSelection={UTXOSelection} UTXOSelectionNext={UTXOSelectionNext}/>
       
       <div className="bg-modal w400px h200px" style={showPasswordModal ? {display: 'flex'} : {display: 'none'}}>
         <a onClick={(e) => closeModal()}></a>
