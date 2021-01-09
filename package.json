@@ -1,6 +1,6 @@
 {
   "name": "elastos-light-wallet",
-  "version": "v1.0.1",
+  "version": "v1.0.2-RC1",
   "description": "elastos light wallet",
   "productName": "Elastos Light Wallet",
   "main": "index.js",
@@ -36,7 +36,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cyber-republic/elastos-light-wallet.git"
+    "url": "git+https://github.com/MButcho/elastos-light-wallet.git"
   },
   "keywords": [
     "elastos"

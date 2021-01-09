@@ -173,6 +173,7 @@ let unspentTransactionOutputsStatus = 'No UTXOs Requested Yet';
 const parsedUnspentTransactionOutputs = [];
 let selectedUTXOs = [];
 let customUTXOs = false;
+let balanceChange = false;
 
 let blockchainStatus = 'No Blockchain State Requested Yet';
 
@@ -583,6 +584,7 @@ const getUnspentTransactionOutputsReadyCallback = (response) => {
       parsedUnspentTransactionOutputs.push(utxo);
     });
   }
+  
   renderApp();
 };
 
@@ -605,7 +607,6 @@ const requestBlockchainData = (_userRequest) => {
   requestBalance();
   requestUnspentTransactionOutputs();
   requestBlockchainState();
-  clearUTXOsSelection();
   
   CoinGecko.requestPriceData();
   
@@ -935,6 +936,7 @@ const sendAmountToAddressReadyCallback = (transactionJson) => {
     requestTransactionHistory();
     GuiToggles.showAllBanners(true);
     clearSendData();
+    clearUTXOsSelection();
     setSendStep(1);
   }
   renderApp();
@@ -1705,6 +1707,7 @@ const sendVoteReadyCallback = (transactionJson) => {
     requestTransactionHistory();
     GuiToggles.showAllBanners(true);
     clearSendData();
+    clearUTXOsSelection();
   }  
   renderApp();
 };
@@ -1829,9 +1832,18 @@ const getBalanceErrorCallback = (response) => {
 };
 
 const getBalanceReadyCallback = (balanceResponse) => {
+  let lastBalance = balance;
   if (balanceResponse.Error == 0) {
     balanceStatus = `Balance Received.`;
     balance = balanceResponse.Result;
+    if (lastBalance !== balance) {
+      balanceChange = true;
+      if (customUTXOs) {
+        clearUTXOsSelection();
+      }
+    } else {
+      balanceChange = false;
+    }
   } else {
     //balanceStatus = `Balance Received Error:${balanceResponse.Error}`;
     balanceStatus = `Error receiving balance`;
@@ -2909,7 +2921,7 @@ const getMaxCandidates = () => {
   return maxCandidates;
 }
 
-const toggleUTXOSelection = (_item) => {
+const toggleUTXOControl = (_item) => {
   const selectUTXO = parsedUnspentTransactionOutputs[_item.index];
   if (!checkUTXO(selectUTXO.utxoIx)) {
     //console.log(JSON.stringify(selectUTXO));
@@ -2921,7 +2933,7 @@ const toggleUTXOSelection = (_item) => {
       }
     }
   }
-  // mainConsole.log('toggleUTXOSelection selectedUTXOs, count', selectedUTXOs, selectedUTXOs.length);
+  // mainConsole.log('toggleUTXOControl selectedUTXOs, count', selectedUTXOs, selectedUTXOs.length);
   renderApp();
 };
 
@@ -2938,13 +2950,13 @@ const validateUTXOsSelection = () => {
     return false;
   }
   
-   if (selectedUTXOs.length === 0) {
+  /*if (selectedUTXOs.length === 0) {
     bannerStatus = 'You have not selected any UTXOs, please select at least 1.';
     bannerClass = 'bg_red color_white banner-look';
     GuiToggles.showAllBanners(false);
     renderApp();
     return false;
-  }
+  }*/
   return true;
 }
   
@@ -3128,7 +3140,7 @@ exports.getVoteValue = getVoteValue;
 exports.getMaxCandidates = getMaxCandidates;
 exports.enableContextMenu = enableContextMenu;
 exports.disableContextMenu = disableContextMenu;
-exports.toggleUTXOSelection = toggleUTXOSelection;
+exports.toggleUTXOControl = toggleUTXOControl;
 exports.getAllUTXOs = getAllUTXOs;
 exports.getSelectedUTXOs = getSelectedUTXOs;
 exports.checkUTXO = checkUTXO;

@@ -975,10 +975,22 @@ button {
   width: 93%;
 }
 
-.utxo-selection {
+.utxo-status {
   position: absolute;
   top: 31px;
   left: 478px;
+}
+
+.utxo-status-font {
+  opacity: 0.9;
+  font-size: 16px;
+  color: #B2B4C3;
+  letter-spacing: 0;
+  line-height: 17px;
+}
+
+.utxo-status-font-max {
+  font-size: 11px;
 }
 
 .utxo-tablediv {
@@ -1044,16 +1056,35 @@ button {
   position: relative;
 }
 
+.utxo-custom-text-grey {
+  font-family: 'Open Sans', sans-serif;
+  opacity: 0.9;
+  font-size: 12px;
+  font-weight: 100;
+  letter-spacing: 0;
+  color: #B2B4C3;
+}
+
 .utxo-custom-text-home {
   position: absolute;
-  top: 419px;
-  left: 510px;
+  top: 416px;
+  left: 480px;
 }
 
 .utxo-custom-text-voting {
   position: absolute;
-  top: 461px;
-  left: 755px;
+  top: 460px;
+  left: 706px;
+}
+
+.utxo-control-button {
+  height: 26px;
+  font-size: 12px;
+  background: none;
+  letter-spacing: 0;
+  padding: 5px 8px 5px 8px;
+  border-radius: 5px;
+  border: 0;
 }
 
 .dark-font {

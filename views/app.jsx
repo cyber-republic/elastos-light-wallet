@@ -145,14 +145,14 @@ class AppView extends React.Component {
           if (Home.showUTXOs) {
             Home.closeModal();
           } else {
-            Home.UTXOSelection();
+            Home.UTXOControl();
           }
           break;
          case "voting":
           if (Voting.showUTXOs) {
             Voting.closeModal();
           } else {
-            Voting.UTXOSelection();
+            Voting.UTXOControl();
           }
           break;
         default:
