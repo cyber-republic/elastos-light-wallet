@@ -365,6 +365,10 @@ module.exports = (props) => {
       <button className="requestsButtons padding_5px display_inline dark-hover br10 cursor_def m15L" onClick={(e) => App.clearRequests()}>Clear requests</button>
     </div>
     
+    <button tabIndex="6" style={(App.getCurrentAdvancedFeatures() || App.getCustomUTXOs()) ? {display: 'block'} : {display: 'none'}} className={App.getCustomUTXOs() ? "utxo-control-button utxo-custom-text-home utxo-custom-text dark-hover cursor_def" : "utxo-control-button utxo-custom-text-home utxo-custom-text-grey dark-hover cursor_def"} title="Update selected UTXOs by CTRL+u or CMD+u" onClick={(e) => UTXOControl()}>UTXO Control ({App.getCustomUTXOs() ? App.getSelectedUTXOs().length+"/"+App.getTotalUTXOs() : "ALL"} selected)</button>
+    {/*<div style={App.getCustomUTXOs() ? {display: 'block'} : {display: 'none'}} className="utxo-custom-text-home utxo-custom-text" title="Update selected UTXOs by CTRL+u or CMD+u"></div>*/}
+    <UTXOsSelection App={App} showUTXOs={showUTXOs} closeModal={closeModal} UTXOControl={UTXOControl} UTXOControlNext={UTXOControlNext}/>
+    
     <div id="txModal" style={showTxDetails ? {display: 'block', top: txModalTop} : {display: 'none', top: txModalTop}} className="txModal">
       <span className="font_size20 gradient-font m15T">Transaction Details</span>
       <div className="txModalTableDiv">
@@ -410,10 +414,6 @@ module.exports = (props) => {
         </table>
       </div>
     </div>
-    
-    <button tabIndex="6" style={(App.getCurrentAdvancedFeatures() || App.getCustomUTXOs()) ? {display: 'block'} : {display: 'none'}} className={App.getCustomUTXOs() ? "utxo-control-button utxo-custom-text-home utxo-custom-text dark-hover cursor_def" : "utxo-control-button utxo-custom-text-home utxo-custom-text-grey dark-hover cursor_def"} title="Update selected UTXOs by CTRL+u or CMD+u" onClick={(e) => UTXOControl()}>UTXO Control ({App.getCustomUTXOs() ? App.getSelectedUTXOs().length+"/"+App.getTotalUTXOs() : "ALL"} selected)</button>
-    {/*<div style={App.getCustomUTXOs() ? {display: 'block'} : {display: 'none'}} className="utxo-custom-text-home utxo-custom-text" title="Update selected UTXOs by CTRL+u or CMD+u"></div>*/}
-    <UTXOsSelection App={App} showUTXOs={showUTXOs} closeModal={closeModal} UTXOControl={UTXOControl} UTXOControlNext={UTXOControlNext}/>
     
     <div className="bg-modal w400px h200px" style={showPasswordModal ? {display: 'flex'} : {display: 'none'}}>
       <a onClick={(e) => closeModal()}></a>

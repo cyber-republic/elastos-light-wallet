@@ -1439,11 +1439,6 @@ const clearSelection = () => {
 
 const clearUTXOsSelection = () => {
   //mainConsole.log('Before clearUTXOsSelection', selectedUTXOs);
-  selectedUTXOs.map(e => {
-    if (e.isSelected) {
-      e.isSelected = false;
-    }
-  });
   selectedUTXOs.length = 0;
   selectedUTXOs = [];
   customUTXOs = false;
@@ -2909,7 +2904,7 @@ const getPasswordRegEx = () => {
 
 const getTXDetails = (_txID) => {
   let txDetail = parsedTransactionHistory.filter(tx => tx.txHash === _txID);
-  //console.log(JSON.stringify(txDetail));
+  //console.log(JSON.stringify(selectedUTXOs));
   return txDetail;
 }
 
@@ -2921,10 +2916,10 @@ const getMaxCandidates = () => {
   return maxCandidates;
 }
 
-const toggleUTXOControl = (_item) => {
-  const selectUTXO = parsedUnspentTransactionOutputs[_item.index];
+const toggleUTXOControl = (_utxoIx) => {
+  const selectUTXO = parsedUnspentTransactionOutputs.find(element => element.utxoIx === _utxoIx);
+  //console.log(_utxoIx, JSON.stringify(selectUTXO));
   if (!checkUTXO(selectUTXO.utxoIx)) {
-    //console.log(JSON.stringify(selectUTXO));
     selectedUTXOs.push(selectUTXO);
   } else {
     for(var i = 0; i < selectedUTXOs.length; i++) {
@@ -2960,11 +2955,11 @@ const validateUTXOsSelection = () => {
   return true;
 }
   
-const checkUTXO = (_index) => {
+const checkUTXO = (_utxoIx) => {
   let matchUTXO = false;
   if (selectedUTXOs.length > 0) {
     selectedUTXOs.forEach((_utxo) => {
-      if (_utxo.utxoIx === _index) {
+      if (_utxo.utxoIx === _utxoIx) {
         matchUTXO = true;
       }
     });
@@ -2972,9 +2967,10 @@ const checkUTXO = (_index) => {
   return matchUTXO;
 }
 
-const selectMaxUTXOs = () => {
+const selectMaxUTXOs = (_sort, _direction) => {
   clearUTXOsSelection();
-  selectedUTXOs = parsedUnspentTransactionOutputs.slice(0, getMaxUTXOsPerTX());
+  let tempUTXOs = parsedUnspentTransactionOutputs;
+  selectedUTXOs = tempUTXOs.sort(_sort === "index" ? (({utxoIx: previousutxoIx}, {utxoIx: currentutxoIx}) => _direction === "asc" ? previousutxoIx - currentutxoIx : currentutxoIx - previousutxoIx) : (({Value: previousValue}, {Value: currentValue}) => _direction === "asc" ? previousValue - currentValue : currentValue - previousValue)).slice(0, getMaxUTXOsPerTX());
 }
 
 const getSelectedUTXOs = () => {

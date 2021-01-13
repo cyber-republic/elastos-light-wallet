@@ -8,3 +8,7 @@ https://support.ledger.com/hc/en-us/articles/115005165269-Connection-issues-with
 ```
 wget -q -O - https://raw.githubusercontent.com/LedgerHQ/udev-rules/master/add_udev_rules.sh | sudo bash
 ```
+
+Any donation to ELA address EUSMsck3svNiacva9LfwrLfbvNnUU27z77 or mbutcho (CryptoName) is much appreciated.
+
+### Thank you and enjoy!

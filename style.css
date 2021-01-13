@@ -2843,3 +2843,33 @@ input:checked + .slider:before {
   color: #B2B4C3;
   font-size: 14px;
 }
+
+.sort-arrow {
+  margin-left: 5px;
+  position: relative;
+  top: -2px;
+  border: solid;
+  border-width: 0 2px 2px 0;
+  display: inline-block;
+  padding: 2px;
+}
+
+.right {
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+}
+
+.left {
+  transform: rotate(135deg);
+  -webkit-transform: rotate(135deg);
+}
+
+.up {
+  transform: rotate(-135deg);
+  -webkit-transform: rotate(-135deg);
+}
+
+.down {
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+}
