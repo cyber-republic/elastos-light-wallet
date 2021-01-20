@@ -217,6 +217,8 @@ module.exports = (props) => {
   module.exports.resetPage = resetPage;
   module.exports.cancelSend = cancelSend;
   module.exports.UTXOControl = UTXOControl;
+  module.exports.memoFocused = memoFocused;
+  module.exports.memoFocusOff = memoFocusOff;
   
   const SendScreenOne = (props) => {
     const visibility = props.visibility;
@@ -244,15 +246,43 @@ module.exports = (props) => {
   const SendScreenTwo = (props) => {
     const visibility = props.visibility;
     return (
-      <div id="sendTwo" className={`send-area ${visibility}`}>
-        <img src="artwork/sendicon.svg" className="send-icon" title="Refresh Blockchain Data" onClick={(e) => App.requestBlockchainData(true)}/>
-        <p className="send-text">Send</p>
-        <p className="confirm-send-address-label">Receiving Address</p>
-        <p className="confirm-send address"><span>{App.getSendToAddress()}</span></p>
-        <p className="confirm-send total maxheight">Total spending amount with fees is <span>{App.getTotalSpendingELA()} ELA</span>{App.getTxMemo() !== '' ? " and memo " : ""}<span className={App.getTxMemo().length > 55 ? "confirm-memo-long" : ""} title={App.getTxMemo()}>{App.getTxMemo() !== '' ? App.getTxMemo(true) : ""}</span></p>
-        <button className="send-back dark-hover cursor_def" onClick={(e) => cancelSend()}><img src="artwork/arrow.svg" alt="" className="rotate_180 arrow-back" /><span className="send-back-text">Back</span></button>        
-        <button className="sendela-button scale-hover" onClick={(App.getPasswordFlag()) ? (e) => showSendModal() : (e) => sendAmountToAddress()}><p>Send ELA</p></button>        
+    <div id="sendTwo" className={`send-area ${visibility}`}>
+      <img src="artwork/sendicon.svg" className="send-icon" alt="Send"/>
+      <p className="send-text">Send Review</p>
+      <div className="confirm-table-div">
+        <table className="confirm-table">
+          <tbody>
+          <tr>
+            <td className="confirm-col1">Network:</td>
+            <td className="confirm-col2">Elastos Mainnet</td>
+          </tr>
+          <tr>
+            <td className="confirm-col1">To address:</td>
+            <td className="confirm-col2"><span className="font-color-orange">{App.getSendToAddress()}</span></td>
+          </tr>
+          <tr>
+            <td className="confirm-col1">Amount:</td>
+            <td className="confirm-col2">{App.getSendAmount()} ELA</td>
+          </tr>
+          <tr>
+            <td className="confirm-col1">Fees:</td>
+            <td className="confirm-col2">{App.getTotalFees()} ELA</td>
+          </tr>
+          <tr>
+            <td className="confirm-col1">Total:</td>
+            <td className="confirm-col2"><span className="font-color-orange">{App.getTotalSpendingELA()} ELA</span></td>
+          </tr>
+          <tr>
+            <td className="confirm-col1">Memo:</td>
+            <td className="confirm-col2">{App.getTxMemo()}</td>
+          </tr>
+          </tbody>
+        </table>
       </div>
+      <button className="send-back dark-hover cursor_def" onClick={(e) => cancelSend()}><img src="artwork/arrow.svg" alt="" className="rotate_180 arrow-back" /><span className="send-back-text">Back</span></button>
+      <button className="sendela-button scale-hover" onClick={(App.getPasswordFlag()) ? (e) => showSendModal() : (e) => sendAmountToAddress()}><p>Send ELA</p></button>
+    </div>
+      
     )
   }
 

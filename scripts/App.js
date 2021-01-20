@@ -2423,6 +2423,12 @@ const getTotalSpendingELA = () => {
   return totalSpendingELA;
 }
 
+const getTotalFees = () => {  
+  var totalFees = BigNumber(Number(BigNumber(Number(feeAmountSats) + minerFee, 10).dividedBy(Asset.satoshis).toString())).decimalPlaces(roundDecimalELA).toString();
+  //mainConsole.log(totalSpendingELA,roundDecimalELA);
+  return totalFees;
+}
+
 const encryptWallet = (text, password) => {
   const keyBytes = crypto.createHash('sha256').update(password).digest();
   const ivBytes = crypto.randomBytes(16);
@@ -3075,6 +3081,7 @@ exports.validateInputs = validateInputs;
 exports.validateFee = validateFee;
 exports.insertELA = insertELA;
 exports.getTotalSpendingELA = getTotalSpendingELA;
+exports.getTotalFees = getTotalFees;
 exports.isValidAddress = isValidAddress;
 exports.isValidDecimal = isValidDecimal;
 exports.showBanner = showBanner;

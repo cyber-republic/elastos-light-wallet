@@ -109,7 +109,11 @@ class AppView extends React.Component {
               if (App.getSendStep() === 2) {
                 Home.cancelSend();
               } else {
-                Home.resetPage();
+                if (Home.memoFocused) {
+                  Home.memoFocusOff();
+                } else {
+                  Home.resetPage();
+                }
               }
             }
           }

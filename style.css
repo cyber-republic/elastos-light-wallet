@@ -639,36 +639,50 @@ button {
   padding: 15px;
 }
 
-.confirm-send-address-label {
-  top: 112px;
-  left: 422px;
-  font-size: 16px;
-  color: #FFFFFF;
-  letter-spacing: 0;
+.confirm-memo-long::after {
+  content: "\00BB";
+  font-size: 18px;
+  left: 5px;
+  top: 1px;
+  position: relative;
+}
+
+.confirm-table-div {
   position: absolute;
+  width: 335px;
+  height: 240px;
+  overflow: auto;  
+  -webkit-app-region: none;
+  top: 120px;
+  padding: 10px 20px 0 20px;
 }
 
-.confirm-send.address {
-  top: 143px;
-  max-width: 260px;
-  overflow-wrap: break-word;
+.confirm-table {
+  overflow: auto;
+  width: 100%;
+  -webkit-app-region: none;
+  border-spacing: 7px;
+  border: 0;
+  font-size: 13px;
+  color: #B2B4C3;
+}
+
+.confirm-col1 {
+  font-family: "BioSans-Regular";
+  width: 75px;
+  text-align: right;
+  vertical-align: top;
+}
+
+.confirm-col2 {
+  font-family: "BioSans-Light";
+  max-width: 220px;
+  text-align: left;
   word-wrap: break-word;
+  vertical-align: top;
 }
 
-.confirm-send.total {
-  top: 220px;
-  max-width: 260px;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-  overflow: hidden;
-}
-
-.confirm-send.total.maxheight {
-  max-height: 86px;
-}
-
-.confirm-send span {
-  font-weight: 600;
+.font-color-orange {
   color: #E5A776;
 }
 
