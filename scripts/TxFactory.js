@@ -15,7 +15,7 @@ const ZERO = BigNumber(0, 10);
 const FEE_SATS = BigNumber(100, 10);
 /* eslint-enable */
 
-const createSignedSendToTx = (privateKey, unspentTransactionOutputs, sendToAddress, sendAmount, feeAmountSats, feeAccount) => {
+const createSignedSendToTx = (privateKey, unspentTransactionOutputs, sendToAddress, sendAmount, feeAmountSats, feeAccount, txMemo) => {
   if (Number.isNaN(sendAmount)) {
     throw new Error(`sendAmount ${sendAmount} is not a number`);
   }
@@ -23,7 +23,7 @@ const createSignedSendToTx = (privateKey, unspentTransactionOutputs, sendToAddre
     throw new Error(`feeAmountSats ${feeAmountSats} is not a number`);
   }
   const publicKey = KeyTranscoder.getPublic(privateKey);
-  const tx = createUnsignedSendToTx(unspentTransactionOutputs, sendToAddress, sendAmount, publicKey, feeAmountSats, feeAccount);
+  const tx = createUnsignedSendToTx(unspentTransactionOutputs, sendToAddress, sendAmount, publicKey, feeAmountSats, feeAccount, txMemo);
   const signature = TxSigner.getSignature(tx, privateKey);
   const encodedSignedTx = TxSigner.addSignatureToTx(tx, publicKey, signature);
 
@@ -33,7 +33,7 @@ const createSignedSendToTx = (privateKey, unspentTransactionOutputs, sendToAddre
   return encodedSignedTx;
 };
 
-const createUnsignedSendToTx = (unspentTransactionOutputs, sendToAddress, sendAmount, publicKey, feeAmountSats, feeAccount, showOutput) => {
+const createUnsignedSendToTx = (unspentTransactionOutputs, sendToAddress, sendAmount, publicKey, feeAmountSats, feeAccount, txMemo, showOutput) => {
   if (unspentTransactionOutputs == undefined) {
     throw new Error(`unspentTransactionOutputs is undefined`);
   }
@@ -55,10 +55,10 @@ const createUnsignedSendToTx = (unspentTransactionOutputs, sendToAddress, sendAm
   /* eslint-disable */
   const sendAmountSats = BigNumber(sendAmount, 10).times(Asset.satoshis);
   /* eslint-enable */
-  return createUnsignedSendToTxSats(unspentTransactionOutputs, sendToAddress, sendAmountSats, publicKey, feeAmountSats, feeAccount, showOutput);
+  return createUnsignedSendToTxSats(unspentTransactionOutputs, sendToAddress, sendAmountSats, publicKey, feeAmountSats, feeAccount, txMemo, showOutput);
 };
 
-const createUnsignedSendToTxSats = (unspentTransactionOutputs, sendToAddress, sendAmountSats, publicKey, feeAmountStr, feeAccount, showOutput) => {
+const createUnsignedSendToTxSats = (unspentTransactionOutputs, sendToAddress, sendAmountSats, publicKey, feeAmountStr, feeAccount, txMemo, showOutput) => {
   // mainConsole.log('STARTED createUnsignedSendToTxSats');
   if (unspentTransactionOutputs == undefined) {
     throw new Error(`unspentTransactionOutputs is undefined`);
@@ -100,6 +100,13 @@ const createUnsignedSendToTxSats = (unspentTransactionOutputs, sendToAddress, se
     txAttribute.Usage = 0;
     txAttribute.Data = '30';
     tx.TxAttributes.push(txAttribute);
+    
+    if (txMemo !== undefined && txMemo !== "") {
+      const txAttribute2 = {};
+      txAttribute2.Usage = 0x81;
+      txAttribute2.Data = Buffer.from("type:text,msg:"+txMemo, 'utf8').toString('hex');
+      tx.TxAttributes.push(txAttribute2);
+    }
   }
 
   /* eslint-disable */
@@ -183,7 +190,7 @@ const createUnsignedSendToTxSats = (unspentTransactionOutputs, sendToAddress, se
   }
 
   tx.Programs = [];
-  // mainConsole.log('SUCCESS createUnsignedSendToTxSats', tx);
+  //mainConsole.log('SUCCESS createUnsignedSendToTxSats', tx);
 
   return tx;
 };

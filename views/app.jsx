@@ -90,19 +90,27 @@ class AppView extends React.Component {
   }
   
   keyFunction(event) {
-    if (event.keyCode === 27) {      
+    if (event.keyCode === 27) {
       switch (GuiToggles.getPage()) {
         case "create":
-          Create.exitPage();
+          if (GuiToggles.getMenuOpened()) {
+            GuiToggles.hideAllMenus(GuiToggles.getPage());
+          } else {
+            Create.exitPage();
+          }
           break;
         case "home":
           if (Home.showPasswordModal || Home.showUTXOs) {
             Home.closeModal();
           } else {
-            if (App.getSendStep() === 2) {
-              Home.cancelSend();
+            if (GuiToggles.getMenuOpened()) {
+              GuiToggles.hideAllMenus(GuiToggles.getPage());
             } else {
-              Home.resetPage();
+              if (App.getSendStep() === 2) {
+                Home.cancelSend();
+              } else {
+                Home.resetPage();
+              }
             }
           }
           break;
@@ -110,11 +118,17 @@ class AppView extends React.Component {
           if (Import.showCreateWalletModal) {
             Import.closeModal();
           } else {
-            Import.exitPage();
+            if (GuiToggles.getMenuOpened()) {
+              GuiToggles.hideAllMenus(GuiToggles.getPage());
+            } else {
+              Import.exitPage();
+            }
           }
           break;
         case "landing":
-          if (Landing.showWalletLoginModal) {
+          if (GuiToggles.getMenuOpened()) {
+            GuiToggles.hideAllMenus(GuiToggles.getPage());
+          } else if (Landing.showWalletLoginModal) {
             Landing.closeModal();
           }
           break;
@@ -132,7 +146,11 @@ class AppView extends React.Component {
           if (Voting.showPasswordModal || Voting.showUTXOs) {
             Voting.closeModal();
           } else {
-            Voting.exitPage();
+            if (GuiToggles.getMenuOpened()) {
+              GuiToggles.hideAllMenus(GuiToggles.getPage());
+            } else {
+              Voting.exitPage();
+            }
           }
           break;
         default:
@@ -156,8 +174,7 @@ class AppView extends React.Component {
           }
           break;
         default:
-          break;
-        
+          break;        
       }      
     }
   }

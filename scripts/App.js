@@ -119,6 +119,8 @@ let feeAmountEla = '';
 
 let sendToAddress = '';
 
+let txMemo = '';
+
 let sendStep = 1;
 
 let isLoggedIn = false;
@@ -951,6 +953,7 @@ const clearSendData = () => {
   GuiUtils.setValue('sendToAddress', '');
   cryptoNameELAAddress = '';
   GuiUtils.setValue('feeAmount', feeRequested);
+  GuiUtils.setValue('txMemo', '');
   GuiUtils.setValue('sendPassword', '');
   GuiUtils.setValue('votePassword', '');
   sendAmount = '';
@@ -959,6 +962,7 @@ const clearSendData = () => {
   sendToAddressStatuses.length = 0;
   sendToAddressLinks.length = 0;
   sendToAddress = '';
+  txMemo = '';
   setSendStep(1);
   //requestFee();
   //mainConsole.log('SUCCESS clearSendData');
@@ -999,6 +1003,7 @@ const validateInputs = () => {
   sendAmount = GuiUtils.getValue('sendAmount').replace(/,/g, '.');  
   feeAmountSats = GuiUtils.getValue('feeAmount');
   feeRequested = feeAmountSats;
+  txMemo = GuiUtils.getValue('txMemo');
   
   const isValidHistory = checkTransactionHistory();
   if (!isValidHistory) {
@@ -1125,7 +1130,7 @@ const consolidateUTXOs = () => {
     }
     
     let encodedTx;
-    const tx = TxFactory.createUnsignedSendToTx(unspentTransactionOutputs, getAddress() , maxAmountToSend, publicKey, feeAmountSats, feeAccount, false);
+    const tx = TxFactory.createUnsignedSendToTx(unspentTransactionOutputs, getAddress() , maxAmountToSend, publicKey, feeAmountSats, feeAccount, '', false);
     const encodedUnsignedTx = TxTranscoder.encodeTx(tx, false);
     
     if (Math.ceil(encodedUnsignedTx.length/2) > maxTXSize) {
@@ -1180,7 +1185,7 @@ const consolidateUTXOs = () => {
         }
           
         if (privateKey) {            
-          const encodedTx = TxFactory.createSignedSendToTx(privateKey, unspentTransactionOutputs, getAddress(), maxAmountToSend, feeAmountSats, feeAccount);
+          const encodedTx = TxFactory.createSignedSendToTx(privateKey, unspentTransactionOutputs, getAddress(), maxAmountToSend, feeAmountSats, feeAccount, '');
           if (encodedTx == undefined) {
             return false;
           }
@@ -1217,7 +1222,7 @@ const sendAmountToAddress = () => {
   let encodedTx;
 
   if (useLedgerFlag) {
-    const tx = TxFactory.createUnsignedSendToTx(unspentTransactionOutputs, sendToAddress, sendAmount, publicKey, feeAmountSats, feeAccount, true);
+    const tx = TxFactory.createUnsignedSendToTx(unspentTransactionOutputs, sendToAddress, sendAmount, publicKey, feeAmountSats, feeAccount, txMemo, true);
     const encodedUnsignedTx = TxTranscoder.encodeTx(tx, false);
     //console.log(Math.ceil(encodedUnsignedTx.length/2));
     showLedgerConfirmBanner(getTxByteLength(encodedUnsignedTx));
@@ -1265,7 +1270,7 @@ const sendAmountToAddress = () => {
     }
     
     if (privateKey) {
-      const encodedTx = TxFactory.createSignedSendToTx(privateKey, unspentTransactionOutputs, sendToAddress, sendAmount, feeAmountSats, feeAccount);
+      const encodedTx = TxFactory.createSignedSendToTx(privateKey, unspentTransactionOutputs, sendToAddress, sendAmount, feeAmountSats, feeAccount, txMemo);
         if (encodedTx == undefined) {
           return false;
         }
@@ -1772,15 +1777,15 @@ const getTransactionHistoryReadyCallback = (transactionHistory) => {
         parsedTransaction.txDetailsUrl = getTransactionHistoryLink(tx.Txid);
         parsedTransaction.date = date;
         parsedTransaction.time = time;
-        parsedTransaction.memoLong = tx.Memo;
-        if (parsedTransaction.memoLong.length > 14) {
-          parsedTransaction.memoLong = parsedTransaction.memoLong.substring(14, parsedTransaction.memoLong.length).trim();
-        }
-        parsedTransaction.memo = tx.Memo;
-        if (parsedTransaction.memo.length > 14) {
-          var n = 14;
-          if (parsedTransaction.memo.indexOf("From ELABank,") >= 0) n = n + 13;
-          parsedTransaction.memo = parsedTransaction.memo.substring(n, n + 24) + '...'.trim();
+        let memo = tx.Memo;
+        if (memo.indexOf("type:text,msg:") >= 0) memo = memo.substring(14, memo.length).trim();
+        parsedTransaction.memoLong = memo;
+        if (memo.length > 14) {
+          var n = 0;
+          if (memo.indexOf("From ELABank,") >= 0) n = n + 13;
+          parsedTransaction.memo = memo.substring(n, n + 24) + '...'.trim();
+        } else {
+          parsedTransaction.memo = memo;
         }
         if (tx.CreateTime != 0) {
           let confirmedHeight = tx.Height;
@@ -2211,10 +2216,23 @@ const getFeeAmountSats = () => {
   return feeAmountSats;
 };
 
+const getTxMemo = (_short) => {
+  let maxLength = 55;
+  if (_short) {
+    if (txMemo.length > maxLength) {
+      return txMemo.substr(0,maxLength)+" ...";
+    } else {
+      return txMemo;
+    }
+  }
+  return txMemo;
+};
+
 const writeSendData = () => {
   sendToAddress = GuiUtils.getValue('sendToAddress');
   sendAmount = GuiUtils.getValue('sendAmount').replace(/,/g, '.');  
   feeAmountSats = GuiUtils.getValue('feeAmount');
+  txMemo = GuiUtils.getValue('txMemo');
   feeRequested = feeAmountSats;
 }
 
@@ -3019,6 +3037,7 @@ exports.getSendAmount = getSendAmount;
 exports.getFeeAmountEla = getFeeAmountEla;
 exports.getSendToAddress = getSendToAddress;
 exports.getFeeAmountSats = getFeeAmountSats;
+exports.getTxMemo = getTxMemo;
 exports.getSendStep = getSendStep;
 exports.setSendStep = setSendStep;
 exports.sendAmountToAddress = sendAmountToAddress;

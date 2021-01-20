@@ -7,6 +7,7 @@ let app;
 let bannerID;
 let bannerTimeout = 10000;
 let page = '';
+let menuOpened = false;
 
 const init = (_app) => {
   app = _app;
@@ -33,15 +34,20 @@ const hideEverything = () => {
   hideAllMenus();
 };
 
-const hideAllMenus = () => {
+const hideAllMenus = (_name) => {
   GuiUtils.hide('importBanner');
   GuiUtils.hide('createBanner');
   const menus = ['home', 'landing', 'voting', 'import', 'create'];
-  menus.forEach((menu) => {
-    hide(menu+'Menu');
+  menus.forEach((name) => {
+    hide(name+'Menu');
     // hide(menu+'MenuOpen');
-    hide(menu+'MenuClose');
+    hide(name+'MenuClose');
   });
+  
+  if (_name !== undefined && _name !== "") {
+    show(_name+'MenuOpen'); 
+  }
+  menuOpened = false;
 };
 
 const showLanding = () => {
@@ -77,6 +83,7 @@ const showMenu = (name) => {
   hide(name+'MenuOpen');
   show(name+'MenuClose');
   hide('version');
+  menuOpened = true;
 };
 
 const hideMenu = (name) => {
@@ -84,6 +91,7 @@ const hideMenu = (name) => {
   show(name+'MenuOpen');
   hide(name+'MenuClose');
   show('version');
+  menuOpened = false;
 };
 
 const showVoting = () => {
@@ -163,12 +171,17 @@ const getPage = () => {
   return page;
 }
 
+const getMenuOpened = () => {
+  return menuOpened;
+}
+
 exports.init = init;
 exports.showLanding = showLanding;
 exports.showImport = showImport;
 exports.showHome = showHome;
 exports.showMenu = showMenu;
 exports.hideMenu = hideMenu;
+exports.hideAllMenus = hideAllMenus;
 exports.showVoting = showVoting;
 exports.showQRCode = showQRCode;
 exports.showSettings = showSettings;
@@ -180,3 +193,4 @@ exports.showAllBanners = showAllBanners;
 exports.hideAllBanners = hideAllBanners;
 exports.bannerID = bannerID;
 exports.getPage = getPage;
+exports.getMenuOpened = getMenuOpened;

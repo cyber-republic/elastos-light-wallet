@@ -22,6 +22,7 @@ let txDetail = '';
 let txModalTop = 0;
 let autoFocus = 0;
 let modalTitle = '';
+let memoFocused = false;
 
 module.exports = (props) => {
   const App = props.App;
@@ -42,10 +43,11 @@ module.exports = (props) => {
     if (e.target.id === "sendToAddress") autoFocus = 1;
     if (e.target.id === "sendAmount") autoFocus = 2;
     if (e.target.id === "feeAmount") autoFocus = 3;
+    if (e.target.id === "txMemo") autoFocus = 4;
   }
   
-  const autoFocusOff = (e) => {
-    autoFocus = 0;    
+  const autoFocusOff = () => {
+    autoFocus = 0;
   }
   
   const writeSendData = () => {
@@ -156,7 +158,7 @@ module.exports = (props) => {
     txDetail = App.getTXDetails(_txID);
     showTxDetails = true;
     
-    txModalTop = offset(event.target).top-347;
+    txModalTop = offset(event.target).top-357;
     App.renderApp();
   }
   
@@ -196,6 +198,19 @@ module.exports = (props) => {
     }
   }
   
+  const memoFocus = () => {
+    memoFocused = true;
+    //console.log("memoFocus", memoFocused);
+    App.renderApp();
+  }
+  
+  const memoFocusOff = () => {
+    memoFocused = false;
+    autoFocusOff();
+    //console.log("memoFocusOff", memoFocused);
+    App.renderApp();
+  }
+    
   module.exports.showPasswordModal = showPasswordModal;
   module.exports.showUTXOs = showUTXOs;
   module.exports.closeModal = closeModal;
@@ -208,9 +223,9 @@ module.exports = (props) => {
     return (<div id="sendOne" className={`send-area ${visibility}`}>
       <img src="artwork/sendicon.svg" className="send-icon"/>
       <p className="send-text">Send</p>
-      <input tabIndex="1" type="text" size="34" maxLength={34} id="sendToAddress" className="ela-address_input" placeholder="Enter ELA Address or CryptoName" defaultValue={App.getSendToAddress()} onChange={(e) => writeSendData()} onKeyDown={(e) => handleKeyDown(e)} onFocus={(e) => autoFocusOn(e)} onBlur={(e) => autoFocusOff(e)} autoFocus={autoFocus === 1 ? true : false}/>
+      <input tabIndex="1" type="text" size="34" maxLength={34} id="sendToAddress" className="ela-address_input" placeholder="Enter ELA Address or CryptoName" defaultValue={App.getSendToAddress()} onChange={(e) => writeSendData()} onKeyDown={(e) => handleKeyDown(e)} onFocus={(e) => autoFocusOn(e)} onBlur={(e) => autoFocusOff()} autoFocus={autoFocus === 1 ? true : false}/>
       <img className="cryptoname" title="Click to retrieve ELA address from cryptoname.org or press Enter" onClick={(e) => retrieveCryptoName()}/>
-      <input tabIndex="2" type="text" size="14" maxLength={14} id="sendAmount" className="ela-send_amount" placeholder="Amount" defaultValue={App.getSendAmount()} onChange={(e) => writeSendData()} onFocus={(e) => autoFocusOn(e)} onBlur={(e) => autoFocusOff(e)} autoFocus={autoFocus === 2 ? true : false}/>    
+      <input tabIndex="2" type="text" size="14" maxLength={14} id="sendAmount" className="ela-send_amount" placeholder="Amount" defaultValue={App.getSendAmount()} onChange={(e) => writeSendData()} onFocus={(e) => autoFocusOn(e)} onBlur={(e) => autoFocusOff()} autoFocus={autoFocus === 2 ? true : false}/>    
     <div className="quick-elaselector">
       <button className="quick-elaselector-icon quarter" onClick={() => App.insertELA('quarter')}>25%</button>
       <button className="quick-elaselector-icon half" onClick={() => App.insertELA('half')}>50%</button>
@@ -218,10 +233,11 @@ module.exports = (props) => {
     </div>
     <hr className="ela-send_amount_line" />
     <p className="elatext-send">ELA</p>
-    <input tabIndex="3" type="text" size="5" maxLength={5} id="feeAmount" placeholder="Fees" defaultValue={App.getFee()} onChange={(e) => writeSendData()} onFocus={(e) => autoFocusOn(e)} onBlur={(e) => autoFocusOff(e)} autoFocus={autoFocus === 3 ? true : false}/>
-    <div className="fees-text">Fees (in Satoshi ELA)</div>
-    <button tabIndex="4" className="next-button scale-hover" onClick={(e) => showConfirmAndSeeFees()}><p>Next</p></button>
-    <button tabIndex="5" style={App.showConsolidateButton() ? {display: 'block'} : {display: 'none'}} className="consolidate-button dark-hover cursor_def" title={consolidateTitle} onClick={(App.getPasswordFlag()) ? (e) => showConsolidateModal() : (e) => consolidateUTXOs()}>Consolidate ({consolidesCount})<img src="artwork/arrow.svg" alt="" className="arrow-forward"/></button>
+    <input tabIndex="3" type="text" size="5" maxLength={5} id="feeAmount" placeholder="Fees (SELA)" style={!memoFocused ? {display: 'block'} : {display: 'none'}} defaultValue={App.getFee()} onChange={(e) => writeSendData()} onFocus={(e) => autoFocusOn(e)} onBlur={(e) => autoFocusOff()} autoFocus={autoFocus === 3 ? true : false}/>
+    {/*<div className="fees-text">Fees (in Satoshi ELA)</div>*/}
+    <input tabIndex="4" type="text" maxLength={128} id="txMemo" placeholder="Memo" className={memoFocused ? "memo-field focused" : "memo-field not-focused"} defaultValue={App.getTxMemo()} onChange={(e) => writeSendData()} onFocus={(e) => autoFocusOn(e)} onClick={(e) => memoFocus()} onBlur={(e) => memoFocusOff()} autoFocus={autoFocus === 4 ? true : false}/>
+    <button tabIndex="5" className="next-button scale-hover" onClick={(e) => showConfirmAndSeeFees()}><p>Next</p></button>
+    <button tabIndex="6" style={App.showConsolidateButton() ? {display: 'block'} : {display: 'none'}} className="consolidate-button dark-hover cursor_def" title={consolidateTitle} onClick={(App.getPasswordFlag()) ? (e) => showConsolidateModal() : (e) => consolidateUTXOs()}>Consolidate ({consolidesCount})<img src="artwork/arrow.svg" alt="" className="arrow-forward"/></button>
     </div>);
   }
 
@@ -232,8 +248,8 @@ module.exports = (props) => {
         <img src="artwork/sendicon.svg" className="send-icon" title="Refresh Blockchain Data" onClick={(e) => App.requestBlockchainData(true)}/>
         <p className="send-text">Send</p>
         <p className="confirm-send-address-label">Receiving Address</p>
-        <p className="confirm-send address"><span>{App.getSendToAddress()}</span></p>        
-        <p className="confirm-send total">Total spending amount with fees is <span>{App.getTotalSpendingELA()} ELA</span></p>
+        <p className="confirm-send address"><span>{App.getSendToAddress()}</span></p>
+        <p className="confirm-send total maxheight">Total spending amount with fees is <span>{App.getTotalSpendingELA()} ELA</span>{App.getTxMemo() !== '' ? " and memo " : ""}<span className={App.getTxMemo().length > 55 ? "confirm-memo-long" : ""} title={App.getTxMemo()}>{App.getTxMemo() !== '' ? App.getTxMemo(true) : ""}</span></p>
         <button className="send-back dark-hover cursor_def" onClick={(e) => cancelSend()}><img src="artwork/arrow.svg" alt="" className="rotate_180 arrow-back" /><span className="send-back-text">Back</span></button>        
         <button className="sendela-button scale-hover" onClick={(App.getPasswordFlag()) ? (e) => showSendModal() : (e) => sendAmountToAddress()}><p>Send ELA</p></button>        
       </div>
@@ -243,10 +259,7 @@ module.exports = (props) => {
   return (
   <div id="home" className="gridback w1125h750px">
     <Banner App={App} GuiToggles={GuiToggles} page="home"/>
-    <Menu App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} page="home"/> {/* <div id="homeMenuOpen" className="h25px bordered display_inline_block bgcolor_black_hover" title="menu" onClick={(e) => showHomeMenu()}>
-       <img src="artwork/more-vertical.svg" />
-     </div> */
-    }
+    <Menu App={App} openDevTools={openDevTools} GuiToggles={GuiToggles} page="home"/>
     <div id="version" className="display_inline_block hidden">
       <Version/>
     </div>
@@ -287,7 +300,6 @@ module.exports = (props) => {
         <img src="artwork/copycut.svg" className="copy-icon" height="20px" width="20px"/>
       </button>
       <p className="address-ex word-breakall">{App.getAddress()}</p>
-      {/* <img id="qricon" src="artwork/qricon.svg" className="qr-icon" height="54px" width="54px" /> */}
       <button className="qr-icon btn_none br5" title="Click to enlarge" onClick={(e) => GuiToggles.showQRCode()}>
         <QRCode value={App.getAddressOrBlank()} size={78} includeMargin={true} className="scale-hover"/>
       </button>
@@ -365,13 +377,12 @@ module.exports = (props) => {
       <button className="requestsButtons padding_5px display_inline dark-hover br10 cursor_def m15L" onClick={(e) => App.clearRequests()}>Clear requests</button>
     </div>
     
-    <button tabIndex="6" style={(App.getCurrentAdvancedFeatures() || App.getCustomUTXOs()) ? {display: 'block'} : {display: 'none'}} className={App.getCustomUTXOs() ? "utxo-control-button utxo-custom-text-home utxo-custom-text dark-hover cursor_def" : "utxo-control-button utxo-custom-text-home utxo-custom-text-grey dark-hover cursor_def"} title="Update selected UTXOs by CTRL+u or CMD+u" onClick={(e) => UTXOControl()}>UTXO Control ({App.getCustomUTXOs() ? App.getSelectedUTXOs().length+"/"+App.getTotalUTXOs() : "ALL"} selected)</button>
-    {/*<div style={App.getCustomUTXOs() ? {display: 'block'} : {display: 'none'}} className="utxo-custom-text-home utxo-custom-text" title="Update selected UTXOs by CTRL+u or CMD+u"></div>*/}
+    <button tabIndex="7" style={(App.getCurrentAdvancedFeatures() || App.getCustomUTXOs()) ? {display: 'block'} : {display: 'none'}} className={App.getCustomUTXOs() ? "utxo-control-button utxo-custom-text-home utxo-custom-text dark-hover cursor_def" : "utxo-control-button utxo-custom-text-home utxo-custom-text-grey dark-hover cursor_def"} title="Update selected UTXOs by CTRL+u or CMD+u" onClick={(e) => UTXOControl()}>UTXO Control ({App.getCustomUTXOs() ? App.getSelectedUTXOs().length+"/"+App.getTotalUTXOs() : "ALL"} selected)</button>
     <UTXOsSelection App={App} showUTXOs={showUTXOs} closeModal={closeModal} UTXOControl={UTXOControl} UTXOControlNext={UTXOControlNext}/>
     
     <div id="txModal" style={showTxDetails ? {display: 'block', top: txModalTop} : {display: 'none', top: txModalTop}} className="txModal">
       <span className="font_size20 gradient-font m15T">Transaction Details</span>
-      <div className="txModalTableDiv">
+      <div className="txModalTableDiv scrollbar">
         <table className="txModalTable">
           <tbody>
           <tr>
