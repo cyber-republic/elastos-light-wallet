@@ -119,6 +119,8 @@ let feeAmountEla = '';
 
 let sendToAddress = '';
 
+let txMemo = '';
+
 let sendStep = 1;
 
 let isLoggedIn = false;
@@ -173,6 +175,7 @@ let unspentTransactionOutputsStatus = 'No UTXOs Requested Yet';
 const parsedUnspentTransactionOutputs = [];
 let selectedUTXOs = [];
 let customUTXOs = false;
+let balanceChange = false;
 
 let blockchainStatus = 'No Blockchain State Requested Yet';
 
@@ -583,6 +586,7 @@ const getUnspentTransactionOutputsReadyCallback = (response) => {
       parsedUnspentTransactionOutputs.push(utxo);
     });
   }
+  
   renderApp();
 };
 
@@ -605,7 +609,6 @@ const requestBlockchainData = (_userRequest) => {
   requestBalance();
   requestUnspentTransactionOutputs();
   requestBlockchainState();
-  clearUTXOsSelection();
   
   CoinGecko.requestPriceData();
   
@@ -935,6 +938,7 @@ const sendAmountToAddressReadyCallback = (transactionJson) => {
     requestTransactionHistory();
     GuiToggles.showAllBanners(true);
     clearSendData();
+    clearUTXOsSelection();
     setSendStep(1);
   }
   renderApp();
@@ -949,6 +953,7 @@ const clearSendData = () => {
   GuiUtils.setValue('sendToAddress', '');
   cryptoNameELAAddress = '';
   GuiUtils.setValue('feeAmount', feeRequested);
+  GuiUtils.setValue('txMemo', '');
   GuiUtils.setValue('sendPassword', '');
   GuiUtils.setValue('votePassword', '');
   sendAmount = '';
@@ -957,6 +962,7 @@ const clearSendData = () => {
   sendToAddressStatuses.length = 0;
   sendToAddressLinks.length = 0;
   sendToAddress = '';
+  txMemo = '';
   setSendStep(1);
   //requestFee();
   //mainConsole.log('SUCCESS clearSendData');
@@ -997,6 +1003,7 @@ const validateInputs = () => {
   sendAmount = GuiUtils.getValue('sendAmount').replace(/,/g, '.');  
   feeAmountSats = GuiUtils.getValue('feeAmount');
   feeRequested = feeAmountSats;
+  txMemo = GuiUtils.getValue('txMemo');
   
   const isValidHistory = checkTransactionHistory();
   if (!isValidHistory) {
@@ -1123,7 +1130,7 @@ const consolidateUTXOs = () => {
     }
     
     let encodedTx;
-    const tx = TxFactory.createUnsignedSendToTx(unspentTransactionOutputs, getAddress() , maxAmountToSend, publicKey, feeAmountSats, feeAccount, false);
+    const tx = TxFactory.createUnsignedSendToTx(unspentTransactionOutputs, getAddress() , maxAmountToSend, publicKey, feeAmountSats, feeAccount, '', false);
     const encodedUnsignedTx = TxTranscoder.encodeTx(tx, false);
     
     if (Math.ceil(encodedUnsignedTx.length/2) > maxTXSize) {
@@ -1178,7 +1185,7 @@ const consolidateUTXOs = () => {
         }
           
         if (privateKey) {            
-          const encodedTx = TxFactory.createSignedSendToTx(privateKey, unspentTransactionOutputs, getAddress(), maxAmountToSend, feeAmountSats, feeAccount);
+          const encodedTx = TxFactory.createSignedSendToTx(privateKey, unspentTransactionOutputs, getAddress(), maxAmountToSend, feeAmountSats, feeAccount, '');
           if (encodedTx == undefined) {
             return false;
           }
@@ -1215,7 +1222,7 @@ const sendAmountToAddress = () => {
   let encodedTx;
 
   if (useLedgerFlag) {
-    const tx = TxFactory.createUnsignedSendToTx(unspentTransactionOutputs, sendToAddress, sendAmount, publicKey, feeAmountSats, feeAccount, true);
+    const tx = TxFactory.createUnsignedSendToTx(unspentTransactionOutputs, sendToAddress, sendAmount, publicKey, feeAmountSats, feeAccount, txMemo, true);
     const encodedUnsignedTx = TxTranscoder.encodeTx(tx, false);
     //console.log(Math.ceil(encodedUnsignedTx.length/2));
     showLedgerConfirmBanner(getTxByteLength(encodedUnsignedTx));
@@ -1263,7 +1270,7 @@ const sendAmountToAddress = () => {
     }
     
     if (privateKey) {
-      const encodedTx = TxFactory.createSignedSendToTx(privateKey, unspentTransactionOutputs, sendToAddress, sendAmount, feeAmountSats, feeAccount);
+      const encodedTx = TxFactory.createSignedSendToTx(privateKey, unspentTransactionOutputs, sendToAddress, sendAmount, feeAmountSats, feeAccount, txMemo);
         if (encodedTx == undefined) {
           return false;
         }
@@ -1437,11 +1444,6 @@ const clearSelection = () => {
 
 const clearUTXOsSelection = () => {
   //mainConsole.log('Before clearUTXOsSelection', selectedUTXOs);
-  selectedUTXOs.map(e => {
-    if (e.isSelected) {
-      e.isSelected = false;
-    }
-  });
   selectedUTXOs.length = 0;
   selectedUTXOs = [];
   customUTXOs = false;
@@ -1705,6 +1707,7 @@ const sendVoteReadyCallback = (transactionJson) => {
     requestTransactionHistory();
     GuiToggles.showAllBanners(true);
     clearSendData();
+    clearUTXOsSelection();
   }  
   renderApp();
 };
@@ -1774,15 +1777,15 @@ const getTransactionHistoryReadyCallback = (transactionHistory) => {
         parsedTransaction.txDetailsUrl = getTransactionHistoryLink(tx.Txid);
         parsedTransaction.date = date;
         parsedTransaction.time = time;
-        parsedTransaction.memoLong = tx.Memo;
-        if (parsedTransaction.memoLong.length > 14) {
-          parsedTransaction.memoLong = parsedTransaction.memoLong.substring(14, parsedTransaction.memoLong.length).trim();
-        }
-        parsedTransaction.memo = tx.Memo;
-        if (parsedTransaction.memo.length > 14) {
-          var n = 14;
-          if (parsedTransaction.memo.indexOf("From ELABank,") >= 0) n = n + 13;
-          parsedTransaction.memo = parsedTransaction.memo.substring(n, n + 24) + '...'.trim();
+        let memo = tx.Memo;
+        if (memo.indexOf("type:text,msg:") >= 0) memo = memo.substring(14, memo.length).trim();
+        parsedTransaction.memoLong = memo;
+        if (memo.length > 14) {
+          var n = 0;
+          if (memo.indexOf("From ELABank,") >= 0) n = n + 13;
+          parsedTransaction.memo = memo.substring(n, n + 24) + '...'.trim();
+        } else {
+          parsedTransaction.memo = memo;
         }
         if (tx.CreateTime != 0) {
           let confirmedHeight = tx.Height;
@@ -1829,9 +1832,18 @@ const getBalanceErrorCallback = (response) => {
 };
 
 const getBalanceReadyCallback = (balanceResponse) => {
+  let lastBalance = balance;
   if (balanceResponse.Error == 0) {
     balanceStatus = `Balance Received.`;
     balance = balanceResponse.Result;
+    if (lastBalance !== balance) {
+      balanceChange = true;
+      if (customUTXOs) {
+        clearUTXOsSelection();
+      }
+    } else {
+      balanceChange = false;
+    }
   } else {
     //balanceStatus = `Balance Received Error:${balanceResponse.Error}`;
     balanceStatus = `Error receiving balance`;
@@ -2204,10 +2216,23 @@ const getFeeAmountSats = () => {
   return feeAmountSats;
 };
 
+const getTxMemo = (_short) => {
+  let maxLength = 55;
+  if (_short) {
+    if (txMemo.length > maxLength) {
+      return txMemo.substr(0,maxLength)+" ...";
+    } else {
+      return txMemo;
+    }
+  }
+  return txMemo;
+};
+
 const writeSendData = () => {
   sendToAddress = GuiUtils.getValue('sendToAddress');
   sendAmount = GuiUtils.getValue('sendAmount').replace(/,/g, '.');  
   feeAmountSats = GuiUtils.getValue('feeAmount');
+  txMemo = GuiUtils.getValue('txMemo');
   feeRequested = feeAmountSats;
 }
 
@@ -2396,6 +2421,12 @@ const getTotalSpendingELA = () => {
   var totalSpendingELA = BigNumber(Number(getSendAmount())+Number(BigNumber(Number(feeAmountSats) + minerFee, 10).dividedBy(Asset.satoshis).toString())).decimalPlaces(roundDecimalELA).toString();
   //mainConsole.log(totalSpendingELA,roundDecimalELA);
   return totalSpendingELA;
+}
+
+const getTotalFees = () => {  
+  var totalFees = BigNumber(Number(BigNumber(Number(feeAmountSats) + minerFee, 10).dividedBy(Asset.satoshis).toString())).decimalPlaces(roundDecimalELA).toString();
+  //mainConsole.log(totalSpendingELA,roundDecimalELA);
+  return totalFees;
 }
 
 const encryptWallet = (text, password) => {
@@ -2897,7 +2928,7 @@ const getPasswordRegEx = () => {
 
 const getTXDetails = (_txID) => {
   let txDetail = parsedTransactionHistory.filter(tx => tx.txHash === _txID);
-  //console.log(JSON.stringify(txDetail));
+  //console.log(JSON.stringify(selectedUTXOs));
   return txDetail;
 }
 
@@ -2909,10 +2940,10 @@ const getMaxCandidates = () => {
   return maxCandidates;
 }
 
-const toggleUTXOSelection = (_item) => {
-  const selectUTXO = parsedUnspentTransactionOutputs[_item.index];
+const toggleUTXOControl = (_utxoIx) => {
+  const selectUTXO = parsedUnspentTransactionOutputs.find(element => element.utxoIx === _utxoIx);
+  //console.log(_utxoIx, JSON.stringify(selectUTXO));
   if (!checkUTXO(selectUTXO.utxoIx)) {
-    //console.log(JSON.stringify(selectUTXO));
     selectedUTXOs.push(selectUTXO);
   } else {
     for(var i = 0; i < selectedUTXOs.length; i++) {
@@ -2921,7 +2952,7 @@ const toggleUTXOSelection = (_item) => {
       }
     }
   }
-  // mainConsole.log('toggleUTXOSelection selectedUTXOs, count', selectedUTXOs, selectedUTXOs.length);
+  // mainConsole.log('toggleUTXOControl selectedUTXOs, count', selectedUTXOs, selectedUTXOs.length);
   renderApp();
 };
 
@@ -2938,21 +2969,21 @@ const validateUTXOsSelection = () => {
     return false;
   }
   
-   if (selectedUTXOs.length === 0) {
+  /*if (selectedUTXOs.length === 0) {
     bannerStatus = 'You have not selected any UTXOs, please select at least 1.';
     bannerClass = 'bg_red color_white banner-look';
     GuiToggles.showAllBanners(false);
     renderApp();
     return false;
-  }
+  }*/
   return true;
 }
   
-const checkUTXO = (_index) => {
+const checkUTXO = (_utxoIx) => {
   let matchUTXO = false;
   if (selectedUTXOs.length > 0) {
     selectedUTXOs.forEach((_utxo) => {
-      if (_utxo.utxoIx === _index) {
+      if (_utxo.utxoIx === _utxoIx) {
         matchUTXO = true;
       }
     });
@@ -2960,9 +2991,10 @@ const checkUTXO = (_index) => {
   return matchUTXO;
 }
 
-const selectMaxUTXOs = () => {
+const selectMaxUTXOs = (_sort, _direction) => {
   clearUTXOsSelection();
-  selectedUTXOs = parsedUnspentTransactionOutputs.slice(0, getMaxUTXOsPerTX());
+  let tempUTXOs = parsedUnspentTransactionOutputs;
+  selectedUTXOs = tempUTXOs.sort(_sort === "index" ? (({utxoIx: previousutxoIx}, {utxoIx: currentutxoIx}) => _direction === "asc" ? previousutxoIx - currentutxoIx : currentutxoIx - previousutxoIx) : (({Value: previousValue}, {Value: currentValue}) => _direction === "asc" ? previousValue - currentValue : currentValue - previousValue)).slice(0, getMaxUTXOsPerTX());
 }
 
 const getSelectedUTXOs = () => {
@@ -3011,6 +3043,7 @@ exports.getSendAmount = getSendAmount;
 exports.getFeeAmountEla = getFeeAmountEla;
 exports.getSendToAddress = getSendToAddress;
 exports.getFeeAmountSats = getFeeAmountSats;
+exports.getTxMemo = getTxMemo;
 exports.getSendStep = getSendStep;
 exports.setSendStep = setSendStep;
 exports.sendAmountToAddress = sendAmountToAddress;
@@ -3048,6 +3081,7 @@ exports.validateInputs = validateInputs;
 exports.validateFee = validateFee;
 exports.insertELA = insertELA;
 exports.getTotalSpendingELA = getTotalSpendingELA;
+exports.getTotalFees = getTotalFees;
 exports.isValidAddress = isValidAddress;
 exports.isValidDecimal = isValidDecimal;
 exports.showBanner = showBanner;
@@ -3128,7 +3162,7 @@ exports.getVoteValue = getVoteValue;
 exports.getMaxCandidates = getMaxCandidates;
 exports.enableContextMenu = enableContextMenu;
 exports.disableContextMenu = disableContextMenu;
-exports.toggleUTXOSelection = toggleUTXOSelection;
+exports.toggleUTXOControl = toggleUTXOControl;
 exports.getAllUTXOs = getAllUTXOs;
 exports.getSelectedUTXOs = getSelectedUTXOs;
 exports.checkUTXO = checkUTXO;

@@ -503,7 +503,7 @@ module.exports = (props) => {
           </td>
         </tr>
         <tr className="settingsTableRow">          
-          <td colSpan="2" className="settingCol1 p28R" title="Derivation path selection, ...">Advanced features:
+          <td colSpan="2" className="settingCol1 p28R" title="Derivation path selection, UTXO Control, ...">Advanced features:
           </td>          
           <td className="settingCol3">
             <label className="m10L switch">

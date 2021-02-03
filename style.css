@@ -302,8 +302,11 @@ button {
 
 .currency-balance {
   position: absolute;
+  width: 270px;
+  overflow: hidden;
   font-size: 51px;
   color: #FFFFFF;
+  text-align: left;
   letter-spacing: 0;
   top: 234px;
   left: 82px;
@@ -585,13 +588,18 @@ button {
   color: #FFFFFF;
   letter-spacing: 0;
   height: 40px;
-  width: 100px;
+  width: 110px;
   top: 291px;
   left: 423px;
-  text-align: center;
   border: none;
   text-align: left;
   padding-left: 17px;
+}
+
+#feeAmount::placeholder {
+  opacity: 0.8;
+  color: #FFFFFF;
+  font-size: 13px;
 }
 
 .fees-text {
@@ -631,33 +639,59 @@ button {
   padding: 15px;
 }
 
-.confirm-send-address-label {
-  top: 112px;
-  left: 422px;
-  font-size: 16px;
-  color: #FFFFFF;
-  letter-spacing: 0;
+.confirm-memo-long::after {
+  content: "\00BB";
+  font-size: 18px;
+  left: 5px;
+  top: 1px;
+  position: relative;
+}
+
+.confirm-table-div {
   position: absolute;
+  width: 335px;
+  height: 240px;
+  overflow: auto;  
+  -webkit-app-region: none;
+  top: 120px;
+  padding: 10px 20px 0 20px;
 }
 
-.confirm-send.address {
-  top: 143px;
-  max-width: 260px;
-  overflow-wrap: break-word;
+.confirm-table {
+  overflow: auto;
+  width: 100%;
+  -webkit-app-region: none;
+  border-spacing: 7px;
+  border: 0;
+  font-size: 13px;
+  color: #B2B4C3;
+}
+
+.confirm-col1 {
+  font-family: "BioSans-Regular";
+  width: 75px;
+  text-align: right;
+  vertical-align: top;
+}
+
+.confirm-col2 {
+  font-family: "BioSans-Light";
+  max-width: 220px;
+  text-align: left;
   word-wrap: break-word;
+  vertical-align: top;
 }
 
-.confirm-send.amount {
-  top: 240px;
-}
-
-.confirm-send.total {
-  top: 220px;
-}
-
-.confirm-send span {
-  font-weight: 600;
+.font-color-orange {
   color: #E5A776;
+}
+
+.confirm-memo-long::after {
+  content: "\00BB";
+  font-size: 18px;
+  left: 5px;
+  top: 1px;
+  position: relative;
 }
 
 .sendela-button {
@@ -975,10 +1009,22 @@ button {
   width: 93%;
 }
 
-.utxo-selection {
+.utxo-status {
   position: absolute;
   top: 31px;
   left: 478px;
+}
+
+.utxo-status-font {
+  opacity: 0.9;
+  font-size: 16px;
+  color: #B2B4C3;
+  letter-spacing: 0;
+  line-height: 17px;
+}
+
+.utxo-status-font-max {
+  font-size: 11px;
 }
 
 .utxo-tablediv {
@@ -1044,16 +1090,35 @@ button {
   position: relative;
 }
 
+.utxo-custom-text-grey {
+  font-family: 'Open Sans', sans-serif;
+  opacity: 0.9;
+  font-size: 12px;
+  font-weight: 100;
+  letter-spacing: 0;
+  color: #B2B4C3;
+}
+
 .utxo-custom-text-home {
   position: absolute;
-  top: 419px;
-  left: 510px;
+  top: 416px;
+  left: 480px;
 }
 
 .utxo-custom-text-voting {
   position: absolute;
-  top: 461px;
-  left: 755px;
+  top: 460px;
+  left: 706px;
+}
+
+.utxo-control-button {
+  height: 26px;
+  font-size: 12px;
+  background: none;
+  letter-spacing: 0;
+  padding: 5px 8px 5px 8px;
+  border-radius: 5px;
+  border: 0;
 }
 
 .dark-font {
@@ -1155,6 +1220,10 @@ select, input {
 
 .font_size12 {
   font-size: 12px;
+}
+
+.font_size45 {
+  font-size: 45px;
 }
 
 .display_inline_block {
@@ -1991,6 +2060,41 @@ select, input {
   /*cursor: pointer;*/
 }
 
+.memo-field {
+  opacity: 0.7;
+  border: 0.7px solid #787981;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #FFFFFF;
+  letter-spacing: 0;
+  text-align: left;
+  padding: 5px;
+  background: none;
+  margin: 0 4px;
+  position: absolute;
+  padding-left: 12px;
+}
+
+.memo-field.not-focused {
+  top: 290px;
+  left: 580px;
+  width: 118px;
+  height: 41px;
+}
+
+.memo-field.focused {
+  top: 290px;
+  left: 420px;
+  width: 277px;
+  height: 41px;
+}
+
+.memo-field::placeholder {
+  opacity: 0.7;
+  color: #ffffff;
+}
+
 .flex-middle {
   display: flex;
   align-items: center;
@@ -2745,7 +2849,7 @@ input:checked + .slider:before {
 .txModal {
   background-image: linear-gradient(2deg, #33373D 0%, rgba(51, 55, 61, 1) 110%);
   width: 410px;
-  height: 300px;
+  height: 310px;
   border: 0.7px solid #787981;
   border-radius: 24px;
   position: absolute;
@@ -2811,4 +2915,34 @@ input:checked + .slider:before {
   background: none;
   color: #B2B4C3;
   font-size: 14px;
+}
+
+.sort-arrow {
+  margin-left: 5px;
+  position: relative;
+  top: -2px;
+  border: solid;
+  border-width: 0 2px 2px 0;
+  display: inline-block;
+  padding: 2px;
+}
+
+.right {
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+}
+
+.left {
+  transform: rotate(135deg);
+  -webkit-transform: rotate(135deg);
+}
+
+.up {
+  transform: rotate(-135deg);
+  -webkit-transform: rotate(-135deg);
+}
+
+.down {
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
 }
