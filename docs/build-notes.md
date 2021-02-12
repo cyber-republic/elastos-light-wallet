@@ -43,23 +43,23 @@ npm run dist-linux;
 
 
 ## Checksum:
-  1.0.2
+  v1.0.4-RC1
 
   windows:
 
-  openssl dgst -sha512 -binary Elastos-Light-Wallet-Setup-1.0.2.exe | openssl base64 -A
+  openssl dgst -sha512 -binary Elastos-Light-Wallet-Setup-1.0.4-RC1.exe | openssl base64 -A
 
   xxxx
 
   Ubuntu 18:
 
-  openssl sha -sha512 Elastos-Light-Wallet-1.0.2.AppImage
+  openssl sha -sha512 Elastos-Light-Wallet-1.0.4-RC1.AppImage
 
   xxxx
 
   Mac:
 
-  openssl dgst -sha512 Elastos-Light-Wallet-1.0.2.dmg
+  openssl dgst -sha512 Elastos-Light-Wallet-1.0.4-RC1.dmg
 
   xxxx
 
@@ -77,13 +77,13 @@ npm ls node-gyp
 
 
 # to auto build a releases
-  git commit -am v1.0.2;
-  git tag v1.0.2;
+  git commit -am v1.0.4-RC1;
+  git tag v1.0.4-RC1;
   git push;
   git push --tags;
 
 ## to delete release tags
-  git push --delete origin v1.0.2;
-  git tag -d v1.0.2;
+  git push --delete origin v1.0.4-RC1;
+  git tag -d v1.0.4-RC1;
   git pull;
   git push;

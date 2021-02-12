@@ -269,10 +269,8 @@ const init = (_GuiToggles) => {
   }
   
   requestRssFeed();
-  setRestService(defaultNetworkIx);
-  if (feeAccount === '') {
-    requestFeeAccount();
-  }
+  if (restService === "") setRestService(defaultNetworkIx);
+  if (feeAccount === '') requestFeeAccount();
   requestFee();
   
   // context menu
